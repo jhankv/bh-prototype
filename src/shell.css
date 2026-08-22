@@ -1,0 +1,75 @@
+/*
+ * Shell stylesheet — the playground's own chrome.
+ *
+ * Automatic source detection is disabled so this build never generates
+ * classes used by a design system sandbox, and no sandbox build ever
+ * generates ours. Each stylesheet emits only what its own files need.
+ */
+@import "tailwindcss" source(none);
+
+@source "./app";
+@source "./canvas";
+@source "./frame";
+
+/*
+ * Deliberately unlike any design system we test. A reviewer must always be
+ * able to tell where the tool ends and the prototype begins.
+ */
+@theme {
+  --color-shell-bg: oklch(0.985 0 0);
+  --color-shell-surface: oklch(1 0 0);
+  --color-shell-line: oklch(0.922 0 0);
+  --color-shell-ink: oklch(0.21 0 0);
+  --color-shell-muted: oklch(0.556 0 0);
+  --color-shell-accent: oklch(0.556 0.14 250);
+  --color-shell-danger: oklch(0.577 0.245 27.325);
+
+  --font-shell: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-shell-bg: oklch(0.16 0 0);
+    --color-shell-surface: oklch(0.21 0 0);
+    --color-shell-line: oklch(0.30 0 0);
+    --color-shell-ink: oklch(0.96 0 0);
+    --color-shell-muted: oklch(0.65 0 0);
+  }
+}
+
+body {
+  background-color: var(--color-shell-bg);
+  color: var(--color-shell-ink);
+  font-family: var(--font-shell);
+}
+
+/* Markdown documents rendered inside a frame use shell chrome, not a
+   design system — a critique document is part of the tool, not the design. */
+.prose-frame {
+  line-height: 1.7;
+}
+.prose-frame h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.75rem; }
+.prose-frame h2 { font-size: 1.125rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+.prose-frame h3 { font-size: 0.95rem; font-weight: 600; margin: 1.25rem 0 0.35rem; }
+.prose-frame p, .prose-frame ul, .prose-frame ol { margin-bottom: 0.85rem; font-size: 0.9rem; }
+.prose-frame ul, .prose-frame ol { padding-inline-start: 1.25rem; }
+.prose-frame ul { list-style: disc; }
+.prose-frame ol { list-style: decimal; }
+.prose-frame li { margin-bottom: 0.25rem; }
+.prose-frame code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8em;
+  background: var(--color-shell-bg);
+  border: 1px solid var(--color-shell-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.prose-frame table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin-bottom: 1rem; }
+.prose-frame th, .prose-frame td {
+  border-bottom: 1px solid var(--color-shell-line);
+  padding: 0.45rem 0.6rem;
+  text-align: start;
+}
+.prose-frame th { font-weight: 600; }
+.prose-frame strong { font-weight: 600; }
+.prose-frame hr { border: 0; border-top: 1px solid var(--color-shell-line); margin: 1.5rem 0; }
