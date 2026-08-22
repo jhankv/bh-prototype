@@ -1,148 +1,29 @@
 {
   "sections": [
     {
-      "title": "Appearance matrix \u2014 pristine sandbox",
+      "title": "Components",
       "frames": [
         {
-          "id": "probe-banhaten-light",
-          "src": "views/ComponentProbe.tsx",
+          "id": "buttons",
+          "src": "views/Buttons.tsx",
           "sandbox": "banhaten",
           "x": 0,
           "y": 0,
-          "width": 620,
-          "height": 720,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "ltr"
-          },
-          "caption": "Baseline \u2014 light, blue, LTR."
+          "width": 900,
+          "height": 1180,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Every Button variant, size, density and state in one place."
         },
         {
-          "id": "probe-banhaten-dark",
-          "src": "views/ComponentProbe.tsx",
+          "id": "inputs",
+          "src": "views/Inputs.tsx",
           "sandbox": "banhaten",
-          "x": 680,
+          "x": 960,
           "y": 0,
-          "width": 620,
-          "height": 720,
-          "appearance": {
-            "mode": "dark",
-            "theme": "blue",
-            "dir": "ltr"
-          },
-          "caption": "Same file, dark mode."
-        },
-        {
-          "id": "probe-banhaten-rtl",
-          "src": "views/ComponentProbe.tsx",
-          "sandbox": "banhaten",
-          "x": 1360,
-          "y": 0,
-          "width": 620,
-          "height": 720,
-          "appearance": {
-            "mode": "light",
-            "theme": "brown",
-            "radius": "sharp",
-            "dir": "rtl"
-          },
-          "caption": "Same file \u2014 RTL, brown theme, sharp radius."
-        }
-      ]
-    },
-    {
-      "title": "Direction audit \u2014 F-001 / F-003 root cause",
-      "frames": [
-        {
-          "id": "audit-ltr",
-          "src": "views/DirectionAudit.tsx",
-          "sandbox": "banhaten",
-          "x": 0,
-          "y": 860,
-          "width": 700,
-          "height": 900,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "ltr"
-          },
-          "caption": "LTR. Arabic strings are the ones at risk here."
-        },
-        {
-          "id": "audit-rtl",
-          "src": "views/DirectionAudit.tsx",
-          "sandbox": "banhaten",
-          "x": 760,
-          "y": 860,
-          "width": 700,
-          "height": 900,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "rtl"
-          },
-          "caption": "RTL. Latin strings are the ones at risk here."
-        },
-        {
-          "id": "audit-rtl-proposed",
-          "src": "views/DirectionAudit.tsx",
-          "sandbox": "banhaten-proposed",
-          "x": 1520,
-          "y": 860,
-          "width": 700,
-          "height": 900,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "rtl"
-          },
-          "caption": "RTL with our fixes applied. Compare against the frame to its side."
-        }
-      ]
-    },
-    {
-      "title": "Pristine vs proposed",
-      "frames": [
-        {
-          "id": "compare-pristine",
-          "src": "views/ComponentProbe.tsx",
-          "sandbox": "banhaten",
-          "x": 0,
-          "y": 1860,
-          "width": 620,
-          "height": 720,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "ltr"
-          },
-          "caption": "What Banhaten ships today."
-        },
-        {
-          "id": "compare-proposed",
-          "src": "views/ComponentProbe.tsx",
-          "sandbox": "banhaten-proposed",
-          "x": 680,
-          "y": 1860,
-          "width": 620,
-          "height": 720,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "dir": "ltr"
-          },
-          "caption": "Same file, our sandbox. Edit it and the difference shows here."
-        },
-        {
-          "id": "unknown-sandbox",
-          "src": "views/ComponentProbe.tsx",
-          "sandbox": "does-not-exist",
-          "x": 1360,
-          "y": 1860,
-          "width": 620,
-          "height": 720,
-          "caption": "Declares a sandbox that is not installed."
+          "width": 900,
+          "height": 1180,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Every Input variant, size, state and affix in one place."
         }
       ]
     },
@@ -154,10 +35,10 @@
           "type": "document",
           "src": "documents/findings.md",
           "x": 0,
-          "y": 2720,
-          "width": 700,
-          "height": 420,
-          "caption": "Every defect lands here or in a diff."
+          "y": 1320,
+          "width": 760,
+          "height": 640,
+          "caption": "F-001 to F-005. Every defect lands here or in a diff."
         }
       ]
     }

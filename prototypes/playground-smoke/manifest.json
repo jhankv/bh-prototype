@@ -1,5 +1,0 @@
-{
-  "name": "Playground Smoke Test",
-  "description": "Phase 1 verification. Plain HTML views with no design system — proves the shell, the canvas, the iframe pipeline, and error containment.",
-  "cover": "appearance-probe-light"
-}

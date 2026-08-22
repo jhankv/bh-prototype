@@ -1,5 +1,5 @@
 {
   "name": "Design System",
-  "description": "Banhaten components rendered live across appearance modes, and the same view against the pristine and proposed sandboxes.",
-  "cover": "probe-banhaten-light"
+  "description": "One gallery per Banhaten component, showing every variant, size, state and content extreme in one frame.",
+  "cover": "buttons"
 }
