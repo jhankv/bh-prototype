@@ -1,0 +1,11 @@
+{
+  "$schema": ".banhaten/schema/config.schema.json",
+  "tailwind": {
+    "css": "globals.css"
+  },
+  "aliases": {
+    "ui": "@/components/ui",
+    "utils": "@/lib/utils",
+    "hooks": "@/hooks"
+  }
+}

@@ -1,0 +1,11 @@
+/*
+ * Frame stylesheet for this sandbox.
+ *
+ * globals.css is generated and owned by the Banhaten CLI — never hand-edit it.
+ * This file is ours: it registers the prototype sources whose class names must
+ * be generated into THIS build, and nothing from the playground shell.
+ */
+@import "./globals.css";
+
+@source "./components";
+@source "../../prototypes";

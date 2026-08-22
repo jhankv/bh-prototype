@@ -1,0 +1,36 @@
+.ds-pagination {
+  container-type: inline-size;
+}
+
+.ds-pagination__controls {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+/* Approved exception: container-query breakpoints stay literal because CSS vars are not reliable in query conditions. */
+@container (max-width: 28rem) {
+  .ds-pagination [data-slot="pagination-caption"] {
+    width: 100%;
+    flex: 1 0 100%;
+  }
+
+  .ds-pagination[data-type="numeric"] .ds-pagination__controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ds-pagination[data-type="numeric"] .ds-pagination__pages > :nth-child(n + 4):not(:last-child) {
+    display: none;
+  }
+
+  .ds-pagination[data-type="simple"] .ds-pagination__controls {
+    margin-inline-start: auto;
+  }
+
+  .ds-pagination[data-type="summary"] [data-slot="pagination-summary"] {
+    order: -1;
+    width: 100%;
+    text-align: center;
+  }
+}

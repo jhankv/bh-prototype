@@ -1,0 +1,94 @@
+{
+  "sections": [
+    {
+      "title": "Appearance matrix — pristine sandbox",
+      "frames": [
+        {
+          "id": "probe-banhaten-light",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 0,
+          "width": 620,
+          "height": 720,
+          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
+          "caption": "Baseline — light, blue, LTR."
+        },
+        {
+          "id": "probe-banhaten-dark",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "banhaten",
+          "x": 680,
+          "y": 0,
+          "width": 620,
+          "height": 720,
+          "appearance": { "mode": "dark", "theme": "blue", "dir": "ltr" },
+          "caption": "Same file, dark mode."
+        },
+        {
+          "id": "probe-banhaten-rtl",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "banhaten",
+          "x": 1360,
+          "y": 0,
+          "width": 620,
+          "height": 720,
+          "appearance": { "mode": "light", "theme": "brown", "radius": "sharp", "dir": "rtl" },
+          "caption": "Same file — RTL, brown theme, sharp radius."
+        }
+      ]
+    },
+    {
+      "title": "Pristine vs proposed",
+      "frames": [
+        {
+          "id": "compare-pristine",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 860,
+          "width": 620,
+          "height": 720,
+          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
+          "caption": "What Banhaten ships today."
+        },
+        {
+          "id": "compare-proposed",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "banhaten-proposed",
+          "x": 680,
+          "y": 860,
+          "width": 620,
+          "height": 720,
+          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
+          "caption": "Same file, our sandbox. Edit it and the difference shows here."
+        },
+        {
+          "id": "unknown-sandbox",
+          "src": "views/ComponentProbe.tsx",
+          "sandbox": "does-not-exist",
+          "x": 1360,
+          "y": 860,
+          "width": 620,
+          "height": 720,
+          "caption": "Declares a sandbox that is not installed."
+        }
+      ]
+    },
+    {
+      "title": "Findings",
+      "frames": [
+        {
+          "id": "findings",
+          "type": "document",
+          "src": "documents/findings.md",
+          "x": 0,
+          "y": 1720,
+          "width": 700,
+          "height": 420,
+          "caption": "Every defect lands here or in a diff."
+        }
+      ]
+    }
+  ]
+}

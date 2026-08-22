@@ -2,6 +2,7 @@ import { Suspense, lazy, useMemo } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
+import { DesignSystemProvider } from '@/ds/DesignSystem'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
 
@@ -20,6 +21,7 @@ export function FrameApp() {
   const project = search.get('project') ?? ''
   const type = search.get('type') ?? 'view'
   const src = search.get('src') ?? ''
+  const sandbox = search.get('sandbox') ?? 'none'
   const appearance = appearanceFromSearch(search)
 
   applyAppearance(document.documentElement, appearance)
@@ -38,10 +40,10 @@ export function FrameApp() {
     )
   }
 
-  return <ViewFrame path={path} />
+  return <ViewFrame path={path} sandbox={sandbox} />
 }
 
-function ViewFrame({ path }: { path: string }) {
+function ViewFrame({ path, sandbox }: { path: string; sandbox: string }) {
   const loader = viewModules[path]
 
   // React.lazy must not be recreated on every render, or the view remounts.
@@ -59,11 +61,19 @@ function ViewFrame({ path }: { path: string }) {
     )
   }
 
+  // "none" is a view with no design system — the shell's own smoke tests.
+  const content =
+    sandbox === 'none' ? (
+      <View />
+    ) : (
+      <DesignSystemProvider sandbox={sandbox}>
+        <View />
+      </DesignSystemProvider>
+    )
+
   return (
     <ErrorBoundary>
-      <Suspense fallback={null}>
-        <View />
-      </Suspense>
+      <Suspense fallback={null}>{content}</Suspense>
     </ErrorBoundary>
   )
 }

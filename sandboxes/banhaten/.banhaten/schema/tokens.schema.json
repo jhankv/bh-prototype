@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:banhaten:schema:tokens",
+  "title": "Banhaten design tokens",
+  "type": "object",
+  "required": ["name", "sourceStatus", "sourceFiles", "provenance", "modes", "cssContract", "tokens", "cssVariables"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "sourceStatus": { "const": "manually-curated-from-reference-archives" },
+    "sourceFiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["method", "lastReviewed", "themeSources", "notes"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "type": "string", "minLength": 1 },
+        "lastReviewed": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "themeSources": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "notes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "required": ["color", "theme", "radius", "numbers"],
+      "additionalProperties": false,
+      "properties": {
+        "color": { "$ref": "#/$defs/stringArray" },
+        "theme": { "$ref": "#/$defs/stringArray" },
+        "radius": { "$ref": "#/$defs/stringArray" },
+        "numbers": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "cssContract": {
+      "type": "object",
+      "required": ["semanticPrefix", "fontFamily", "fontFamilies", "defaultTheme", "defaultNeutralTheme", "defaultRadius", "shadcnAliases", "shadowTokens"],
+      "additionalProperties": false,
+      "properties": {
+        "semanticPrefix": { "type": "string", "minLength": 1 },
+        "fontFamily": { "type": "string", "minLength": 1 },
+        "fontFamilies": {
+          "type": "object",
+          "required": ["english", "arabic", "fallback"],
+          "additionalProperties": false,
+          "properties": {
+            "english": { "type": "string", "minLength": 1 },
+            "arabic": { "type": "string", "minLength": 1 },
+            "fallback": { "type": "string", "minLength": 1 }
+          }
+        },
+        "defaultTheme": { "type": "string", "minLength": 1 },
+        "defaultNeutralTheme": { "type": "string", "minLength": 1 },
+        "defaultRadius": { "type": "string", "minLength": 1 },
+        "shadowTokens": { "type": "string" },
+        "shadcnAliases": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "pattern": "^--" }
+        }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "required": ["colorMode", "theme", "numbers", "radius"],
+      "additionalProperties": false,
+      "properties": {
+        "colorMode": { "$ref": "#/$defs/modeTokenMaps" },
+        "theme": { "$ref": "#/$defs/modeTokenMaps" },
+        "numbers": { "$ref": "#/$defs/tokenMap" },
+        "radius": { "$ref": "#/$defs/modeTokenMaps" }
+      }
+    },
+    "cssVariables": {
+      "type": "object",
+      "required": ["system", "typography", "effects", "components", "darkEffects", "scopedAliases"],
+      "additionalProperties": false,
+      "properties": {
+        "system": { "$ref": "#/$defs/cssVariableMap" },
+        "typography": { "$ref": "#/$defs/cssVariableMap" },
+        "effects": { "$ref": "#/$defs/cssVariableMap" },
+        "components": { "$ref": "#/$defs/cssVariableMap" },
+        "darkEffects": { "$ref": "#/$defs/cssVariableMap" },
+        "scopedAliases": { "$ref": "#/$defs/cssVariableMap" }
+      }
+    }
+  },
+  "$defs": {
+    "stringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "modeTokenMaps": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/tokenMap" }
+    },
+    "tokenMap": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/token" }
+    },
+    "token": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "color" },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:#[0-9A-Fa-f]{6,8}|rgb\\([^\\n]+\\))$"
+            },
+            "alias": { "type": ["string", "null"], "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "number" },
+            "value": { "type": "number" },
+            "alias": { "type": ["string", "null"], "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "cssVariableMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^--(?:bh|shadow)-[a-z0-9-]+$" },
+      "additionalProperties": { "$ref": "#/$defs/cssVariableToken" }
+    },
+    "cssVariableToken": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["alias", "cubicBezier", "dimension", "duration", "number", "shadow", "string"]
+        },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

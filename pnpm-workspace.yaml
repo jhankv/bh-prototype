@@ -1,0 +1,5 @@
+packages:
+  - "sandboxes/*"
+
+# Both sandboxes are source-installed copies of the same design system.
+# React must resolve to one instance or hooks break across the boundary.
