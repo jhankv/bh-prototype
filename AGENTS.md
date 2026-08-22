@@ -141,35 +141,29 @@ Three rules for `<Compare>`:
   it. A snippet is never scaled *up* past 1 — an enlarged component shows
   spacing and hairlines no browser will ever render.
 
-**Prose is 672px wide. That is right for reading and wrong for evidence.** Split
-into two columns it leaves each side around 330px, where a page header renders
-at 45% and nobody can see what they are being asked to look at. So a figure
-escapes its column:
+**The figure sizes itself to the evidence. Do not set `bleed` by hand.**
 
-| `bleed` | Figure width | For |
-| --- | --- | --- |
-| `prose` | the text column | a badge, a tag, a single input |
-| `wide` *(default)* | `min(1120px, 100vw - 3rem)` | most components |
-| `full` | `calc(100vw - 3rem)` | a defect measured in pixels, or a whole screen |
+Prose is about 700px wide, which is right for reading and wrong for evidence. So
+a figure is exactly as wide as its snippet needs, capped at the window: it
+breaks out of the text column only when the snippet is bigger than the column,
+and never grows past the snippet.
 
-**Stacked is the default, and the reason is not just size.** Almost every defect
-recorded here is a difference in *position* — a period that moved to the front
-of a line, a label clipped at its start, a column truncating from the wrong end.
-Stacked, both versions begin at the same x, so the difference shows up as a
-broken vertical alignment and the eye finds it without being told where to look.
-Side by side, each version starts at a different x and the reader has to
-mentally translate one onto the other first. This is why diff tools stack.
+Both failure modes are real and both were shipped before this was measured. A
+component squeezed into a 330px half-column renders at 45% and cannot be
+examined. A figure stretched to 1120px around a 720px snippet pads it with 400px
+of white that reads like part of the component — and a reader who mistakes
+padding for the component files a defect that does not exist.
 
-Stacking also makes `bleed` matter less, because each side gets the whole figure
-width instead of half: the PageHeader case renders at **98% inside the plain
-prose column**, where two columns at `bleed="wide"` managed 77%.
+Measured on the PageHeader audit, prose column 704px:
 
-Use `layout="columns"` only when the snippet is tall enough that stacking would
-push the two versions further apart than a glance can span.
+| `viewport` | Figure | Dead space | Scale |
+| --- | --- | --- | --- |
+| 720 | 720 — breaks out by 16px | 0 | 100% |
+| 480 | 480 — stays inside | 0 | 100% |
 
-The frame box shrinks to the scaled snippet rather than to the column, so a
-`full` bleed wider than the snippet's viewport does not pad it with white space
-that reads like part of the component.
+The explicit values `prose`, `wide` and `full` remain for the rare figure that
+should be deliberately wider or narrower than its content warrants.
+
 
 Keep the snippet minimal. Every element that is not part of the claim is
 something a reader has to rule out.

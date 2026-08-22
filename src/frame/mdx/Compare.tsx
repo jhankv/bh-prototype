@@ -29,15 +29,18 @@ export type CompareProps = {
   viewport?: number
   height?: number
   /**
-   * How far the figure escapes the prose column. Prose is ~672px wide, which is
-   * right for reading and wrong for evidence: split into two columns it leaves
-   * each side around 330px, where a page header renders at 45% and nobody can
-   * see what they are being asked to look at.
+   * How far the figure escapes the prose column. Leave it alone.
    *
-   * `wide` is the default because most components are wider than a paragraph.
-   * Reach for `prose` only when the snippet really is small — a badge, an input.
+   * The default measures instead of guessing: a snippet that fits the text
+   * column stays inside it, and one that does not breaks out by exactly the
+   * width it needs and no further. Both failure modes are real — a component
+   * squeezed into 330px cannot be examined, and a figure stretched past its own
+   * snippet pads it with white space that reads like part of the component.
+   *
+   * The explicit values exist for the rare case where a figure should be
+   * deliberately wider or narrower than its content warrants.
    */
-  bleed?: 'prose' | 'wide' | 'full'
+  bleed?: 'auto' | 'prose' | 'wide' | 'full'
   /**
    * Rows by default, and not only because each side then gets the full figure
    * width instead of half.
@@ -73,56 +76,78 @@ function frameSrc(
   return `/frame.html?${params}`
 }
 
-/** Width of the figure itself, before it is split into columns. */
-const BLEED: Record<NonNullable<CompareProps['bleed']>, string> = {
-  prose: '100%',
-  wide: 'min(1120px, 100vw - 3rem)',
-  full: 'calc(100vw - 3rem)',
-}
+/** Gutter kept between the figure and the window when it breaks out. */
+const GUTTER = 48
+/** Grid gap between the two sides, in px — must match the `gap-3` class below. */
+const GAP = 12
 
 export function Compare(props: CompareProps) {
   const {
     viewport = 720,
     height = 160,
     labels = ['Pristine', 'Proposed'],
-    bleed = 'wide',
+    bleed = 'auto',
     layout = 'rows',
   } = props
   // Compare only ever renders inside a frame, so the project is in the URL.
   const project = new URLSearchParams(window.location.search).get('project') ?? ''
 
-  const column = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
+  // Measured on the wrapper, which is always the width of the prose column: a
+  // block element takes its width from its container, so the figure overflowing
+  // it cannot feed back into the measurement.
+  const wrapper = useRef<HTMLDivElement>(null)
+  const [prose, setProse] = useState(0)
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth)
 
   useEffect(() => {
-    const element = column.current
+    const element = wrapper.current
     if (!element) return
 
-    const observer = new ResizeObserver(([entry]) => {
-      // Never scale up: a snippet enlarged past its own viewport would show
-      // spacing and hairlines that nobody's browser will ever render.
-      setScale(Math.min(1, entry.contentRect.width / viewport))
-    })
-
+    const observer = new ResizeObserver(([entry]) => setProse(entry.contentRect.width))
     observer.observe(element)
-    return () => observer.disconnect()
-  }, [viewport])
 
-  const width = BLEED[bleed]
+    const onResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', onResize)
+    }
+  }, [])
+
+  // What the figure would need to show every side at its own scale.
+  const needed = layout === 'rows' ? viewport : viewport * 2 + GAP
+  const ceiling = Math.max(prose, windowWidth - GUTTER)
+
+  const figureWidth =
+    bleed === 'prose' ? prose
+    : bleed === 'wide' ? Math.min(1120, ceiling)
+    : bleed === 'full' ? ceiling
+    // The figure is exactly as wide as the evidence, capped at the window: it
+    // breaks out of the text column only when the snippet needs the room, and
+    // never grows past the snippet, so there is no white margin inside the frame
+    // for a reader to mistake for part of the component.
+    : Math.min(needed, ceiling)
+
+  const columnWidth = layout === 'rows' ? figureWidth : (figureWidth - GAP) / 2
+  // Never scale up: a snippet enlarged past its own viewport would show spacing
+  // and hairlines that nobody's browser will ever render.
+  const scale = prose === 0 ? 0 : Math.min(1, columnWidth / viewport)
 
   return (
-    <figure
-      className="not-prose my-8 grid gap-3"
-      style={{
-        width,
-        // Centres a block wider than its container without a transform, which
-        // would otherwise become the containing block for anything fixed inside.
-        marginInlineStart: `calc(50% - ${width} / 2)`,
-        gridTemplateColumns: layout === 'rows' ? '1fr' : 'repeat(2, minmax(0, 1fr))',
-      }}
-    >
+    <div ref={wrapper} className="not-prose w-full">
+      <figure
+        className="my-8 grid gap-3"
+        style={{
+          width: figureWidth || undefined,
+          // Centres a block wider than its container without a transform, which
+          // would otherwise become the containing block for anything fixed inside.
+          marginInlineStart: figureWidth ? (prose - figureWidth) / 2 : undefined,
+          gridTemplateColumns: layout === 'rows' ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+        }}
+      >
       {SANDBOXES.map((sandbox, index) => (
-        <div key={sandbox} className="min-w-0" ref={index === 0 ? column : undefined}>
+        <div key={sandbox} className="min-w-0">
           <div className="mb-1 flex items-baseline justify-between gap-2">
             <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
               {labels[index]}
@@ -153,6 +178,7 @@ export function Compare(props: CompareProps) {
         {props.src} · laid out at {viewport}px, shown at {Math.round(scale * 100)}% ·{' '}
         {props.mode ?? 'light'} · {props.dir ?? 'ltr'}
       </figcaption>
-    </figure>
+      </figure>
+    </div>
   )
 }

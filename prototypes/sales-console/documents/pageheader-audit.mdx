@@ -16,7 +16,7 @@ right.
 A Latin description inside an Arabic page renders with its final period at the
 **front** of the sentence.
 
-<Compare src="views/snippets/PageHeaderCase.tsx" dir="rtl" viewport={720} height={200} bleed="prose" />
+<Compare src="views/snippets/PageHeaderCase.tsx" dir="rtl" viewport={720} height={200} />
 
 Look at the description line. Left: `.Refunds appear once…`. Right: the period
 is back where it belongs.
@@ -84,6 +84,14 @@ Pick<TabsProps, "activeIndex" | "ariaLabel" | "defaultActiveIndex" | "items" | "
 `fullWidth` is not in that list, so a consumer cannot turn it off. `Tabs` does
 set `ds-tabs--hug` when `fullWidth` is false — but **no CSS rule for that class
 exists anywhere in the package.** The hug mode is a dead class.
+
+**And it gets worse as the container narrows.** The same header in a sidebar
+layout, where five tabs share 480px instead of 720:
+
+<Compare src="views/snippets/PageHeaderCase.tsx" viewport={480} height={200} />
+
+`Fulfilled` and `Pending` now lose glyphs too. There is no width at which the
+component warns you; it just quietly returns fewer letters than it was given.
 
 **Not patched, on purpose.** Three reasonable fixes exist — let the label
 truncate honestly, let the list scroll instead of clip, or expose `fullWidth`
