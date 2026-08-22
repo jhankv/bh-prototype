@@ -5,10 +5,14 @@ import type { ComponentType } from 'react'
  * where its components come from based on a runtime search param. Rendering one
  * view against two design system versions therefore needs a registry, not
  * imports. See docs/specs — §5.6.
+ *
+ * The glob is lazy. An eager one instantiates every component of every sandbox
+ * inside every frame, and a canvas is many frames at once — measured at 13s to
+ * open a ten-frame canvas. A frame renders exactly one sandbox, so it should
+ * pay for exactly one.
  */
 const modules = import.meta.glob<Record<string, unknown>>(
   '/sandboxes/*/components/ui/**/*.tsx',
-  { eager: true },
 )
 
 export type ComponentMap = Record<string, ComponentType<Record<string, unknown>>>
@@ -23,34 +27,51 @@ function isComponent(value: unknown): boolean {
   return typeof value === 'object' && value !== null && '$$typeof' in value
 }
 
-function build(): Record<string, ComponentMap> {
-  const bySandbox: Record<string, ComponentMap> = {}
-
-  for (const [path, mod] of Object.entries(modules)) {
-    const owner = path.match(/^\/sandboxes\/([^/]+)\//)
-    if (!owner) continue
-
-    const map = (bySandbox[owner[1]] ??= {})
-
-    for (const [name, value] of Object.entries(mod)) {
-      // Components are the capitalised exports; helpers and cva variants are not.
-      if (/^[A-Z]/.test(name) && isComponent(value)) {
-        map[name] = value as ComponentType<Record<string, unknown>>
-      }
-    }
-  }
-
-  return bySandbox
+function pathsFor(sandbox: string): string[] {
+  return Object.keys(modules).filter((path) => path.startsWith(`/sandboxes/${sandbox}/`))
 }
-
-const registry = build()
 
 export function availableSandboxes(): string[] {
-  return Object.keys(registry).sort()
+  const names = new Set<string>()
+
+  for (const path of Object.keys(modules)) {
+    const owner = path.match(/^\/sandboxes\/([^/]+)\//)
+    if (owner) names.add(owner[1])
+  }
+
+  return [...names].sort()
 }
 
-export function hasSandbox(name: string): boolean {
-  return name in registry
+const cache = new Map<string, ComponentMap>()
+
+/** Called once per frame, before rendering, with the sandbox that frame declares. */
+export async function loadSandbox(sandbox: string): Promise<void> {
+  if (cache.has(sandbox)) return
+
+  const paths = pathsFor(sandbox)
+
+  if (paths.length === 0) {
+    throw new Error(
+      `Unknown sandbox "${sandbox}". Available: ${availableSandboxes().join(', ') || 'none'}`,
+    )
+  }
+
+  const map: ComponentMap = {}
+
+  await Promise.all(
+    paths.map(async (path) => {
+      const mod = await modules[path]()
+
+      for (const [name, value] of Object.entries(mod)) {
+        // Components are the capitalised exports; helpers and cva variants are not.
+        if (/^[A-Z]/.test(name) && isComponent(value)) {
+          map[name] = value as ComponentType<Record<string, unknown>>
+        }
+      }
+    }),
+  )
+
+  cache.set(sandbox, map)
 }
 
 /**
@@ -58,11 +79,11 @@ export function hasSandbox(name: string): boolean {
  * naming what was asked for and what exists, instead of rendering `undefined`.
  */
 export function componentsFor(sandbox: string): ComponentMap {
-  const map = registry[sandbox]
+  const map = cache.get(sandbox)
 
   if (!map) {
     throw new Error(
-      `Unknown sandbox "${sandbox}". Available: ${availableSandboxes().join(', ') || 'none'}`,
+      `Sandbox "${sandbox}" was not loaded. Available: ${availableSandboxes().join(', ') || 'none'}`,
     )
   }
 

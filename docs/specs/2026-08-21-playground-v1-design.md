@@ -395,13 +395,45 @@ build: {
 }
 ```
 
-#### Known performance risk: live iframes
+#### Live iframes — measured, not assumed
 
-Every frame is a full React application in its own document. A canvas with twenty frames is twenty React apps, twenty style recalculations, and twenty Radix runtimes.
+Every frame is a full document with its own React runtime. The v1 plan assumed
+the mitigation would be `IntersectionObserver`, mounting only frames in view.
+Measurement said otherwise on both counts.
 
-v1 does not solve this — four baseline frames will not strain anything. But the mitigation is decided now so the frame component does not need rewriting later: **mount the iframe only when the frame intersects the viewport**, via `IntersectionObserver` on the frame wrapper, rendering a static placeholder otherwise. `react-zoom-pan-pinch`'s `Virtualize` covers the same ground if it fits.
+**What was measured** (production build, ten-frame canvas):
 
-Flag this the moment a canvas passes roughly ten frames.
+| | Before | After |
+| --- | --- | --- |
+| First contentful paint | 12,180 ms | **3,776 ms** |
+| Load event | 13,885 ms | 3,473 ms |
+
+DOMContentLoaded was already 651 ms. The screen simply stayed blank for twelve
+seconds while ten documents booted in one commit.
+
+**Two hypotheses were tested and rejected before the real one:**
+
+1. *The design system registry is the cost.* It eagerly instantiated every
+   component of both sandboxes in every frame. Making it lazy and per-sandbox
+   shrank the chunk from 485 kB to 14 kB — and load time did not move. The
+   change was kept because a frame paying for the other sandbox is waste
+   regardless, but it was not the bottleneck.
+2. *Banhaten's CSS and webfonts are the cost.* The `playground-smoke` canvas has
+   no design system at all — plain HTML views, no tokens, no fonts — and still
+   cost 995 ms per frame against 1,389 ms with it. The design system adds ~40%
+   on top of a baseline that is simply the iframe.
+
+**The real cost is the iframe itself**, and it is inherent to the isolation the
+canvas is built on. It cannot be optimised away — only spread out.
+
+**`IntersectionObserver` would not have helped**, because the canvas fits to
+content on open, so every frame is in view. The fix is `useProgressiveMount`:
+frames mount one per animation frame, so the canvas paints and pans immediately
+and fills in behind you. Unmounted frames show their chrome and a placeholder,
+so the layout never shifts.
+
+Roughly one second per frame remains the ceiling. Revisit if a canvas ever needs
+to hold dozens.
 
 ---
 

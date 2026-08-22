@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../shell.css'
+import { loadSandbox } from '@/ds/registry'
 import { FrameApp } from './FrameApp'
 
 /**
@@ -13,11 +14,22 @@ const stylesheets = import.meta.glob('/sandboxes/*/frame.css')
 const sandbox = new URLSearchParams(window.location.search).get('sandbox') ?? 'none'
 const stylesheet = stylesheets[`/sandboxes/${sandbox}/frame.css`]
 
-// Render after the stylesheet resolves so the frame never flashes unstyled.
+// Render after the stylesheet and this frame's components resolve, so the frame
+// never flashes unstyled and useDS() can stay synchronous inside views.
 if (stylesheet) await stylesheet()
+
+let sandboxError: string | null = null
+
+if (sandbox !== 'none') {
+  try {
+    await loadSandbox(sandbox)
+  } catch (error) {
+    sandboxError = error instanceof Error ? error.message : String(error)
+  }
+}
 
 createRoot(document.getElementById('frame-root')!).render(
   <StrictMode>
-    <FrameApp />
+    <FrameApp sandboxError={sandboxError} />
   </StrictMode>,
 )

@@ -6,6 +6,7 @@ import { findProject, loadCanvas } from '@/lib/projects'
 import { onFrameRelease } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
+import { useProgressiveMount } from './useProgressiveMount'
 import type { Canvas, Section } from '@/lib/schema'
 
 const MIN_SCALE = 0.05
@@ -56,6 +57,14 @@ function measure(canvas: Canvas) {
 function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
   const content = useMemo(() => measure(canvas), [canvas])
 
+  // Frames mount one at a time so the canvas paints without waiting for all of
+  // them. Numbering is global across sections, in reading order.
+  const order = useMemo(
+    () => canvas.sections.flatMap((section) => section.frames).map((frame) => frame.id),
+    [canvas],
+  )
+  const mountedCount = useProgressiveMount(order.length)
+
   // Exactly one frame takes pointer events at a time. Held here rather than in
   // each frame so Escape can release it and two frames can never both be live.
   const [activeFrameId, setActiveFrameId] = useState<string | null>(null)
@@ -100,6 +109,7 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
                 section={section}
                 activeFrameId={activeFrameId}
                 onActivate={setActiveFrameId}
+                isMounted={(id) => order.indexOf(id) < mountedCount}
               />
             ))}
           </div>
@@ -120,11 +130,13 @@ function SectionGroup({
   section,
   activeFrameId,
   onActivate,
+  isMounted,
 }: {
   slug: string
   section: Section
   activeFrameId: string | null
   onActivate: (id: string | null) => void
+  isMounted: (id: string) => boolean
 }) {
   if (section.frames.length === 0) return null
 
@@ -146,6 +158,7 @@ function SectionGroup({
           frame={frame}
           active={activeFrameId === frame.id}
           onActivate={onActivate}
+          mounted={isMounted(frame.id)}
         />
       ))}
     </>

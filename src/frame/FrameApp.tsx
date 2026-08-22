@@ -17,8 +17,12 @@ const documentModules = import.meta.glob<string>('/prototypes/*/documents/*.md',
   eager: true,
 })
 
-export function FrameApp() {
+export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   useEffect(forwardEscapeToCanvas, [])
+
+  if (sandboxError) {
+    return <FrameError title="Sandbox unavailable" detail={sandboxError} />
+  }
 
   const search = new URLSearchParams(window.location.search)
   const project = search.get('project') ?? ''

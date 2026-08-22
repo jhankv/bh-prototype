@@ -8,6 +8,8 @@ type CanvasFrameProps = {
   frame: Frame
   active: boolean
   onActivate: (id: string | null) => void
+  /** False until this frame's turn in the progressive mount queue. */
+  mounted: boolean
 }
 
 /**
@@ -21,7 +23,7 @@ type CanvasFrameProps = {
  * Which frame is active lives in the canvas, not here, so that Escape can
  * release it and only one frame is ever live at a time.
  */
-export function CanvasFrame({ slug, frame, active, onActivate }: CanvasFrameProps) {
+export function CanvasFrame({ slug, frame, active, onActivate, mounted }: CanvasFrameProps) {
 
   const url = frameUrl(slug, {
     type: frame.type,
@@ -48,14 +50,18 @@ export function CanvasFrame({ slug, frame, active, onActivate }: CanvasFrameProp
         }`}
         style={{ height: frame.height }}
       >
-        <iframe
-          src={url}
-          title={frame.id}
-          className="size-full border-0"
-          style={{ pointerEvents: active ? 'auto' : 'none' }}
-        />
+        {mounted ? (
+          <iframe
+            src={url}
+            title={frame.id}
+            className="size-full border-0"
+            style={{ pointerEvents: active ? 'auto' : 'none' }}
+          />
+        ) : (
+          <div className="size-full animate-pulse bg-shell-bg" />
+        )}
 
-        {!active && (
+        {mounted && !active && (
           <button
             type="button"
             onClick={() => onActivate(frame.id)}
