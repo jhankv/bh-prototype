@@ -6,7 +6,10 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // sandboxes/ is source-installed vendor code owned by the Banhaten CLI.
+  // Linting it is noise, and worse, it invites an agent to "fix" generated
+  // files — which breaks `banhaten update` and pollutes the proposal diff.
+  globalIgnores(['dist', 'sandboxes']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

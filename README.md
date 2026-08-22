@@ -1,77 +1,51 @@
-# React + TypeScript + Vite
+# Prototype Playground
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A local environment for prototyping with a design system, and for producing
+evidence about it.
 
-Currently, two official plugins are available:
+A dashboard lists projects. Opening one shows a pan/zoom canvas of **live,
+interactive prototypes** — not screenshots — each in its own iframe, so the same
+view file can render simultaneously in light and dark, across brand themes, in
+LTR and RTL, and against two versions of the design system side by side.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+You iterate with a coding agent. The interface only renders.
 
-## React Compiler
+## Why
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Design system defects are easy to feel and hard to prove. This tool exists to
+make them visible next to each other, then turn them into something a team can
+act on: a note, or a diff.
 
-Note: This will impact Vite dev & build performances.
+The first canvas produced five findings, three fixed and demonstrated
+side by side, and one hypothesis investigated and rejected. See
+[`prototypes/design-system/documents/findings.md`](prototypes/design-system/documents/findings.md).
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the dashboard, pick a project, and the canvas opens. Drag empty canvas to
+pan; Ctrl/Cmd + wheel to zoom. Click a frame to interact with it, Escape to hand
+control back to the canvas. Every frame also opens standalone by URL — the arrow
+under it.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## How it fits together
 
 ```
+prototypes/<project>/     manifest.json, canvas.json, views/*.tsx, documents/*.md
+sandboxes/<name>/         a source-installed design system
+src/                      the shell (dashboard, canvas) and the frame renderer
+docs/                     research and the v1 design spec
+```
+
+There is no backend, no database, and no authoring UI. The filesystem is the
+database: add a folder under `prototypes/` and a card appears.
+
+## Working on it
+
+- [`AGENTS.md`](AGENTS.md) — the vocabulary and rules for authoring prototypes.
+- [`CLAUDE.md`](CLAUDE.md) — commands and architecture for working on the tool.
+- [`docs/specs/2026-08-21-playground-v1-design.md`](docs/specs/2026-08-21-playground-v1-design.md) — why it is built this way, including what was measured and what turned out to be wrong.

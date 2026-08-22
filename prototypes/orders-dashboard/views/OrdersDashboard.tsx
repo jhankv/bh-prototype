@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useDS } from '@/ds/DesignSystem'
+import { useDS } from '@/ds'
 import {
   ORDERS,
   STATUS_TONE,

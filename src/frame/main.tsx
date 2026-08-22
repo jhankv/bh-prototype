@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../shell.css'
-import { loadSandbox } from '@/ds/registry'
+import { loadSandbox } from '@/ds'
 import { FrameApp } from './FrameApp'
 
 /**

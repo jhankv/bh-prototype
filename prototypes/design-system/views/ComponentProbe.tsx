@@ -1,4 +1,4 @@
-import { useDS } from '@/ds/DesignSystem'
+import { useDS } from '@/ds'
 
 /**
  * Phase 2 verification.

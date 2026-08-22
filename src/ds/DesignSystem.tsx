@@ -1,8 +1,11 @@
-import { createContext, use, type ReactNode } from 'react'
-import { componentsFor, type ComponentMap } from './registry'
+import type { ReactNode } from 'react'
+import { componentsFor } from './registry'
+import { DesignSystemContext } from './context'
 
-const DesignSystemContext = createContext<ComponentMap | null>(null)
-
+/**
+ * Kept to components only. Exporting the hook alongside it breaks Fast Refresh
+ * for every view in the frame — the context and useDS live in ./context.
+ */
 export function DesignSystemProvider({
   sandbox,
   children,
@@ -14,19 +17,4 @@ export function DesignSystemProvider({
   const components = componentsFor(sandbox)
 
   return <DesignSystemContext value={components}>{children}</DesignSystemContext>
-}
-
-/**
- * Views consume design system components through this hook rather than by
- * importing them, which is what lets one view file render against two sandboxes
- * side by side on the same canvas.
- */
-export function useDS(): ComponentMap {
-  const components = use(DesignSystemContext)
-
-  if (!components) {
-    throw new Error('useDS() must be called inside a frame — no design system is mounted.')
-  }
-
-  return components
 }

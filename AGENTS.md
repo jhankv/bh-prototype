@@ -102,7 +102,7 @@ ever come from one sandbox. That would make the pristine-versus-proposed
 comparison impossible. Use the registry:
 
 ```tsx
-import { useDS } from '@/ds/DesignSystem'
+import { useDS } from '@/ds'
 
 export default function OrdersTable() {
   const { Table, Badge, Button } = useDS()
@@ -117,10 +117,11 @@ it.
 
 ## Writing findings
 
-One entry per defect in `documents/findings.md`:
+One entry per defect in `documents/findings.md`. `F-000` below is a template —
+real findings continue the numbering already used in those files:
 
 ```markdown
-### F-001 · Table — row density breaks with avatar + badge
+### F-000 · Table — row density breaks with avatar + badge
 **Component:** table   **Severity:** major   **Modes:** all
 **Repro:** frame `orders-dense-ltr`
 **What breaks:** …
@@ -164,6 +165,16 @@ handled by the `scoped-at-alias` plugin in `vite.config.ts`, because Vite's
 `resolve.alias` is global and cannot mean three different roots at once.
 
 ---
+
+## Working on the tool itself
+
+`src/` is a different job with different rules — see [CLAUDE.md](CLAUDE.md).
+Two that matter from here:
+
+- `sandboxes/` is vendor code and is excluded from ESLint. Do not "fix" lint in
+  generated files; it breaks `banhaten update` and pollutes the proposal diff.
+- Verify visible behaviour by driving the running app. Every serious bug this
+  project has had was invisible when reading the code.
 
 ## Invariants
 
