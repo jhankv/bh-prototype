@@ -152,9 +152,20 @@ escapes its column:
 | `wide` *(default)* | `min(1120px, 100vw - 3rem)` | most components |
 | `full` | `calc(100vw - 3rem)` | a defect measured in pixels, or a whole screen |
 
-`layout="rows"` stacks pristine above proposed at full figure width. For anything
-approaching a real screen, two full-width rows beat two half-width columns even
-though the eye has to travel further.
+**Stacked is the default, and the reason is not just size.** Almost every defect
+recorded here is a difference in *position* — a period that moved to the front
+of a line, a label clipped at its start, a column truncating from the wrong end.
+Stacked, both versions begin at the same x, so the difference shows up as a
+broken vertical alignment and the eye finds it without being told where to look.
+Side by side, each version starts at a different x and the reader has to
+mentally translate one onto the other first. This is why diff tools stack.
+
+Stacking also makes `bleed` matter less, because each side gets the whole figure
+width instead of half: the PageHeader case renders at **98% inside the plain
+prose column**, where two columns at `bleed="wide"` managed 77%.
+
+Use `layout="columns"` only when the snippet is tall enough that stacking would
+push the two versions further apart than a glance can span.
 
 The frame box shrinks to the scaled snippet rather than to the column, so a
 `full` bleed wider than the snippet's viewport does not pad it with white space

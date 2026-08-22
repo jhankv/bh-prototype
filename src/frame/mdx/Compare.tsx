@@ -39,9 +39,19 @@ export type CompareProps = {
    */
   bleed?: 'prose' | 'wide' | 'full'
   /**
-   * `rows` stacks pristine above proposed at full figure width. For anything
-   * approaching a real screen, two half-width columns are worse than two
-   * full-width rows, even though the eye has to travel further.
+   * Rows by default, and not only because each side then gets the full figure
+   * width instead of half.
+   *
+   * Almost every defect here is a difference in POSITION — a period that moved
+   * to the front of a line, a label clipped at its start, a column that
+   * truncates from the wrong end. Stacked, both versions begin at the same x,
+   * so the difference is a broken vertical alignment and the eye finds it
+   * without being told where to look. Side by side, each version starts at a
+   * different x and the reader has to mentally translate one onto the other
+   * before they can compare. That is why diff tools stack.
+   *
+   * `columns` is for a snippet tall enough that stacking would push the two
+   * versions further apart than a glance can span.
    */
   layout?: 'columns' | 'rows'
   mode?: 'light' | 'dark'
@@ -76,7 +86,7 @@ export function Compare(props: CompareProps) {
     height = 160,
     labels = ['Pristine', 'Proposed'],
     bleed = 'wide',
-    layout = 'columns',
+    layout = 'rows',
   } = props
   // Compare only ever renders inside a frame, so the project is in the URL.
   const project = new URLSearchParams(window.location.search).get('project') ?? ''

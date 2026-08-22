@@ -16,7 +16,7 @@ right.
 A Latin description inside an Arabic page renders with its final period at the
 **front** of the sentence.
 
-<Compare src="views/snippets/PageHeaderCase.tsx" dir="rtl" viewport={720} height={200} />
+<Compare src="views/snippets/PageHeaderCase.tsx" dir="rtl" viewport={720} height={200} bleed="prose" />
 
 Look at the description line. Left: `.Refunds appear once…`. Right: the period
 is back where it belongs.
@@ -49,7 +49,6 @@ The patch is worth applying. The pattern is worth a conversation.
   src="views/snippets/PageHeaderCase.tsx"
   viewport={720}
   height={200}
-  bleed="full"
   labels={['Pristine', 'Proposed (unchanged — not patched)']}
 />
 
