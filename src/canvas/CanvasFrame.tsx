@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ExternalLink, Languages, Moon, Sun } from 'lucide-react'
+import { ExternalLink, Moon, Sun } from 'lucide-react'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
 import { frameUrl } from '@/lib/projects'
 import type { Appearance, Frame } from '@/lib/schema'
@@ -24,12 +24,14 @@ type CanvasFrameProps = {
  * Which frame is active lives in the canvas, not here, so that Escape can
  * release it and only one frame is ever live at a time.
  *
- * Appearance is switched per frame rather than duplicated into one frame per
- * mode. Four frames of the same screen cost four seconds of boot and a lot of
- * canvas to say what a toggle says, and side-by-side comparison — the reason
- * they existed — now lives in <Compare> inside an audit document, where the two
- * versions can be stacked at the same x. canvas.json still declares the
- * appearance a frame opens in; the toggle only changes what you are looking at.
+ * Colour mode is a toggle; direction is not. The distinction is what the frame
+ * is showing. Light and dark are the same screen wearing different tokens, so a
+ * frame per mode is a frame wasted. Left-to-right and right-to-left are not the
+ * same screen at all — the copy is a different language — so they are two
+ * prototypes, and you want both on the canvas at once.
+ *
+ * canvas.json still declares the appearance a frame opens in; the toggle only
+ * changes what you are looking at.
  */
 export function CanvasFrame({ slug, frame, active, onActivate, mounted }: CanvasFrameProps) {
   const [appearance, setAppearance] = useState<Appearance>(frame.appearance)
@@ -56,35 +58,21 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
             {describeAppearance(appearance)}
           </span>
           {themeable && (
-            <>
-              <AppearanceToggle
-                label={appearance.mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
-                onClick={() =>
-                  setAppearance((current) => ({
-                    ...current,
-                    mode: current.mode === 'dark' ? 'light' : 'dark',
-                  }))
-                }
-              >
-                {appearance.mode === 'dark' ? (
-                  <Sun className="size-3.5" aria-hidden />
-                ) : (
-                  <Moon className="size-3.5" aria-hidden />
-                )}
-              </AppearanceToggle>
-              <AppearanceToggle
-                label={appearance.dir === 'rtl' ? 'Switch to English (LTR)' : 'Switch to Arabic (RTL)'}
-                active={appearance.dir === 'rtl'}
-                onClick={() =>
-                  setAppearance((current) => ({
-                    ...current,
-                    dir: current.dir === 'rtl' ? 'ltr' : 'rtl',
-                  }))
-                }
-              >
-                <Languages className="size-3.5" aria-hidden />
-              </AppearanceToggle>
-            </>
+            <AppearanceToggle
+              label={appearance.mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
+              onClick={() =>
+                setAppearance((current) => ({
+                  ...current,
+                  mode: current.mode === 'dark' ? 'light' : 'dark',
+                }))
+              }
+            >
+              {appearance.mode === 'dark' ? (
+                <Sun className="size-3.5" aria-hidden />
+              ) : (
+                <Moon className="size-3.5" aria-hidden />
+              )}
+            </AppearanceToggle>
           )}
         </div>
       </div>
@@ -145,12 +133,10 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
 function AppearanceToggle({
   children,
   label,
-  active = false,
   onClick,
 }: {
   children: React.ReactNode
   label: string
-  active?: boolean
   onClick: () => void
 }) {
   return (
@@ -159,11 +145,7 @@ function AppearanceToggle({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={`rounded border px-1.5 py-1 transition-colors ${
-        active
-          ? 'border-shell-accent text-shell-accent'
-          : 'border-shell-line text-shell-muted hover:text-shell-ink'
-      }`}
+      className="rounded border border-shell-line px-1.5 py-1 text-shell-muted transition-colors hover:text-shell-ink"
     >
       {children}
     </button>

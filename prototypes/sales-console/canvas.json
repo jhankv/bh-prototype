@@ -17,7 +17,23 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "One console. Toggle mode and direction in the frame header \u2014 Arabic copy comes with RTL."
+          "caption": "English, left to right. Toggle light and dark in the frame header."
+        },
+        {
+          "id": "console-rtl",
+          "src": "views/SalesConsole.tsx",
+          "sandbox": "banhaten",
+          "x": 1520,
+          "y": 0,
+          "width": 1440,
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "Arabic, right to left. Same file \u2014 the copy follows the direction, so this is a real Arabic console and not English laid out backwards."
         }
       ]
     },
@@ -28,7 +44,7 @@
           "id": "findings",
           "type": "document",
           "src": "documents/findings.md",
-          "x": 1520,
+          "x": 3040,
           "y": 0,
           "width": 920,
           "height": 1180,
@@ -38,7 +54,7 @@
           "id": "pageheader-audit",
           "type": "document",
           "src": "documents/pageheader-audit.mdx",
-          "x": 2520,
+          "x": 4040,
           "y": 0,
           "width": 920,
           "height": 1180,

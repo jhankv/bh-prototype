@@ -103,16 +103,22 @@ Appearance values, matching Banhaten's HTML attributes:
   tracks after, from identical source. Restart before you conclude anything
   about layout in a new project.
 
-### One frame per screen, not one per appearance
+### Colour mode is a toggle. Direction is a second frame.
 
-**Do not add a frame per mode.** A prototype gets ONE frame; the mode and
-direction toggles in its header switch it in place. Four frames of the same
-screen cost four seconds of boot and a screenful of canvas to say what two
-buttons say, and side-by-side comparison — the reason they existed — belongs in
-`<Compare>` inside an audit, where the two versions stack at the same x.
+The distinction is what the frame is *showing*.
 
-`canvas.json` still declares the appearance a frame *opens* in. Pick the one
-that shows the prototype at its most ordinary; the reviewer will toggle.
+**Light and dark are the same screen wearing different tokens**, so a frame per
+mode is a frame wasted — two seconds of boot and a screenful of canvas to say
+what one button says. The mode toggle lives in the frame header and switches in
+place.
+
+**Left-to-right and right-to-left are not the same screen.** The copy is a
+different language, so they are two prototypes and you want both on the canvas
+at once. Give the RTL version its own frame beside the LTR one, pointing at the
+same view file.
+
+`canvas.json` still declares the appearance a frame *opens* in. For mode, pick
+whichever shows the prototype at its most ordinary; the reviewer will toggle.
 
 ### RTL means Arabic. Not English laid out backwards.
 
