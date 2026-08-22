@@ -103,6 +103,51 @@ Appearance values, matching Banhaten's HTML attributes:
   tracks after, from identical source. Restart before you conclude anything
   about layout in a new project.
 
+### One frame per screen, not one per appearance
+
+**Do not add a frame per mode.** A prototype gets ONE frame; the mode and
+direction toggles in its header switch it in place. Four frames of the same
+screen cost four seconds of boot and a screenful of canvas to say what two
+buttons say, and side-by-side comparison — the reason they existed — belongs in
+`<Compare>` inside an audit, where the two versions stack at the same x.
+
+`canvas.json` still declares the appearance a frame *opens* in. Pick the one
+that shows the prototype at its most ordinary; the reviewer will toggle.
+
+### RTL means Arabic. Not English laid out backwards.
+
+**A right-to-left frame must render Arabic copy.** English strings in an RTL
+container test exactly one thing — Latin text inside an RTL paragraph — and hide
+everything else an Arabic interface actually breaks on:
+
+- the script has no uppercase, so `text-transform` silently does nothing
+- it needs more line height than Latin at the same font size
+- letter-spacing breaks the cursive joins outright
+- the font stack has to actually resolve, and a fallback is obvious in Arabic
+
+Write copy twice and let the frame's direction pick it:
+
+```tsx
+const c = useCopy({
+  orders: { en: 'Orders', ar: 'الطلبات' },
+  tabs: { en: ['All statuses', …], ar: ['كل الحالات', …] },
+})
+
+<PageHeader title={c.orders} tabs={{ items: c.tabs }} />
+```
+
+`@/copy` exports `useCopy` for a dictionary and `t()` for a single phrase.
+
+**Translate the interface, not the data.** Customer names, emails and product
+titles stay as they are. A real Arabic console has Arabic chrome and a customer
+list that is whatever the customers are called, and that mixture is the only
+thing that exercises bidi at all — three of the findings in this repo came from
+it. A table of uniformly Arabic rows would look correct and prove nothing.
+
+This rule paid for itself immediately: with the console in Arabic, the first tab
+renders `ل الحالات` instead of `كل الحالات`, and the table footer turned out to
+be the only English left on the screen (F-105).
+
 ### Two document formats, two jobs
 
 `documents/findings.md` is the **ledger**: prose, history, rejected hypotheses,

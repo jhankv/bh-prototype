@@ -149,6 +149,43 @@ never showed that the recommended path was already fine.
 
 ---
 
+### F-105 · Arabic pagination strings exist and nothing can reach them
+
+**Component:** `pagination.tsx`, `expanded/Table.tsx`
+**Severity:** major **Modes:** any `dir="rtl"`
+**Repro:** frame `console`, toggle the header to RTL, read the table footer
+**Status:** OPEN
+
+With the console fully translated and `dir="rtl"`, every string is Arabic except
+the two in the table footer, which read `Showing 1 to 8 of 12 rows` and
+`Showing 1 to 10 of 20 results`.
+
+**This is not a missing feature.** `pagination.tsx` exports a complete Arabic
+message set:
+
+```ts
+export { arabicPaginationMessages, Pagination, … }
+```
+
+`DataTable` never references it — zero occurrences in `expanded/Table.tsx`.
+`Pagination` resolves its strings as `{ ...defaultPaginationMessages,
+...messageOverrides }`, and nothing consults `dir`. So `DataTable` passes
+`dir={dir}` down, the layout mirrors correctly, and the words stay English.
+
+**Why it matters**
+The work is done and the wiring is missing, which is the failure mode most
+likely to survive review: a reader greps for Arabic support, finds it, and
+concludes the component is covered. A team shipping an Arabic console has to
+discover by looking at the screen that they must hand-write every label —
+including the caption that F-101 shows is wrong anyway.
+
+**Two candidate fixes, and they are not equivalent.** Selecting messages from
+`dir` inside `Pagination` makes RTL correct by default. Forwarding a `messages`
+prop through `DataTable` makes it *possible*. The first is a behaviour change
+and belongs to the design system team.
+
+---
+
 ## Open questions
 
 Observed while building. Each is a conversation, not a patch.

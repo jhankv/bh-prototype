@@ -1,3 +1,5 @@
+import type { Phrase } from '@/copy'
+
 /**
  * Fixture data for the orders console.
  *
@@ -5,6 +7,11 @@
  * comfortable case: names long enough to truncate, mixed-script customers,
  * amounts that the bidi algorithm reorders under `dir="rtl"`, a disabled row,
  * and one status that carries no badge tone of its own.
+ *
+ * Interface copy is translated; customer names and emails are NOT. A real Arabic
+ * console has Arabic chrome and a customer list that is whatever the customers
+ * are called — and that mixture is the only thing that exercises bidi at all. A
+ * table of uniformly Arabic rows would look correct and prove nothing.
  */
 
 export type OrderStatus = 'paid' | 'pending' | 'refunded' | 'failed' | 'partially refunded'
@@ -157,9 +164,28 @@ export const STATUS_TONE: Record<OrderStatus, string> = {
   'partially refunded': 'neutral',
 }
 
-export const METRICS = [
-  { label: 'Gross sales', value: '$79,620.40', delta: '+12.4%', tone: 'success' },
-  { label: 'Orders', value: '1,284', delta: '+3.1%', tone: 'success' },
-  { label: 'Refund rate', value: '4.8%', delta: '+1.2%', tone: 'danger' },
-  { label: 'Avg. order value', value: '$62.01', delta: '-0.4%', tone: 'warning' },
+export const STATUS_LABEL: Record<OrderStatus, Phrase> = {
+  paid: { en: 'paid', ar: 'مدفوع' },
+  pending: { en: 'pending', ar: 'قيد الانتظار' },
+  refunded: { en: 'refunded', ar: 'مسترد' },
+  failed: { en: 'failed', ar: 'فشل' },
+  'partially refunded': { en: 'partially refunded', ar: 'مسترد جزئياً' },
+}
+
+export const CHANNEL_LABEL: Record<string, Phrase> = {
+  Online: { en: 'Online', ar: 'عبر الإنترنت' },
+  Wholesale: { en: 'Wholesale', ar: 'بالجملة' },
+  Retail: { en: 'Retail', ar: 'التجزئة' },
+  Marketplace: { en: 'Marketplace', ar: 'السوق' },
+  Returns: { en: 'Returns', ar: 'المرتجعات' },
+  'Net 30': { en: 'Net 30', ar: 'صافي ٣٠' },
+  'Net 60': { en: 'Net 60', ar: 'صافي ٦٠' },
+  Priority: { en: 'Priority', ar: 'أولوية' },
+}
+
+export const METRICS: Array<{ label: Phrase; value: string; delta: string; tone: string }> = [
+  { label: { en: 'Gross sales', ar: 'إجمالي المبيعات' }, value: '$79,620.40', delta: '+12.4%', tone: 'success' },
+  { label: { en: 'Orders', ar: 'الطلبات' }, value: '1,284', delta: '+3.1%', tone: 'success' },
+  { label: { en: 'Refund rate', ar: 'نسبة الاسترداد' }, value: '4.8%', delta: '+1.2%', tone: 'danger' },
+  { label: { en: 'Avg. order value', ar: 'متوسط قيمة الطلب' }, value: '$62.01', delta: '-0.4%', tone: 'warning' },
 ]

@@ -1,7 +1,8 @@
-import { ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { ExternalLink, Languages, Moon, Sun } from 'lucide-react'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
 import { frameUrl } from '@/lib/projects'
-import type { Frame } from '@/lib/schema'
+import type { Appearance, Frame } from '@/lib/schema'
 
 type CanvasFrameProps = {
   slug: string
@@ -22,15 +23,26 @@ type CanvasFrameProps = {
  *
  * Which frame is active lives in the canvas, not here, so that Escape can
  * release it and only one frame is ever live at a time.
+ *
+ * Appearance is switched per frame rather than duplicated into one frame per
+ * mode. Four frames of the same screen cost four seconds of boot and a lot of
+ * canvas to say what a toggle says, and side-by-side comparison — the reason
+ * they existed — now lives in <Compare> inside an audit document, where the two
+ * versions can be stacked at the same x. canvas.json still declares the
+ * appearance a frame opens in; the toggle only changes what you are looking at.
  */
 export function CanvasFrame({ slug, frame, active, onActivate, mounted }: CanvasFrameProps) {
+  const [appearance, setAppearance] = useState<Appearance>(frame.appearance)
 
   const url = frameUrl(slug, {
     type: frame.type,
     src: frame.src,
     sandbox: frame.sandbox,
-    appearance: appearanceToParams(frame.appearance),
+    appearance: appearanceToParams(appearance),
   })
+
+  // A document frame renders prose, not a design system — nothing to theme.
+  const themeable = frame.type !== 'document'
 
   return (
     <div
@@ -39,9 +51,42 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
     >
       <div className="flex items-baseline justify-between gap-3 px-1">
         <span className="truncate text-sm font-medium text-shell-ink">{frame.id}</span>
-        <span className="shrink-0 font-mono text-[11px] text-shell-muted">
-          {describeAppearance(frame.appearance)}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="font-mono text-[11px] text-shell-muted">
+            {describeAppearance(appearance)}
+          </span>
+          {themeable && (
+            <>
+              <AppearanceToggle
+                label={appearance.mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
+                onClick={() =>
+                  setAppearance((current) => ({
+                    ...current,
+                    mode: current.mode === 'dark' ? 'light' : 'dark',
+                  }))
+                }
+              >
+                {appearance.mode === 'dark' ? (
+                  <Sun className="size-3.5" aria-hidden />
+                ) : (
+                  <Moon className="size-3.5" aria-hidden />
+                )}
+              </AppearanceToggle>
+              <AppearanceToggle
+                label={appearance.dir === 'rtl' ? 'Switch to English (LTR)' : 'Switch to Arabic (RTL)'}
+                active={appearance.dir === 'rtl'}
+                onClick={() =>
+                  setAppearance((current) => ({
+                    ...current,
+                    dir: current.dir === 'rtl' ? 'ltr' : 'rtl',
+                  }))
+                }
+              >
+                <Languages className="size-3.5" aria-hidden />
+              </AppearanceToggle>
+            </>
+          )}
+        </div>
       </div>
 
       <div
@@ -94,5 +139,33 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
         </a>
       </div>
     </div>
+  )
+}
+
+function AppearanceToggle({
+  children,
+  label,
+  active = false,
+  onClick,
+}: {
+  children: React.ReactNode
+  label: string
+  active?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={`rounded border px-1.5 py-1 transition-colors ${
+        active
+          ? 'border-shell-accent text-shell-accent'
+          : 'border-shell-line text-shell-muted hover:text-shell-ink'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
