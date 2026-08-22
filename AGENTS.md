@@ -103,6 +103,45 @@ Appearance values, matching Banhaten's HTML attributes:
   tracks after, from identical source. Restart before you conclude anything
   about layout in a new project.
 
+### Two document formats, two jobs
+
+`documents/findings.md` is the **ledger**: prose, history, rejected hypotheses,
+read end to end. It stays markdown.
+
+`documents/<component>-audit.mdx` is an **audit**: one component, and the
+evidence rendered live inside the paragraph that makes the claim about it.
+
+```mdx
+A Latin description inside an Arabic page renders with its final period at the
+**front** of the sentence.
+
+<Compare src="views/snippets/PageHeaderCase.tsx" dir="rtl" viewport={720} height={200} />
+```
+
+`<Compare>` renders one snippet against both sandboxes, side by side. It needs
+no import — `vite.config.ts` points MDX's `providerImportSource` at
+`src/frame/mdx/provider.tsx`. That is not a convenience: an import line inside a
+document would be a static ESM import of a design system path, the one thing
+views are forbidden from doing, and it would bind the document to one sandbox at
+build time.
+
+Three rules for `<Compare>`:
+
+- **Each side is a real nested iframe.** A document cannot simply load both
+  stylesheets — they define the same `--bh-*` properties and the same `ds-*`
+  classes, so the second to load would win and the comparison would be a lie.
+  Producing a convincing false finding is the worst thing this tool can do.
+- **The snippet lives in `views/snippets/`**, not inline in the prose. It has to
+  cross a document boundary, and a URL can carry a path where it cannot carry a
+  closure.
+- **`viewport` is part of the evidence, not styling.** Tab clipping and text
+  truncation are both functions of available width. The snippet is laid out at
+  `viewport` px and then scaled to fit the column, and the width is printed in
+  the figure caption so the reader can reproduce it.
+
+Keep the snippet minimal. Every element that is not part of the claim is
+something a reader has to rule out.
+
 ### Hold Alt to ask what a component is
 
 Inside any activated frame that renders a sandbox, holding **Alt** highlights

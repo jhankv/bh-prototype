@@ -42,9 +42,43 @@ function scopedAtAlias(): Plugin {
   }
 }
 
+/**
+ * Audit documents are MDX so a claim and the evidence for it can share a
+ * paragraph — see AGENTS.md. Compiling here rather than pulling in
+ * @mdx-js/rollup keeps one less plugin between us and Rolldown, and this repo
+ * already owns a resolver plugin, so the pattern is not new.
+ *
+ * `providerImportSource` is what lets a document use <Compare> without an
+ * import line — and that is not a convenience. An import inside a document
+ * would be a static ESM import of a design system path, the one thing views are
+ * forbidden from doing, and it would bind the document to a single sandbox at
+ * build time.
+ */
+function mdx(): Plugin {
+  return {
+    name: 'mdx-documents',
+    enforce: 'pre',
+    async transform(code, id) {
+      if (!id.endsWith('.mdx')) return null
+
+      const { compile } = await import('@mdx-js/mdx')
+      // Emit calls to the automatic JSX runtime rather than JSX itself. Vite's
+      // oxc transform does not treat .mdx as a JSX-bearing extension, so leaving
+      // JSX in the output fails to parse before any React plugin sees it.
+      const compiled = await compile(code, {
+        jsxRuntime: 'automatic',
+        providerImportSource: '@/frame/mdx/provider',
+      })
+
+      return { code: String(compiled), map: null }
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     scopedAtAlias(),
+    mdx(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),

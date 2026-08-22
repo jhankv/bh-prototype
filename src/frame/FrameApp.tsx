@@ -10,7 +10,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
 
 /** Views load on demand — a canvas should not pay for frames nobody opened. */
-const viewModules = import.meta.glob('/prototypes/*/views/*.tsx')
+const viewModules = import.meta.glob('/prototypes/*/views/**/*.tsx')
 
 /**
  * lazy() must be called outside render. Creating it during a render — even
@@ -39,6 +39,34 @@ const documentModules = import.meta.glob<string>('/prototypes/*/documents/*.md',
   eager: true,
 })
 
+/**
+ * An audit document is MDX, so it compiles to a component and cannot be handed
+ * to react-markdown. It is loaded twice on purpose: compiled, to render, and
+ * raw, so the copy button can hand a human-readable source to another agent. A
+ * compiled module is useless to the thing on the other end of that clipboard.
+ */
+const auditModules = import.meta.glob('/prototypes/*/documents/*.mdx')
+
+const auditSources = import.meta.glob<string>('/prototypes/*/documents/*.mdx', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+})
+
+const lazyAudits = new Map<string, LazyExoticComponent<ComponentType>>()
+
+function auditFor(path: string): LazyExoticComponent<ComponentType> | null {
+  const loader = auditModules[path]
+  if (!loader) return null
+
+  const cached = lazyAudits.get(path)
+  if (cached) return cached
+
+  const Audit = lazy(loader as () => Promise<{ default: ComponentType }>)
+  lazyAudits.set(path, Audit)
+  return Audit
+}
+
 export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   useEffect(forwardEscapeToCanvas, [])
 
@@ -58,6 +86,32 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   const path = `/prototypes/${project}/${src}`
 
   if (type === 'document') {
+    if (path.endsWith('.mdx')) {
+      const Audit = auditFor(path)
+      const raw = auditSources[path]
+
+      if (!Audit || raw === undefined) {
+        return <FrameError title="Audit not found" detail={path} />
+      }
+
+      return (
+        <>
+          <CopyHandoff markdown={raw} source={`${project}/${src}`} />
+          <ErrorBoundary>
+            <article className="prose-frame mx-auto max-w-3xl px-8 py-10">
+              <Suspense fallback={null}>
+                {/* Same as View below: auditFor caches by path at module level,
+                    so the identity is stable across renders and the rule cannot
+                    see through the lookup. */}
+                {/* eslint-disable-next-line react-hooks/static-components */}
+                <Audit />
+              </Suspense>
+            </article>
+          </ErrorBoundary>
+        </>
+      )
+    }
+
     const source = documentModules[path]
     if (source === undefined) {
       return <FrameError title="Document not found" detail={path} />
