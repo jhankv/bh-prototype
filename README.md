@@ -27,10 +27,13 @@ pnpm install
 pnpm dev
 ```
 
-Open the dashboard, pick a project, and the canvas opens. Drag empty canvas to
-pan; Ctrl/Cmd + wheel to zoom. Click a frame to interact with it, Escape to hand
-control back to the canvas. Every frame also opens standalone by URL — the arrow
-under it.
+Open the dashboard, pick a project, and the canvas opens fitted to its content.
+
+The canvas follows Figma's gestures: **hold space and drag to pan**, **Cmd/Ctrl +
+scroll to zoom**, two-finger trackpad to pan. Click a frame to interact with it,
+Escape to hand control back to the canvas — while a frame is active it owns your
+keyboard, space included. Every frame also opens standalone by URL, from the
+arrow beneath it.
 
 ## How it fits together
 

@@ -69,6 +69,46 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
   // each frame so Escape can release it and two frames can never both be live.
   const [activeFrameId, setActiveFrameId] = useState<string | null>(null)
 
+  // Figma's contract: space arms panning, and the spacebar would otherwise
+  // scroll the page. While a frame is active the space belongs to that frame —
+  // the user is typing in it — so Escape is the handoff back to the canvas.
+  const [spaceHeld, setSpaceHeld] = useState(false)
+  const [panning, setPanning] = useState(false)
+
+  // Derived rather than reset in an effect: an activated frame owns the space
+  // key, so arming is a function of both, not a state to keep in sync.
+  const spaceArmed = spaceHeld && !activeFrameId
+
+  useEffect(() => {
+    if (activeFrameId) return
+
+    function onDown(event: KeyboardEvent) {
+      if (event.key !== ' ' || event.repeat) return
+      // The library's own key listeners are passive and cannot do this.
+      event.preventDefault()
+      setSpaceHeld(true)
+    }
+
+    function onUp(event: KeyboardEvent) {
+      if (event.key === ' ') setSpaceHeld(false)
+    }
+
+    // Releasing the key outside the window never fires keyup.
+    function onBlur() {
+      setSpaceHeld(false)
+    }
+
+    window.addEventListener('keydown', onDown)
+    window.addEventListener('keyup', onUp)
+    window.addEventListener('blur', onBlur)
+
+    return () => {
+      window.removeEventListener('keydown', onDown)
+      window.removeEventListener('keyup', onUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [activeFrameId])
+
   useEffect(() => {
     function release() {
       setActiveFrameId(null)
@@ -93,10 +133,25 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       minScale={MIN_SCALE}
       maxScale={MAX_SCALE}
       limitToBounds={false}
-      wheel={{ step: 0.08, activationKeys: ['Control', 'Meta'] }}
+      // Without this the scale bounds are elastic by ±0.4, which pushes the
+      // ceiling to 2.4 and — because the floor is smaller than the padding —
+      // collapses it to 1e-7, so zooming out hard loses the canvas entirely.
+      // A precision canvas wants hard stops; Figma has no rubber-banding either.
+      disablePadding
+      // The array form is evaluated with `every`, so ['Control', 'Meta'] demands
+      // both keys at once — Cmd-scroll alone never zoomed. The function form is
+      // the only way to express "either modifier".
+      wheel={{ step: 0.08, activationKeys: (keys) => keys.includes('Control') || keys.includes('Meta') }}
+      panning={{ activationKeys: [' '] }}
       doubleClick={{ disabled: true }}
+      onPanningStart={() => setPanning(true)}
+      onPanningStop={() => setPanning(false)}
     >
-      <div className="relative flex-1 overflow-hidden bg-shell-bg">
+      <div
+        className={`relative flex-1 overflow-hidden bg-shell-bg ${
+          panning ? 'cursor-grabbing' : spaceArmed ? 'cursor-grab' : ''
+        }`}
+      >
         <TransformComponent
           wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{ width: content.width, height: content.height }}
@@ -202,6 +257,38 @@ function Controls({ content }: { content: { width: number; height: number } }) {
       <button type="button" onClick={fit} className={button} aria-label="Fit to content">
         <Maximize2 className="size-4" aria-hidden />
       </button>
+
+      <ShortcutHint />
     </div>
+  )
+}
+
+/**
+ * Figma's gestures are muscle memory for designers but invisible to everyone
+ * else, and this canvas has no other affordance for them. A shortcut nobody can
+ * see does not exist.
+ */
+function ShortcutHint() {
+  const zoomKey = navigator.userAgent.includes('Mac') ? '⌘' : 'Ctrl'
+
+  return (
+    <p className="ms-2 me-1 flex items-center gap-1.5 text-[11px] whitespace-nowrap text-shell-muted">
+      <Key>Space</Key>
+      <span className="opacity-60">+ drag to pan</span>
+      <span className="mx-0.5 opacity-30">·</span>
+      <Key>{zoomKey}</Key>
+      <span className="opacity-60">+ scroll to zoom</span>
+    </p>
+  )
+}
+
+function Key({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd
+      dir="ltr"
+      className="rounded border border-shell-line bg-shell-bg px-1.5 py-0.5 font-mono text-[10px] text-shell-ink"
+    >
+      {children}
+    </kbd>
   )
 }

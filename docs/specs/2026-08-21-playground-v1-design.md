@@ -215,9 +215,27 @@ Discovers projects with `import.meta.glob('/prototypes/*/manifest.json', { eager
 
 A single transformed layer, driven by `react-zoom-pan-pinch`.
 
-- Drag empty canvas, or two-finger trackpad = pan.
-- Ctrl/Cmd + wheel = zoom at cursor.
-- Zoom clamped to `[0.05, 2]`.
+- **Space + drag**, or two-finger trackpad = pan. Figma's gesture, deliberately
+  strict: dragging without space does nothing, because that is the standard
+  designers already have in their hands.
+- **Cmd/Ctrl + scroll** = zoom at cursor.
+- Zoom clamped to `[0.05, 2]`, with elastic padding disabled.
+
+Three details the library will not handle for you, each found by testing rather
+than by reading:
+
+1. `wheel.activationKeys` in its array form is evaluated with `every`, so
+   `['Control', 'Meta']` demands **both** keys at once and Cmd-scroll never
+   zooms. Only the function form expresses "either modifier".
+2. The library's key listeners are `passive`, so they cannot stop the spacebar
+   scrolling the page. The canvas registers its own listener for that.
+3. Scale bounds are elastic by ±0.4 unless `disablePadding` is set. That pushes
+   the ceiling to 2.4, and because a floor of 0.05 is smaller than the padding
+   it collapses to `1e-7` — zoom out hard and the canvas disappears.
+
+While a frame is active it owns the keyboard, space included; Escape is the
+handoff back (§5.3). So space is never forwarded from a frame — there is nothing
+to forward, by design.
 - Frames absolutely positioned from `canvas.json`.
 - Section titles and frame captions render as canvas chrome, outside the iframe.
 
