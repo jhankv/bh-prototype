@@ -28,6 +28,22 @@ export type CompareProps = {
    */
   viewport?: number
   height?: number
+  /**
+   * How far the figure escapes the prose column. Prose is ~672px wide, which is
+   * right for reading and wrong for evidence: split into two columns it leaves
+   * each side around 330px, where a page header renders at 45% and nobody can
+   * see what they are being asked to look at.
+   *
+   * `wide` is the default because most components are wider than a paragraph.
+   * Reach for `prose` only when the snippet really is small — a badge, an input.
+   */
+  bleed?: 'prose' | 'wide' | 'full'
+  /**
+   * `rows` stacks pristine above proposed at full figure width. For anything
+   * approaching a real screen, two half-width columns are worse than two
+   * full-width rows, even though the eye has to travel further.
+   */
+  layout?: 'columns' | 'rows'
   mode?: 'light' | 'dark'
   dir?: 'ltr' | 'rtl'
   theme?: string
@@ -47,8 +63,21 @@ function frameSrc(
   return `/frame.html?${params}`
 }
 
+/** Width of the figure itself, before it is split into columns. */
+const BLEED: Record<NonNullable<CompareProps['bleed']>, string> = {
+  prose: '100%',
+  wide: 'min(1120px, 100vw - 3rem)',
+  full: 'calc(100vw - 3rem)',
+}
+
 export function Compare(props: CompareProps) {
-  const { viewport = 720, height = 160, labels = ['Pristine', 'Proposed'] } = props
+  const {
+    viewport = 720,
+    height = 160,
+    labels = ['Pristine', 'Proposed'],
+    bleed = 'wide',
+    layout = 'columns',
+  } = props
   // Compare only ever renders inside a frame, so the project is in the URL.
   const project = new URLSearchParams(window.location.search).get('project') ?? ''
 
@@ -69,8 +98,19 @@ export function Compare(props: CompareProps) {
     return () => observer.disconnect()
   }, [viewport])
 
+  const width = BLEED[bleed]
+
   return (
-    <figure className="not-prose my-6 grid grid-cols-2 gap-3">
+    <figure
+      className="not-prose my-8 grid gap-3"
+      style={{
+        width,
+        // Centres a block wider than its container without a transform, which
+        // would otherwise become the containing block for anything fixed inside.
+        marginInlineStart: `calc(50% - ${width} / 2)`,
+        gridTemplateColumns: layout === 'rows' ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+      }}
+    >
       {SANDBOXES.map((sandbox, index) => (
         <div key={sandbox} className="min-w-0" ref={index === 0 ? column : undefined}>
           <div className="mb-1 flex items-baseline justify-between gap-2">
@@ -79,9 +119,13 @@ export function Compare(props: CompareProps) {
             </span>
             <span className="truncate font-mono text-[10px] text-neutral-400">{sandbox}</span>
           </div>
+          {/* The box shrinks to the scaled snippet, not to the column. When the
+              column is wider than the viewport the snippet was laid out at,
+              scale is capped at 1 and the surplus would otherwise render as dead
+              space that reads like part of the component. */}
           <div
             className="overflow-hidden rounded border border-neutral-200 bg-white dark:border-neutral-700"
-            style={{ height: height * scale }}
+            style={{ width: viewport * scale, height: height * scale }}
           >
             <iframe
               title={`${labels[index]} — ${props.src}`}
@@ -95,8 +139,9 @@ export function Compare(props: CompareProps) {
           </div>
         </div>
       ))}
-      <figcaption className="col-span-2 font-mono text-[10px] text-neutral-400">
-        {props.src} · {viewport}px · {props.mode ?? 'light'} · {props.dir ?? 'ltr'}
+      <figcaption className="font-mono text-[10px] text-neutral-400" style={{ gridColumn: '1 / -1' }}>
+        {props.src} · laid out at {viewport}px, shown at {Math.round(scale * 100)}% ·{' '}
+        {props.mode ?? 'light'} · {props.dir ?? 'ltr'}
       </figcaption>
     </figure>
   )

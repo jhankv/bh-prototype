@@ -136,8 +136,29 @@ Three rules for `<Compare>`:
   closure.
 - **`viewport` is part of the evidence, not styling.** Tab clipping and text
   truncation are both functions of available width. The snippet is laid out at
-  `viewport` px and then scaled to fit the column, and the width is printed in
-  the figure caption so the reader can reproduce it.
+  `viewport` px and then scaled to fit the column, and both the width and the
+  resulting scale are printed in the figure caption so the reader can reproduce
+  it. A snippet is never scaled *up* past 1 — an enlarged component shows
+  spacing and hairlines no browser will ever render.
+
+**Prose is 672px wide. That is right for reading and wrong for evidence.** Split
+into two columns it leaves each side around 330px, where a page header renders
+at 45% and nobody can see what they are being asked to look at. So a figure
+escapes its column:
+
+| `bleed` | Figure width | For |
+| --- | --- | --- |
+| `prose` | the text column | a badge, a tag, a single input |
+| `wide` *(default)* | `min(1120px, 100vw - 3rem)` | most components |
+| `full` | `calc(100vw - 3rem)` | a defect measured in pixels, or a whole screen |
+
+`layout="rows"` stacks pristine above proposed at full figure width. For anything
+approaching a real screen, two full-width rows beat two half-width columns even
+though the eye has to travel further.
+
+The frame box shrinks to the scaled snippet rather than to the column, so a
+`full` bleed wider than the snippet's viewport does not pad it with white space
+that reads like part of the component.
 
 Keep the snippet minimal. Every element that is not part of the claim is
 something a reader has to rule out.
