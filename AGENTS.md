@@ -173,6 +173,8 @@ Breaking any of these breaks the tool's reason to exist.
 2. **Every frame opens standalone by URL.** Appearance travels in search params.
    This is what keeps deployment a config change rather than a rewrite.
 3. **Failures stay local to one frame.** A broken view must never blank the canvas.
+   Only one frame is interactive at a time; `Escape` releases it, forwarded from
+   inside the frame by `postMessage` because focus lives in the iframe.
 4. **No backend, no database, no user system.** The filesystem is the database.
 5. **The shell must not look like the design system under test.** A reviewer has
    to be able to tell tool chrome from prototype.

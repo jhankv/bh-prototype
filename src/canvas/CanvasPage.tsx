@@ -1,14 +1,17 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'wouter'
 import { TransformComponent, TransformWrapper, useControls } from 'react-zoom-pan-pinch'
 import { ArrowLeft, Maximize2, Minus, Plus } from 'lucide-react'
 import { findProject, loadCanvas } from '@/lib/projects'
+import { onFrameRelease } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
-import type { Section } from '@/lib/schema'
+import type { Canvas, Section } from '@/lib/schema'
 
-const MIN_SCALE = 0.1
+const MIN_SCALE = 0.05
 const MAX_SCALE = 2
+/** Room for the section title above a frame, and breathing space around the edges. */
+const PADDING = 120
 
 export function CanvasPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -32,32 +35,79 @@ export function CanvasPage() {
       {!canvas.ok ? (
         <Empty title="Canvas could not be read" detail={canvas.error} />
       ) : (
-        <TransformWrapper
-          minScale={MIN_SCALE}
-          maxScale={MAX_SCALE}
-          initialScale={0.5}
-          limitToBounds={false}
-          centerOnInit
-          wheel={{ step: 0.08, activationKeys: ['Control', 'Meta'] }}
-          doubleClick={{ disabled: true }}
-        >
-          <div className="relative flex-1 overflow-hidden bg-shell-bg">
-            <TransformComponent
-              wrapperStyle={{ width: '100%', height: '100%' }}
-              contentStyle={{ width: '100%', height: '100%' }}
-            >
-              <div className="relative size-full">
-                {canvas.value.sections.map((section) => (
-                  <SectionGroup key={section.title} slug={slug} section={section} />
-                ))}
-              </div>
-            </TransformComponent>
-
-            <ZoomControls />
-          </div>
-        </TransformWrapper>
+        <CanvasViewport slug={slug} canvas={canvas.value} />
       )}
     </div>
+  )
+}
+
+/** The bounding box of every frame, so the transform layer has real content to fit. */
+function measure(canvas: Canvas) {
+  const frames = canvas.sections.flatMap((section) => section.frames)
+
+  if (frames.length === 0) return { width: 1, height: 1 }
+
+  return {
+    width: Math.max(...frames.map((frame) => frame.x + frame.width)) + PADDING,
+    height: Math.max(...frames.map((frame) => frame.y + frame.height)) + PADDING,
+  }
+}
+
+function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
+  const content = useMemo(() => measure(canvas), [canvas])
+
+  // Exactly one frame takes pointer events at a time. Held here rather than in
+  // each frame so Escape can release it and two frames can never both be live.
+  const [activeFrameId, setActiveFrameId] = useState<string | null>(null)
+
+  useEffect(() => {
+    function release() {
+      setActiveFrameId(null)
+    }
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') release()
+    }
+
+    // Escape from the canvas itself, and Escape forwarded by the focused frame.
+    window.addEventListener('keydown', onKey)
+    const stopListening = onFrameRelease(release)
+
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      stopListening()
+    }
+  }, [])
+
+  return (
+    <TransformWrapper
+      minScale={MIN_SCALE}
+      maxScale={MAX_SCALE}
+      limitToBounds={false}
+      wheel={{ step: 0.08, activationKeys: ['Control', 'Meta'] }}
+      doubleClick={{ disabled: true }}
+    >
+      <div className="relative flex-1 overflow-hidden bg-shell-bg">
+        <TransformComponent
+          wrapperStyle={{ width: '100%', height: '100%' }}
+          contentStyle={{ width: content.width, height: content.height }}
+        >
+          <div className="relative" style={{ width: content.width, height: content.height }}>
+            {canvas.sections.map((section) => (
+              <SectionGroup
+                key={section.title}
+                slug={slug}
+                section={section}
+                activeFrameId={activeFrameId}
+                onActivate={setActiveFrameId}
+              />
+            ))}
+          </div>
+        </TransformComponent>
+
+        <Controls content={content} />
+      </div>
+    </TransformWrapper>
   )
 }
 
@@ -65,7 +115,17 @@ export function CanvasPage() {
  * Sections are logical groups, not containers. The title floats above the
  * bounding box of the frames it owns, so moving a frame moves the label.
  */
-function SectionGroup({ slug, section }: { slug: string; section: Section }) {
+function SectionGroup({
+  slug,
+  section,
+  activeFrameId,
+  onActivate,
+}: {
+  slug: string
+  section: Section
+  activeFrameId: string | null
+  onActivate: (id: string | null) => void
+}) {
   if (section.frames.length === 0) return null
 
   const left = Math.min(...section.frames.map((frame) => frame.x))
@@ -80,23 +140,40 @@ function SectionGroup({ slug, section }: { slug: string; section: Section }) {
         {section.title}
       </h2>
       {section.frames.map((frame) => (
-        <CanvasFrame key={frame.id} slug={slug} frame={frame} />
+        <CanvasFrame
+          key={frame.id}
+          slug={slug}
+          frame={frame}
+          active={activeFrameId === frame.id}
+          onActivate={onActivate}
+        />
       ))}
     </>
   )
 }
 
-function ZoomControls() {
-  const { zoomIn, zoomOut, resetTransform, centerView } = useControls()
+function Controls({ content }: { content: { width: number; height: number } }) {
+  const { zoomIn, zoomOut, centerView } = useControls()
 
-  // Escape releases an activated frame by moving focus back to the document.
+  /**
+   * Fit is not decorative. A canvas is thousands of pixels wide, so opening one
+   * without fitting drops you into empty space with no idea where the frames are.
+   */
+  const fit = useCallback(() => {
+    const wrapper = document.querySelector('.react-transform-wrapper')
+    if (!wrapper) return
+
+    const { width, height } = wrapper.getBoundingClientRect()
+    const scale = Math.min(width / content.width, height / content.height, 1) * 0.94
+
+    centerView(Math.max(scale, MIN_SCALE), 0)
+  }, [centerView, content.height, content.width])
+
+  // Fit on open, after layout has settled enough to measure the wrapper.
   useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') (document.activeElement as HTMLElement | null)?.blur()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    const frame = requestAnimationFrame(fit)
+    return () => cancelAnimationFrame(frame)
+  }, [fit])
 
   const button =
     'flex size-7 items-center justify-center rounded text-shell-muted hover:bg-shell-bg hover:text-shell-ink'
@@ -109,15 +186,7 @@ function ZoomControls() {
       <button type="button" onClick={() => zoomIn()} className={button} aria-label="Zoom in">
         <Plus className="size-4" aria-hidden />
       </button>
-      <button
-        type="button"
-        onClick={() => {
-          resetTransform()
-          centerView(0.5)
-        }}
-        className={button}
-        aria-label="Fit"
-      >
+      <button type="button" onClick={fit} className={button} aria-label="Fit to content">
         <Maximize2 className="size-4" aria-hidden />
       </button>
     </div>

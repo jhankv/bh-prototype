@@ -1,8 +1,9 @@
-import { Suspense, lazy, useMemo } from 'react'
+import { Suspense, lazy, useEffect, useMemo } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
 import { DesignSystemProvider } from '@/ds/DesignSystem'
+import { forwardEscapeToCanvas } from '@/lib/frameMessages'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
 
@@ -17,6 +18,8 @@ const documentModules = import.meta.glob<string>('/prototypes/*/documents/*.md',
 })
 
 export function FrameApp() {
+  useEffect(forwardEscapeToCanvas, [])
+
   const search = new URLSearchParams(window.location.search)
   const project = search.get('project') ?? ''
   const type = search.get('type') ?? 'view'

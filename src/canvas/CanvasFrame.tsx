@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
 import { frameUrl } from '@/lib/projects'
@@ -7,6 +6,8 @@ import type { Frame } from '@/lib/schema'
 type CanvasFrameProps = {
   slug: string
   frame: Frame
+  active: boolean
+  onActivate: (id: string | null) => void
 }
 
 /**
@@ -15,10 +16,12 @@ type CanvasFrameProps = {
  *
  * Iframes swallow pointer events, which would stop the canvas panning whenever
  * the cursor crossed a frame. So a frame is inert until it is activated by a
- * click, and Escape releases it. Pan freely, then opt in to interaction.
+ * click. Pan freely, then opt in to interaction.
+ *
+ * Which frame is active lives in the canvas, not here, so that Escape can
+ * release it and only one frame is ever live at a time.
  */
-export function CanvasFrame({ slug, frame }: CanvasFrameProps) {
-  const [active, setActive] = useState(false)
+export function CanvasFrame({ slug, frame, active, onActivate }: CanvasFrameProps) {
 
   const url = frameUrl(slug, {
     type: frame.type,
@@ -55,7 +58,7 @@ export function CanvasFrame({ slug, frame }: CanvasFrameProps) {
         {!active && (
           <button
             type="button"
-            onClick={() => setActive(true)}
+            onClick={() => onActivate(frame.id)}
             aria-label={`Interact with ${frame.id}`}
             className="absolute inset-0 cursor-pointer bg-transparent"
           />
@@ -64,10 +67,10 @@ export function CanvasFrame({ slug, frame }: CanvasFrameProps) {
         {active && (
           <button
             type="button"
-            onClick={() => setActive(false)}
+            onClick={() => onActivate(null)}
             className="absolute end-2 top-2 rounded border border-shell-line bg-shell-surface px-2 py-1 text-[11px] text-shell-muted shadow-sm hover:text-shell-ink"
           >
-            Release
+            Release · Esc
           </button>
         )}
       </div>

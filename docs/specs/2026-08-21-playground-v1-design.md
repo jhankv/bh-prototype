@@ -213,19 +213,23 @@ Discovers projects with `import.meta.glob('/prototypes/*/manifest.json', { eager
 
 ### 5.2 Canvas viewport (`src/canvas`)
 
-A single transformed layer:
+A single transformed layer, driven by `react-zoom-pan-pinch`.
 
-```
-translate(panX, panY) scale(zoom)
-```
-
-- Wheel = pan. Ctrl/Cmd + wheel = zoom at cursor.
-- Space + drag = pan.
-- Zoom clamped to `[0.1, 2]`.
+- Drag empty canvas, or two-finger trackpad = pan.
+- Ctrl/Cmd + wheel = zoom at cursor.
+- Zoom clamped to `[0.05, 2]`.
 - Frames absolutely positioned from `canvas.json`.
 - Section titles and frame captions render as canvas chrome, outside the iframe.
 
-State is `useState` in the canvas component. Nothing persists — pan/zoom is ephemeral by design.
+**The transform layer is sized to the content bounding box**, computed from
+`canvas.json`, not to the viewport. Without that the library has nothing real to
+centre and both "fit" and centre-on-open are no-ops — you land in empty space
+several thousand pixels from your frames. The canvas fits to content on open.
+
+Pan and zoom are ephemeral by design; nothing persists.
+
+**Exactly one frame is active at a time**, and that state lives in the canvas
+rather than in each frame — see §5.3.
 
 ### 5.3 Frame
 
@@ -237,6 +241,24 @@ An `<iframe>` pointing at `/frame.html` with search params:
 ```
 
 Every frame is therefore **shareable as a standalone URL**. This is a hard requirement — it is what makes deployment later a config change rather than a rewrite.
+
+#### Activation, and why Escape needs a message
+
+An iframe swallows pointer events, so a frame under the cursor would stop the
+canvas panning. Frames are therefore inert (`pointer-events: none`) behind a
+transparent overlay until clicked.
+
+Releasing one is less obvious than it looks. Once a frame is activated the user
+clicks inside it and keyboard focus moves **into the iframe document**, so the
+canvas window stops receiving keydown events entirely — an Escape handler on the
+canvas is dead exactly when it is needed.
+
+The frame therefore forwards Escape to the canvas with `postMessage`, and the
+canvas accepts it only from its own origin (`src/lib/frameMessages.ts`). The
+canvas keeps its own Escape handler too, for when focus is outside a frame.
+
+Which frame is active is held in the canvas, not in each frame, so that two
+frames can never both be live.
 
 ### 5.4 Frame entry (`src/frame/main.tsx`)
 
@@ -444,3 +466,22 @@ Bilingual faker data · the screen itself · `documents/findings.md`.
 8. At least one real finding recorded from actually using the thing.
 
 Item 8 is the one that matters. The tool is not done when it runs — it is done when it has already produced value.
+
+### v1 status — 2026-08-22
+
+All eight items verified. Items 1–6 were checked by driving the running app,
+not by reading the code. Item 4 was verified inside the canvas, not only on a
+standalone frame: activating a frame, applying the `paid` filter (24 rows → 5),
+and selecting a row to raise the bulk-action bar.
+
+Three shell defects were found during that verification and fixed:
+
+1. The canvas opened into empty space — the transform layer was viewport-sized,
+   so nothing could fit or centre it.
+2. `Escape` did not release an active frame. It called `blur()`, which never
+   touched the frame's own state.
+3. Focus inside an iframe stopped the canvas hearing keyboard events at all,
+   so no canvas-side Escape handler could have worked. Fixed with `postMessage`.
+
+Item 7 is written and was followed while scaffolding two projects, but has not
+been independently tested by scaffolding a project from `AGENTS.md` alone.
