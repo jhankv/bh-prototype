@@ -1,0 +1,5 @@
+{
+  "name": "Orders Dashboard",
+  "description": "Table + filter bar stress test. Roughly 20 Banhaten components in one dense screen, with bilingual data and no sidebar.",
+  "cover": "orders-ltr-light"
+}

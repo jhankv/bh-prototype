@@ -791,8 +791,11 @@ function renderTableItem(item: TableItem, tableSize: TableSize) {
         <span className="ds-table-avatar-text">
           <Avatar name={item.name} size={tableSize === "lg" ? "md" : "sm"} src={item.src} />
           <span>
-            <strong>{item.name}</strong>
-            {item.caption && <em>{item.caption}</em>}
+            {/* dir="auto" lets each string choose its own base direction. Without
+                it, text running opposite to the document direction truncates from
+                its logical start and loses the beginning of the name. */}
+            <strong dir="auto">{item.name}</strong>
+            {item.caption && <em dir="auto">{item.caption}</em>}
           </span>
         </span>
       );
