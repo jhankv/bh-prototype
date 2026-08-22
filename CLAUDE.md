@@ -75,6 +75,14 @@ properties panel, no save button. You edit files; Vite renders them. This single
 constraint is why the project is small enough to exist. Never add UI that
 mutates project data.
 
+The copy button on document frames (`src/frame/CopyHandoff.tsx`) is not an
+exception to that rule and must not be cited as precedent for one. It reads a
+`.md` file that Vite already loaded and writes to the clipboard; nothing in the
+project changes. It exists because a findings document that cannot leave this
+repository is worth nothing — the reader on the other side is an agent sitting
+on the real design system source, so the button composes a handoff telling it
+which entries carry a diff and which need a human decision.
+
 **The filesystem is the database.** `import.meta.glob` over `prototypes/*`
 discovers projects, views, and documents. There is no registry to keep in sync
 and no backend, which is also what keeps deployment a config change.

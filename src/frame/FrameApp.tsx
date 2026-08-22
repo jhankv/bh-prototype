@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
 import { DesignSystemProvider } from '@/ds'
 import { forwardEscapeToCanvas } from '@/lib/frameMessages'
+import { CopyHandoff } from './CopyHandoff'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
 
@@ -61,9 +62,12 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
       return <FrameError title="Document not found" detail={path} />
     }
     return (
-      <article className="prose-frame mx-auto max-w-2xl px-8 py-10">
-        <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>
-      </article>
+      <>
+        <CopyHandoff markdown={source} source={`${project}/${src}`} />
+        <article className="prose-frame mx-auto max-w-2xl px-8 py-10">
+          <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>
+        </article>
+      </>
     )
   }
 

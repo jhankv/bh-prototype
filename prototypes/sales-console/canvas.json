@@ -10,9 +10,14 @@
           "x": 0,
           "y": 0,
           "width": 1440,
-          "height": 1500,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
-          "caption": "Baseline. Light, LTR — the state every component was designed against."
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Baseline. Light, LTR \u2014 the state every component was designed against."
         },
         {
           "id": "console-dark",
@@ -21,8 +26,13 @@
           "x": 1520,
           "y": 0,
           "width": 1440,
-          "height": 1500,
-          "appearance": { "mode": "dark", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "height": 1180,
+          "appearance": {
+            "mode": "dark",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
           "caption": "Same file, dark. Watch contrast on badges, progress fills and disabled rows."
         },
         {
@@ -32,8 +42,13 @@
           "x": 3040,
           "y": 0,
           "width": 1440,
-          "height": 1500,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
           "caption": "Same file, RTL. Every finding so far came from this column."
         },
         {
@@ -43,8 +58,13 @@
           "x": 4560,
           "y": 0,
           "width": 1440,
-          "height": 1500,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
           "caption": "Same file, our sandbox, RTL. Compare against the frame to its left."
         }
       ]
@@ -56,11 +76,11 @@
           "id": "findings",
           "type": "document",
           "src": "documents/findings.md",
-          "x": 0,
-          "y": 1600,
-          "width": 820,
-          "height": 700,
-          "caption": "What this composition surfaced that the galleries did not."
+          "x": 6080,
+          "y": 0,
+          "width": 920,
+          "height": 1180,
+          "caption": "What this composition surfaced. Copy it straight into the other team\u2019s agent."
         }
       ]
     }
