@@ -1,7 +1,7 @@
 {
   "sections": [
     {
-      "title": "Appearance matrix — pristine sandbox",
+      "title": "Appearance matrix \u2014 pristine sandbox",
       "frames": [
         {
           "id": "probe-banhaten-light",
@@ -11,8 +11,12 @@
           "y": 0,
           "width": 620,
           "height": 720,
-          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
-          "caption": "Baseline — light, blue, LTR."
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "ltr"
+          },
+          "caption": "Baseline \u2014 light, blue, LTR."
         },
         {
           "id": "probe-banhaten-dark",
@@ -22,7 +26,11 @@
           "y": 0,
           "width": 620,
           "height": 720,
-          "appearance": { "mode": "dark", "theme": "blue", "dir": "ltr" },
+          "appearance": {
+            "mode": "dark",
+            "theme": "blue",
+            "dir": "ltr"
+          },
           "caption": "Same file, dark mode."
         },
         {
@@ -33,8 +41,63 @@
           "y": 0,
           "width": 620,
           "height": 720,
-          "appearance": { "mode": "light", "theme": "brown", "radius": "sharp", "dir": "rtl" },
-          "caption": "Same file — RTL, brown theme, sharp radius."
+          "appearance": {
+            "mode": "light",
+            "theme": "brown",
+            "radius": "sharp",
+            "dir": "rtl"
+          },
+          "caption": "Same file \u2014 RTL, brown theme, sharp radius."
+        }
+      ]
+    },
+    {
+      "title": "Direction audit \u2014 F-001 / F-003 root cause",
+      "frames": [
+        {
+          "id": "audit-ltr",
+          "src": "views/DirectionAudit.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 860,
+          "width": 700,
+          "height": 900,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "ltr"
+          },
+          "caption": "LTR. Arabic strings are the ones at risk here."
+        },
+        {
+          "id": "audit-rtl",
+          "src": "views/DirectionAudit.tsx",
+          "sandbox": "banhaten",
+          "x": 760,
+          "y": 860,
+          "width": 700,
+          "height": 900,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "rtl"
+          },
+          "caption": "RTL. Latin strings are the ones at risk here."
+        },
+        {
+          "id": "audit-rtl-proposed",
+          "src": "views/DirectionAudit.tsx",
+          "sandbox": "banhaten-proposed",
+          "x": 1520,
+          "y": 860,
+          "width": 700,
+          "height": 900,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "rtl"
+          },
+          "caption": "RTL with our fixes applied. Compare against the frame to its side."
         }
       ]
     },
@@ -46,10 +109,14 @@
           "src": "views/ComponentProbe.tsx",
           "sandbox": "banhaten",
           "x": 0,
-          "y": 860,
+          "y": 1860,
           "width": 620,
           "height": 720,
-          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "ltr"
+          },
           "caption": "What Banhaten ships today."
         },
         {
@@ -57,10 +124,14 @@
           "src": "views/ComponentProbe.tsx",
           "sandbox": "banhaten-proposed",
           "x": 680,
-          "y": 860,
+          "y": 1860,
           "width": 620,
           "height": 720,
-          "appearance": { "mode": "light", "theme": "blue", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "dir": "ltr"
+          },
           "caption": "Same file, our sandbox. Edit it and the difference shows here."
         },
         {
@@ -68,7 +139,7 @@
           "src": "views/ComponentProbe.tsx",
           "sandbox": "does-not-exist",
           "x": 1360,
-          "y": 860,
+          "y": 1860,
           "width": 620,
           "height": 720,
           "caption": "Declares a sandbox that is not installed."
@@ -83,7 +154,7 @@
           "type": "document",
           "src": "documents/findings.md",
           "x": 0,
-          "y": 1720,
+          "y": 2720,
           "width": 700,
           "height": 420,
           "caption": "Every defect lands here or in a diff."

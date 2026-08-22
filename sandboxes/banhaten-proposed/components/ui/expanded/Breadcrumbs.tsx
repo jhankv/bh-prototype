@@ -82,7 +82,14 @@ export function Breadcrumbs({
               <span className="ds-breadcrumbs__icon" aria-hidden={item.icon ? "true" : undefined}>
                 {item.overflow ? <OverflowIcon /> : item.icon}
               </span>
-              <span className={cx("ds-breadcrumbs__label", iconOnly && "ds-breadcrumbs__label--hidden")}>
+              {/* dir="auto" lets each crumb take its base direction from its own
+                  first strong character. Without it a label running opposite to
+                  the document truncates from its logical start, so the crumb
+                  loses the part that identifies it. */}
+              <span
+                dir="auto"
+                className={cx("ds-breadcrumbs__label", iconOnly && "ds-breadcrumbs__label--hidden")}
+              >
                 {item.label}
               </span>
             </>

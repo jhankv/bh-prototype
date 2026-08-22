@@ -39,6 +39,12 @@ const Kbd = React.forwardRef<HTMLElement, KbdProps>(function Kbd(
     <kbd
       data-disabled={disabled ? "true" : undefined}
       data-slot="kbd"
+      // A shortcut is not prose. Modifier glyphs (⌘ ⇧ ⌥ ⌃) are bidi-neutral, so
+      // in an RTL document the Unicode algorithm moves them after the letter and
+      // ⌘K is shown as K⌘ — the wrong key order on a keyboard that does not
+      // mirror. Forcing LTR keeps the sequence; the surrounding layout still
+      // mirrors normally. ASCII shortcuts like Ctrl+S were never affected.
+      dir="ltr"
       ref={ref}
       className={cn(kbdVariants({ size, className }))}
       {...props}
