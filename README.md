@@ -1,7 +1,9 @@
 # Prototype Playground
 
-A local environment for prototyping with a design system, and for producing
-evidence about it.
+A local environment for prototyping with the **Banhaten** design system, and for
+producing evidence about it. It is scoped to Banhaten deliberately — see
+[CLAUDE.md](CLAUDE.md) for why, and for the two files that would change if that
+ever stopped being true.
 
 A dashboard lists projects. Opening one shows a pan/zoom canvas of **live,
 interactive prototypes** — not screenshots — each in its own iframe, so the same

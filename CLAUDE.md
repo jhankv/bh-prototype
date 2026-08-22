@@ -4,13 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A local prototyping environment. A dashboard lists projects; opening one shows a
-pan/zoom canvas of **live, interactive React prototypes** built with a
-source-installed design system, rendered across appearance modes and against two
-versions of that design system at once.
+A local prototyping environment **for the Banhaten design system**. A dashboard
+lists projects; opening one shows a pan/zoom canvas of **live, interactive React
+prototypes** built with a source-installed copy of Banhaten, rendered across
+appearance modes and against two versions of it at once.
 
-Its purpose is not to look nice. It is to **stress design system components and
+Its purpose is not to look nice. It is to **stress Banhaten components and
 produce actionable defect reports** — see `prototypes/*/documents/findings.md`.
+
+### Scope: Banhaten only — on purpose
+
+This is not a generic design system playground and must not be made into one.
+The engine happens to be agnostic — `src/ds/registry.ts` globs `sandboxes/*` and
+registers whatever it finds — but that is a consequence of the two-sandbox
+comparison, **not an extension point to build on**.
+
+Exactly two places encode Banhaten, and they are the ones to change if a second
+design system ever arrives:
+
+| Where | What is Banhaten-specific |
+| --- | --- |
+| `src/lib/schema.ts` | `AppearanceSchema` — the seven `theme` values and three `radius` values |
+| `src/lib/appearance.ts` | The attributes written to `<html>`: `class="dark"`, `data-theme`, `data-radius`, `dir` |
+
+Roughly fifty lines. Do **not** abstract them behind a plugin, adapter, or
+config layer in advance: a second design system may express appearance through
+CSS variables or a React provider rather than HTML attributes, and an
+abstraction designed against one case models that case in disguise.
 
 Two audiences, two documents:
 

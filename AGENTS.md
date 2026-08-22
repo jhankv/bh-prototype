@@ -25,7 +25,7 @@ These terms are binding. Do not invent parallel names or structures.
 | **Document** | A `.md` file rendered as a frame. Critiques, findings, notes. |
 | **Canvas** | `canvas.json` — points at views and documents and positions them. It never imports them. |
 | **Frame** | One entry in a canvas: what to render, where, how large, and in which appearance. |
-| **Sandbox** | An installed design system under `sandboxes/`. Frames declare which one they render against. |
+| **Sandbox** | An installed copy of Banhaten under `sandboxes/` — `banhaten` (pristine) or `banhaten-proposed` (our fixes). Frames declare which one they render against. |
 | **Finding** | A recorded defect or observation about a design system component. |
 
 ---
