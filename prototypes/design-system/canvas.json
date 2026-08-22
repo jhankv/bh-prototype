@@ -11,7 +11,12 @@
           "y": 0,
           "width": 900,
           "height": 1180,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
           "caption": "Every Button variant, size, density and state in one place."
         },
         {
@@ -22,8 +27,29 @@
           "y": 0,
           "width": 900,
           "height": 1180,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
           "caption": "Every Input variant, size, state and affix in one place."
+        },
+        {
+          "id": "inputs-proposed",
+          "src": "views/Inputs.tsx",
+          "sandbox": "banhaten-proposed",
+          "x": 1920,
+          "y": 0,
+          "width": 900,
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Same file, our sandbox. Compare the isOptional row against the frame to its left."
         }
       ]
     },

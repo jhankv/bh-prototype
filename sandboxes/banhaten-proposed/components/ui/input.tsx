@@ -317,7 +317,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const isInvalid = visualState === "error" && !isDisabled
     const isTagInput = kind === "tags" || kind === "inline-tags"
     const selectedLabel = label
-    const selectedOptionalText = optionalText
+    // isOptional rendered nothing unless optionalText was also supplied, while
+    // isRequired always drew its asterisk. The boolean has to mean something on
+    // its own or it should not exist.
+    const selectedOptionalText = optionalText ?? (isOptional ? "(optional)" : undefined)
     const inferredPlaceholder = getInputPlaceholder({
       placeholder,
     })
@@ -447,6 +450,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 placeholder={inferredPlaceholder}
                 readOnly={readOnly}
                 ref={setInputRef}
+                // The asterisk isRequired draws is aria-hidden, and `required`
+                // only ever came from the native prop — so assistive technology
+                // was told nothing at all. aria-required rather than native
+                // required, to avoid changing form validation behaviour.
+                aria-required={isRequired || required || undefined}
                 required={required}
                 value={value}
                 className={cn(inputControl(), controlClassName)}

@@ -191,6 +191,94 @@ breadcrumbs to this component, so one change covers both.
 
 ---
 
+### F-006 · Input — `isRequired` is decorative, and assistive technology is told nothing
+
+**Component:** `input` **Severity:** major **Modes:** all
+**Repro:** frames `inputs` vs `inputs-proposed`, the "Label and helper text" group
+**Status:** FIXED in `sandboxes/banhaten-proposed`
+
+**What breaks**
+
+`isRequired` draws an asterisk carrying `aria-hidden="true"`, and the control
+itself sets `required` from the **native** prop only — `isRequired` never
+reaches the input:
+
+```tsx
+required={required}   // isRequired is not consulted
+```
+
+Measured on the rendered field: `required` absent, `aria-required` absent,
+asterisk `aria-hidden="true"`. A screen reader announces "Email, edit text" and
+nothing more. The one visual signal that the field is mandatory is the one piece
+explicitly hidden from the accessibility tree.
+
+**Why it matters**
+
+A sighted user sees the asterisk; a screen reader user discovers the field was
+required by submitting the form and failing. In an Arabic-first system aimed at
+public-facing products this is the kind of gap that ends up in an audit.
+
+**Fix applied**
+
+```diff
++ aria-required={isRequired || required || undefined}
+  required={required}
+```
+
+`aria-required` rather than native `required` on purpose: adding the native
+attribute would switch on browser form validation and change behaviour for
+every existing consumer. This states the fact without changing the mechanics.
+
+---
+
+### F-007 · Input — `isOptional` renders nothing unless `optionalText` is also passed
+
+**Component:** `input` **Severity:** minor **Modes:** all
+**Repro:** frames `inputs` vs `inputs-proposed`, the "Label and helper text" group
+**Status:** FIXED in `sandboxes/banhaten-proposed`
+
+**What breaks**
+
+The optional marker is gated on both the flag and the text:
+
+```tsx
+{isOptional && hasRenderableContent(optionalText) ? … : null}
+```
+
+and `optionalText` has no default. So `<Input label="Company" isOptional />`
+renders a label indistinguishable from one with no flag at all. It fails
+silently — TypeScript accepts it, nothing warns, and it looks intentional.
+
+The asymmetry is the tell: `isRequired` alone draws its asterisk, `isOptional`
+alone draws nothing.
+
+| | Pristine | Proposed |
+| --- | --- | --- |
+| `isRequired` | `Email *` | `Email *` |
+| `isOptional` | `Company` | `Company (optional)` |
+| `isOptional` + `optionalText` | `Company (optional)` | `Company (optional)` |
+
+**Why it matters**
+
+Marking optional fields is how a long form stops feeling like an interrogation.
+A team that reaches for the obvious boolean gets nothing and has no way to tell,
+so the affordance quietly never ships.
+
+**Fix applied**
+
+```diff
+- const selectedOptionalText = optionalText
++ const selectedOptionalText = optionalText ?? (isOptional ? "(optional)" : undefined)
+```
+
+**Open question for the design system's owners:** the default string is
+English. In an Arabic-first system the default arguably belongs in the locale
+layer, not the component. The alternative is to drop the boolean and keep only
+`optionalText` — but then the API should say so, because `isOptional` currently
+reads like it works alone.
+
+---
+
 ## The audit that produced F-005
 
 F-001 and F-003 looked unrelated. They are the same defect, so the obvious next

@@ -54,6 +54,9 @@ export default function Inputs() {
         <Item label="isOptional">
           <Input label="Company" isOptional placeholder="Acme Inc." />
         </Item>
+        <Item label="isOptional + optionalText">
+          <Input label="Company" isOptional optionalText="(optional)" placeholder="Acme Inc." />
+        </Item>
         <Item label="message">
           <Input label="Email" message="We only use this for receipts." placeholder="you@example.com" />
         </Item>
