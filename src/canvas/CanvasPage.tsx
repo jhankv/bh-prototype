@@ -7,6 +7,7 @@ import { onFrameRelease } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
 import { useProgressiveMount } from './useProgressiveMount'
+import { useWheelZoom } from './useWheelZoom'
 import type { Canvas, Section } from '@/lib/schema'
 
 const MIN_SCALE = 0.05
@@ -138,10 +139,10 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       // collapses it to 1e-7, so zooming out hard loses the canvas entirely.
       // A precision canvas wants hard stops; Figma has no rubber-banding either.
       disablePadding
-      // The array form is evaluated with `every`, so ['Control', 'Meta'] demands
-      // both keys at once — Cmd-scroll alone never zoomed. The function form is
-      // the only way to express "either modifier".
-      wheel={{ step: 0.08, activationKeys: (keys) => keys.includes('Control') || keys.includes('Meta') }}
+      // Zoom is handled by useWheelZoom instead — the built-in one is additive
+      // and scales with |deltaY|, which made a single mouse tick cross the whole
+      // range. Trackpad two-finger panning is separate and stays enabled.
+      wheel={{ disabled: true }}
       panning={{ activationKeys: [' '] }}
       doubleClick={{ disabled: true }}
       onPanningStart={() => setPanning(true)}
@@ -222,6 +223,8 @@ function SectionGroup({
 
 function Controls({ content }: { content: { width: number; height: number } }) {
   const { zoomIn, zoomOut, centerView } = useControls()
+
+  useWheelZoom(MIN_SCALE, MAX_SCALE)
 
   /**
    * Fit is not decorative. A canvas is thousands of pixels wide, so opening one

@@ -218,8 +218,22 @@ A single transformed layer, driven by `react-zoom-pan-pinch`.
 - **Space + drag**, or two-finger trackpad = pan. Figma's gesture, deliberately
   strict: dragging without space does nothing, because that is the standard
   designers already have in their hands.
-- **Cmd/Ctrl + scroll** = zoom at cursor.
+- **Cmd/Ctrl + scroll**, or trackpad pinch = zoom, anchored at the cursor.
 - Zoom clamped to `[0.05, 2]`, with elastic padding disabled.
+
+**Wheel zoom is ours, not the library's** (`src/canvas/useWheelZoom.ts`). Its
+built-in zoom is additive — `scale + delta * step`, with the step multiplied by
+`|deltaY|` under the default `smooth`. Measured: one mouse tick crossed the whole
+0.05–2 range, and because the increment is fixed, the same tick was +50% at scale
+0.2 and +5% at scale 1.9. Perceived zoom is geometric, so the step has to be a
+ratio: `scale * exp(-deltaY * 0.0015)`, a constant 1.16× per mouse tick at any
+zoom level, with the point under the cursor held fixed.
+
+One subtlety worth keeping: the library's state lags a frame, so two wheel events
+in quick succession both read the pre-first-event scale and silently drop a tick
+of the gesture. The hook tracks the transform itself *within* a gesture — events
+less than 200 ms apart — and re-reads the library between gestures, since
+panning, fit and the zoom buttons all move it too.
 
 Three details the library will not handle for you, each found by testing rather
 than by reading:
