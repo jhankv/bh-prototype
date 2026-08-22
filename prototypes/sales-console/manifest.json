@@ -1,0 +1,5 @@
+{
+  "name": "Sales Console",
+  "description": "A realistic orders console. Components fail in composition, not in isolation — this is where findings come from.",
+  "cover": "console"
+}

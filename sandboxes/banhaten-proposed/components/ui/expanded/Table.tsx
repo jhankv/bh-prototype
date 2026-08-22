@@ -516,6 +516,7 @@ export function DataTable<Row extends TableRowBase>({
             pages={paginationConfig.pages ?? getDataTablePaginationPages(currentPage, pageCount)}
             previousDisabled={currentPage <= 1}
             showCaption={paginationConfig.showCaption ?? false}
+            caption={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
             summary={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
             type={paginationConfig.type ?? "numeric"}
             variant={paginationConfig.variant ?? "soft"}

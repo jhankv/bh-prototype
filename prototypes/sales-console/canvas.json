@@ -1,0 +1,68 @@
+{
+  "sections": [
+    {
+      "title": "Orders console",
+      "frames": [
+        {
+          "id": "console",
+          "src": "views/SalesConsole.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1500,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Baseline. Light, LTR — the state every component was designed against."
+        },
+        {
+          "id": "console-dark",
+          "src": "views/SalesConsole.tsx",
+          "sandbox": "banhaten",
+          "x": 1520,
+          "y": 0,
+          "width": 1440,
+          "height": 1500,
+          "appearance": { "mode": "dark", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Same file, dark. Watch contrast on badges, progress fills and disabled rows."
+        },
+        {
+          "id": "console-rtl",
+          "src": "views/SalesConsole.tsx",
+          "sandbox": "banhaten",
+          "x": 3040,
+          "y": 0,
+          "width": 1440,
+          "height": 1500,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "caption": "Same file, RTL. Every finding so far came from this column."
+        },
+        {
+          "id": "console-rtl-proposed",
+          "src": "views/SalesConsole.tsx",
+          "sandbox": "banhaten-proposed",
+          "x": 4560,
+          "y": 0,
+          "width": 1440,
+          "height": 1500,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "caption": "Same file, our sandbox, RTL. Compare against the frame to its left."
+        }
+      ]
+    },
+    {
+      "title": "Findings",
+      "frames": [
+        {
+          "id": "findings",
+          "type": "document",
+          "src": "documents/findings.md",
+          "x": 0,
+          "y": 1600,
+          "width": 820,
+          "height": 700,
+          "caption": "What this composition surfaced that the galleries did not."
+        }
+      ]
+    }
+  ]
+}

@@ -122,7 +122,7 @@ export function PageHeader({
             <div className="ds-page-header__heading-row">
               <div className="ds-page-header__heading-main">
                 {showIcon && <span className="ds-page-header__icon">{icon ?? <HomeIcon />}</span>}
-                {title && <Heading className="ds-page-header__title">{title}</Heading>}
+                {title && <Heading className="ds-page-header__title" dir="auto">{title}</Heading>}
               </div>
               {metaInfo && (
                 <span className="ds-page-header__meta">
@@ -131,7 +131,7 @@ export function PageHeader({
               )}
             </div>
             {description && (
-              <p className="ds-page-header__description">
+              <p className="ds-page-header__description" dir="auto">
                 {description}
               </p>
             )}
