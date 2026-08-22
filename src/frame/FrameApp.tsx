@@ -5,6 +5,7 @@ import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
 import { DesignSystemProvider } from '@/ds'
 import { forwardEscapeToCanvas } from '@/lib/frameMessages'
 import { CopyHandoff } from './CopyHandoff'
+import { Inspector } from './inspector/Inspector'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
 
@@ -102,6 +103,8 @@ function ViewFrame({ path, sandbox }: { path: string; sandbox: string }) {
   return (
     <ErrorBoundary>
       <Suspense fallback={null}>{content}</Suspense>
+      {/* Nothing to identify in a frame with no design system. */}
+      {sandbox !== 'none' && <Inspector sandbox={sandbox} />}
     </ErrorBoundary>
   )
 }

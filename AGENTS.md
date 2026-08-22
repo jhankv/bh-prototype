@@ -103,6 +103,34 @@ Appearance values, matching Banhaten's HTML attributes:
   tracks after, from identical source. Restart before you conclude anything
   about layout in a new project.
 
+### Hold Alt to ask what a component is
+
+Inside any activated frame that renders a sandbox, holding **Alt** highlights
+the nearest design system component under the cursor and names it:
+
+```
+Badge · components/ui/badge.tsx · badge-label
+```
+
+Alt-click copies that line. Releasing Alt clears it. It is read-only — it
+highlights and copies, and never changes the page.
+
+This exists for the step between *observing* a defect in a composition and
+*isolating* it: a filter in a dashboard is a Select inside a Toolbar inside a
+DataTable, and reading the view file to work that out is the loop this tool
+removes.
+
+Resolution is exact, not a naming convention. `src/frame/inspector/componentIndex.ts`
+scans the active sandbox's own sources for two things: every `data-slot` value,
+and every `ds-*` class. Both are needed — measured on the sales console, 378
+elements resolve through `data-slot` and **204 through `ds-*` classes**. A
+`data-slot`-only inspector would be a third blind, and blind precisely on
+`expanded/`, whose four files carry no `data-slot` at all.
+
+Coverage on that page is 96%. The 23 misses are the prototype's own layout
+markup, which is the correct answer — if it is not a design system component,
+the inspector should say nothing.
+
 ### Never import design system components — resolve them
 
 A static ESM import is fixed at build time, so an imported `Button` can only
