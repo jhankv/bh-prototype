@@ -1,0 +1,45 @@
+{
+  "sections": [
+    {
+      "title": "Choice controls",
+      "frames": [
+        {
+          "id": "settings",
+          "src": "views/SettingsPanel.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 0,
+          "width": 860,
+          "height": 1180,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Toggle, Checkbox, CheckboxCard, SegmentedControl and ButtonGroup in one column. Read down the left edge."
+        },
+        {
+          "id": "settings-rtl",
+          "src": "views/SettingsPanel.tsx",
+          "sandbox": "banhaten",
+          "x": 920,
+          "y": 0,
+          "width": 860,
+          "height": 1180,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "caption": "The same panel in Arabic. Control position, not just text, has to mirror."
+        }
+      ]
+    },
+    {
+      "title": "Notes",
+      "frames": [
+        {
+          "id": "notes",
+          "src": "documents/observations.md",
+          "x": 0,
+          "y": 1320,
+          "width": 760,
+          "height": 700,
+          "caption": "What the eye caught, before any source was read."
+        }
+      ]
+    }
+  ]
+}
