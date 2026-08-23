@@ -62,12 +62,20 @@ function mdx(): Plugin {
       if (!id.endsWith('.mdx')) return null
 
       const { compile } = await import('@mdx-js/mdx')
+      const { default: remarkGfm } = await import('remark-gfm')
+
       // Emit calls to the automatic JSX runtime rather than JSX itself. Vite's
       // oxc transform does not treat .mdx as a JSX-bearing extension, so leaving
       // JSX in the output fails to parse before any React plugin sees it.
       const compiled = await compile(code, {
         jsxRuntime: 'automatic',
         providerImportSource: '@/frame/mdx/provider',
+        // Plain MDX is CommonMark, which has no tables. The .md renderer has
+        // carried remark-gfm all along, so a document gained or lost its tables
+        // depending on its extension — silently, since an unparsed table renders
+        // as a paragraph of pipes rather than as an error. Measured on the notes
+        // document at the moment it became .mdx: eleven tables, none rendered.
+        remarkPlugins: [remarkGfm],
       })
 
       return { code: String(compiled), map: null }

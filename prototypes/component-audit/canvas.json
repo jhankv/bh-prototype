@@ -253,11 +253,11 @@
       "frames": [
         {
           "id": "notes",
-          "src": "documents/observations.md",
+          "src": "documents/observations.mdx",
           "x": 0,
           "y": 5500,
-          "width": 760,
-          "height": 700,
+          "width": 900,
+          "height": 900,
           "caption": "What the eye caught, before any source was read."
         }
       ]

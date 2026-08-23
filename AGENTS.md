@@ -162,9 +162,16 @@ be the only English left on the screen (`pagination-1`).
 
 ### Two document formats, two jobs
 
-`documents/observations.md` is the **ledger**: prose, history, rejected
-hypotheses, read end to end. It stays markdown, and there is exactly one of it —
-in `prototypes/component-audit/`.
+`documents/observations.mdx` is the **ledger**: prose, history, rejected
+hypotheses, read end to end. There is exactly one of it, in
+`prototypes/component-audit/`.
+
+It is `.mdx` rather than `.md` so an entry can carry a `<Compare>` figure beside
+the claim it makes. Use one when a fix is **visible** and the difference is small
+enough to hunt for — `input-3` is one word inside a parenthesis, and no reader
+was ever going to find it across two 900px galleries. Do not use one when the fix
+is invisible: `input-2` changes an ARIA attribute and nothing on screen moves, so
+it carries a measured table instead, and says plainly that no figure is possible.
 
 `documents/<component>-audit.mdx` is an **audit**: one component, and the
 evidence rendered live inside the paragraph that makes the claim about it.

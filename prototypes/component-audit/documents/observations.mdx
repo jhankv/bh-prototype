@@ -450,6 +450,18 @@ hidden from the accessibility tree.
   required={required}
 ```
 
+**There is no figure for this one, and there cannot be.** The fix is an
+attribute; nothing on screen changes. Measured instead, on the `isRequired`
+field of frames `inputs` and `inputs-proposed`:
+
+| | Pristine | Proposed |
+| --- | --- | --- |
+| `aria-required` | absent | `"true"` |
+| Announced | "Email, edit text" | "Email, edit text, required" |
+
+That invisibility is the finding, not a caveat about it. A sighted user sees the
+asterisk either way; the person the asterisk was drawn for was told nothing.
+
 `aria-required` rather than native `required` **on purpose**: adding the native
 attribute would switch on browser form validation and change behaviour for every
 existing consumer. This states the fact without changing the mechanics.
@@ -466,6 +478,11 @@ indistinguishable from one with no flag at all.
 
 The asymmetry is the tell: `isRequired` alone draws its asterisk, `isOptional`
 alone draws nothing.
+
+<Compare src="views/snippets/InputOptionalCase.tsx" viewport={620} height={110} />
+
+Middle field, top line. Pristine says `Company`; patched says `Company
+(optional)`. Same file, same props, one sandbox apart.
 
 Fix: `optionalText ?? (isOptional ? "(optional)" : undefined)`.
 
