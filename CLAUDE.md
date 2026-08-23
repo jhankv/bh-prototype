@@ -108,11 +108,26 @@ and the pristine-versus-proposed comparison is the point of the tool. Views call
 `useDS()` from `@/ds`, backed by a lazy per-sandbox registry in
 `src/ds/registry.ts`. Only capitalised exports are registered.
 
-**3. Frames are inert until clicked.** An iframe swallows pointer events, so a
-frame under the cursor would stop the canvas panning. Releasing one needs a
-message, not a keyboard handler: once a frame is used, focus lives **inside** the
-iframe and the canvas window receives no keydown at all. `src/lib/frameMessages.ts`
-forwards Escape by origin-checked `postMessage`.
+**3. Frames are inert until clicked, and talk back by message.** An iframe
+swallows pointer events, so a frame under the cursor would stop the canvas
+panning. Releasing one needs a message, not a keyboard handler: once a frame is
+used, focus lives **inside** the iframe and the canvas window receives no keydown
+at all. `src/lib/frameMessages.ts` carries three origin-checked messages —
+Escape and readiness upward, appearance downward.
+
+Appearance goes by message rather than by rebuilding the frame's `src` because a
+new URL reloads the document, and the state you were in is usually *how* you
+found the defect. Only a sandbox switch reloads, since a different design system
+means a different stylesheet. Two rules fall out of that, and both were bugs
+first:
+
+- A reloading frame must announce **`ready`** before it can be sent anything.
+  `load` fires before React has mounted inside, `postMessage` has no queue, and
+  the lost message left a frame rendering light-blue under a toolbar that read
+  dark-brown. The chrome disagreeing with the pixels is the worst failure this
+  tool has, because it makes a *finding* wrong.
+- Every listener filters on message **type**, not just source. They share one
+  window.
 
 ### Two design systems, side by side
 

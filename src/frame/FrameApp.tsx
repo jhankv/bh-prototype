@@ -1,9 +1,16 @@
-import { Suspense, lazy, useEffect, type ComponentType, type LazyExoticComponent } from 'react'
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+  type ComponentType,
+  type LazyExoticComponent,
+} from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
 import { DesignSystemProvider } from '@/ds'
-import { forwardEscapeToCanvas } from '@/lib/frameMessages'
+import { announceFrameReady, forwardEscapeToCanvas, onAppearanceMessage } from '@/lib/frameMessages'
 import { CopyHandoff } from './CopyHandoff'
 import { Inspector } from './inspector/Inspector'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -70,6 +77,23 @@ function auditFor(path: string): LazyExoticComponent<ComponentType> | null {
 export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   useEffect(forwardEscapeToCanvas, [])
 
+  /**
+   * The URL sets the appearance this document opens in; the canvas can change
+   * it afterwards without reloading, so it has to be state rather than a value
+   * read straight out of the search params on every render.
+   */
+  const [appearance, setAppearance] = useState(() =>
+    appearanceFromSearch(new URLSearchParams(window.location.search)),
+  )
+
+  useEffect(() => {
+    const stopListening = onAppearanceMessage(setAppearance)
+    announceFrameReady()
+    return stopListening
+  }, [])
+
+  applyAppearance(document.documentElement, appearance)
+
   if (sandboxError) {
     return <FrameError title="Sandbox unavailable" detail={sandboxError} />
   }
@@ -79,9 +103,6 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   const type = search.get('type') ?? 'view'
   const src = search.get('src') ?? ''
   const sandbox = search.get('sandbox') ?? 'none'
-  const appearance = appearanceFromSearch(search)
-
-  applyAppearance(document.documentElement, appearance)
 
   const path = `/prototypes/${project}/${src}`
 

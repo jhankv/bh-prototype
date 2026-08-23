@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { ExternalLink, Moon, Sun } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { availableSandboxes } from '@/ds/registry'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
+import { onFrameReady, pushAppearance } from '@/lib/frameMessages'
 import { frameUrl } from '@/lib/projects'
 import type { Appearance, Frame } from '@/lib/schema'
+import { FrameToolbar } from './FrameToolbar'
 
 type CanvasFrameProps = {
   slug: string
@@ -24,60 +26,104 @@ type CanvasFrameProps = {
  * Which frame is active lives in the canvas, not here, so that Escape can
  * release it and only one frame is ever live at a time.
  *
- * Colour mode is a toggle; direction is not. The distinction is what the frame
- * is showing. Light and dark are the same screen wearing different tokens, so a
- * frame per mode is a frame wasted. Left-to-right and right-to-left are not the
- * same screen at all — the copy is a different language — so they are two
- * prototypes, and you want both on the canvas at once.
- *
- * canvas.json still declares the appearance a frame opens in; the toggle only
- * changes what you are looking at.
+ * canvas.json declares the appearance and sandbox a frame OPENS in; the toolbar
+ * changes what you are looking at without changing the file. That asymmetry is
+ * the point — the canvas is a saved starting position, not a settings panel.
  */
 export function CanvasFrame({ slug, frame, active, onActivate, mounted }: CanvasFrameProps) {
   const [appearance, setAppearance] = useState<Appearance>(frame.appearance)
+  const [sandbox, setSandbox] = useState(frame.sandbox)
 
-  const url = frameUrl(slug, {
-    type: frame.type,
-    src: frame.src,
-    sandbox: frame.sandbox,
-    appearance: appearanceToParams(appearance),
-  })
+  const iframe = useRef<HTMLIFrameElement>(null)
+  const box = useRef<HTMLDivElement>(null)
 
-  // A document frame renders prose, not a design system — nothing to theme.
-  const themeable = frame.type !== 'document'
+  // A document frame renders prose, not a design system — nothing to theme,
+  // and no second version of prose to compare it against.
+  const themeable = frame.type !== 'document' && frame.sandbox !== 'none'
+
+  const sandboxes = useMemo(() => (themeable ? availableSandboxes() : []), [themeable])
+
+  const urlFor = (forSandbox: string, forAppearance: Appearance) =>
+    frameUrl(slug, {
+      type: frame.type,
+      src: frame.src,
+      sandbox: forSandbox,
+      appearance: appearanceToParams(forAppearance),
+    })
+
+  /**
+   * Held as state rather than derived, so that changing mode or theme does NOT
+   * rebuild it. Rebuilding would reload the document and throw away the state
+   * you were in when you noticed something was wrong — which is usually the
+   * whole reason you wanted to see it in another mode.
+   *
+   * Switching sandbox is the exception: a different design system is a
+   * different stylesheet, and only a fresh document can load one. That URL is
+   * rebuilt with the appearance you are looking at NOW, not the one the canvas
+   * declared, so the replacement paints correctly on its first frame instead of
+   * flashing the declared appearance and correcting itself afterwards.
+   */
+  const [iframeSrc, setIframeSrc] = useState(() => urlFor(frame.sandbox, frame.appearance))
+
+  function switchSandbox(next: string) {
+    setSandbox(next)
+    setIframeSrc(urlFor(next, appearance))
+  }
+
+  /** What the toolbar's open-in-a-tab link hands you: exactly what you see now. */
+  const standaloneUrl = urlFor(sandbox, appearance)
+
+  useEffect(() => {
+    pushAppearance(iframe.current?.contentWindow ?? null, appearance)
+  }, [appearance])
+
+  /**
+   * A reloading frame cannot be sent anything until it is listening, and `load`
+   * fires before React has mounted inside it. So the frame says when, and this
+   * re-sends whatever the toolbar has changed since the URL was built.
+   */
+  useEffect(
+    () =>
+      onFrameReady(
+        () => iframe.current?.contentWindow ?? null,
+        () => pushAppearance(iframe.current?.contentWindow ?? null, appearance),
+      ),
+    [appearance],
+  )
 
   return (
     <div
       className="absolute flex flex-col gap-2"
       style={{ left: frame.x, top: frame.y, width: frame.width }}
     >
-      <div className="flex items-baseline justify-between gap-3 px-1">
-        <span className="truncate text-sm font-medium text-shell-ink">{frame.id}</span>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="font-mono text-[11px] text-shell-muted">
-            {describeAppearance(appearance)}
-          </span>
-          {themeable && (
-            <AppearanceToggle
-              label={appearance.mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
-              onClick={() =>
-                setAppearance((current) => ({
-                  ...current,
-                  mode: current.mode === 'dark' ? 'light' : 'dark',
-                }))
-              }
-            >
-              {appearance.mode === 'dark' ? (
-                <Sun className="size-3.5" aria-hidden />
-              ) : (
-                <Moon className="size-3.5" aria-hidden />
-              )}
-            </AppearanceToggle>
-          )}
-        </div>
+      {/* Fixed height so the row does not collapse when the label gives way to
+          the toolbar, which floats and must not push the frame down. */}
+      <div className="relative h-5">
+        {active ? (
+          <FrameToolbar
+            frameId={frame.id}
+            appearance={appearance}
+            onAppearance={setAppearance}
+            sandbox={sandbox}
+            sandboxes={sandboxes}
+            onSandbox={switchSandbox}
+            themeable={themeable}
+            standaloneUrl={standaloneUrl}
+            target={box}
+            onRelease={() => onActivate(null)}
+          />
+        ) : (
+          <div className="flex items-baseline justify-between gap-3 px-1">
+            <span className="truncate text-sm font-medium text-shell-ink">{frame.id}</span>
+            <span className="shrink-0 font-mono text-[11px] text-shell-muted">
+              {describeAppearance(appearance)}
+            </span>
+          </div>
+        )}
       </div>
 
       <div
+        ref={box}
         className={`relative overflow-hidden rounded-lg border bg-white transition-colors ${
           active ? 'border-shell-accent' : 'border-shell-line'
         }`}
@@ -85,7 +131,8 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
       >
         {mounted ? (
           <iframe
-            src={url}
+            ref={iframe}
+            src={iframeSrc}
             title={frame.id}
             className="size-full border-0"
             style={{ pointerEvents: active ? 'auto' : 'none' }}
@@ -102,52 +149,11 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
             className="absolute inset-0 cursor-pointer bg-transparent"
           />
         )}
-
-        {active && (
-          <button
-            type="button"
-            onClick={() => onActivate(null)}
-            className="absolute end-2 top-2 rounded border border-shell-line bg-shell-surface px-2 py-1 text-[11px] text-shell-muted shadow-sm hover:text-shell-ink"
-          >
-            Release · Esc
-          </button>
-        )}
       </div>
 
-      <div className="flex items-start justify-between gap-3 px-1">
-        <p className="text-xs leading-relaxed text-shell-muted">{frame.caption}</p>
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          title="Open this frame standalone"
-          className="shrink-0 text-shell-muted hover:text-shell-accent"
-        >
-          <ExternalLink className="size-3.5" aria-hidden />
-        </a>
-      </div>
+      {frame.caption && (
+        <p className="px-1 text-xs leading-relaxed text-shell-muted">{frame.caption}</p>
+      )}
     </div>
-  )
-}
-
-function AppearanceToggle({
-  children,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      className="rounded border border-shell-line px-1.5 py-1 text-shell-muted transition-colors hover:text-shell-ink"
-    >
-      {children}
-    </button>
   )
 }
