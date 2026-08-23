@@ -28,13 +28,40 @@
       ]
     },
     {
+      "title": "Neon — table browser",
+      "frames": [
+        {
+          "id": "neon",
+          "src": "views/TableStudio.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 1040,
+          "width": 1420,
+          "height": 820,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "caption": "Checkbox, Select, SegmentedControl, Table. Two filter rows that have to line up with each other."
+        },
+        {
+          "id": "neon-rtl",
+          "src": "views/TableStudio.tsx",
+          "sandbox": "banhaten",
+          "x": 1480,
+          "y": 1040,
+          "width": 1420,
+          "height": 820,
+          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid."
+        }
+      ]
+    },
+    {
       "title": "Notes",
       "frames": [
         {
           "id": "notes",
           "src": "documents/observations.md",
           "x": 0,
-          "y": 1040,
+          "y": 2000,
           "width": 760,
           "height": 700,
           "caption": "What the eye caught, before any source was read."
