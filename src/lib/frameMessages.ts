@@ -10,7 +10,7 @@ export const FRAME_MESSAGE_SOURCE = 'prototype-playground-frame'
 
 export type FrameMessage = {
   source: typeof FRAME_MESSAGE_SOURCE
-  type: 'release' | 'ready' | 'zoom'
+  type: 'release' | 'ready' | 'zoom' | 'wheel'
 }
 
 function toCanvas(type: FrameMessage['type']): void {
@@ -55,6 +55,32 @@ export function forwardShortcutsToCanvas(): () => void {
  */
 export function announceFrameReady(): void {
   toCanvas('ready')
+}
+
+/**
+ * TEMPORARY DIAGNOSTIC. Reports that a wheel reached this frame's document.
+ *
+ * There is a reproducible complaint that a freshly selected frame ignores the
+ * scroll wheel until something inside it is clicked, and it cannot be
+ * reproduced here — the automation used to drive this app emits no wheel events
+ * at all. So the app counts them instead: a wheel either lands in the frame,
+ * lands on the canvas, or lands nowhere, and only the third case would mean the
+ * browser is routing it to an element that no longer exists.
+ *
+ * Remove once the cause is known.
+ */
+export function reportWheelToCanvas(): () => void {
+  function onWheel() {
+    toCanvas('wheel')
+  }
+
+  window.addEventListener('wheel', onWheel, { passive: true, capture: true })
+  return () => window.removeEventListener('wheel', onWheel, { capture: true })
+}
+
+/** TEMPORARY DIAGNOSTIC. See reportWheelToCanvas. */
+export function onFrameWheel(handler: () => void): () => void {
+  return onFrameMessage('wheel', () => true, handler)
 }
 
 /** Called in the canvas. Ignores anything not from a frame on this origin. */
