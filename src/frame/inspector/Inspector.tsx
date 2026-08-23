@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
-import { Check, Copy, Crosshair, Trash2, X } from 'lucide-react'
+import { Check, Copy, Crosshair, Pause, Play, Trash2, X } from 'lucide-react'
 import { loadIndex, resolve, type ComponentHit } from './componentIndex'
 import { componentChain, isComponentRoot } from './fiber'
 import { measure } from './measure'
@@ -42,7 +42,17 @@ type Draft = { target: Target; note: string }
 
 export function Inspector({ sandbox }: { sandbox: string }) {
   const index = useRef<Map<string, ComponentHit> | null>(null)
-  const [armed, setArmed] = useState(false)
+
+  /**
+   * Open is whether the tool is on screen; paused is whether it is listening.
+   *
+   * They are separate because the useful middle state exists: notes taken and
+   * still visible, while the prototype is clicked normally to reach the next
+   * thing worth a note. One flag could not express "showing but not capturing".
+   */
+  const [open, setOpen] = useState(false)
+  const [paused, setPaused] = useState(false)
+  const armed = open && !paused
   const [target, setTarget] = useState<Target | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [annotations, setAnnotations] = useState<Annotation[]>([])
@@ -72,7 +82,16 @@ export function Inspector({ sandbox }: { sandbox: string }) {
   }, [])
 
   const update = useCallback(() => {
-    setTarget(describe(document.elementFromPoint(point.current.x, point.current.y)))
+    const element = document.elementFromPoint(point.current.x, point.current.y)
+
+    // Otherwise the tool highlights its own toolbar and offers to annotate it,
+    // which is both useless and, briefly, quite funny.
+    if (element?.closest('[data-inspector]')) {
+      setTarget(null)
+      return
+    }
+
+    setTarget(describe(element))
   }, [describe])
 
   useEffect(() => {
@@ -120,19 +139,19 @@ export function Inspector({ sandbox }: { sandbox: string }) {
    * frame deselect instead, losing the note, is the worst outcome available.
    */
   useEffect(() => {
-    if (!armed && !draft) return
+    if (!open && !draft) return
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return
 
       event.stopPropagation()
       if (draft) setDraft(null)
-      else setArmed(false)
+      else collapse()
     }
 
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
-  }, [armed, draft])
+  }, [open, draft])
 
   // Losing the window while armed leaves a highlight stranded under a cursor
   // that is somewhere else entirely.
@@ -161,16 +180,23 @@ export function Inspector({ sandbox }: { sandbox: string }) {
     if (draft) field.current?.focus()
   }, [draft])
 
-  function arm() {
-    if (armed) {
-      setArmed(false)
-      setTarget(null)
-      return
-    }
-
-    setArmed(true)
+  function expand() {
+    setOpen(true)
+    setPaused(false)
     // Loading here rather than on mount keeps a frame nobody inspects free.
     if (!index.current) loadIndex(sandbox).then((loaded) => (index.current = loaded))
+  }
+
+  /**
+   * Collapsing keeps the notes and hides them. They are still there when you
+   * come back — losing work to tidying the screen would make tidying the screen
+   * a decision, and it should not be one.
+   */
+  function collapse() {
+    setOpen(false)
+    setPaused(false)
+    setTarget(null)
+    setDraft(null)
   }
 
   function save() {
@@ -218,9 +244,12 @@ export function Inspector({ sandbox }: { sandbox: string }) {
     >
       {showing && <Highlight target={showing} />}
 
-      {annotations.map((annotation, order) => (
-        <Marker key={annotation.id} index={order + 1} element={annotation.element} />
-      ))}
+      {/* Hidden while collapsed: the markers sit on top of the interface being
+          judged, so putting the tool away has to put them away too. */}
+      {open &&
+        annotations.map((annotation, order) => (
+          <Marker key={annotation.id} index={order + 1} element={annotation.element} />
+        ))}
 
       {draft && (
         <Field
@@ -233,10 +262,13 @@ export function Inspector({ sandbox }: { sandbox: string }) {
       )}
 
       <Bar
-        armed={armed}
+        open={open}
+        paused={paused}
         count={annotations.length}
         copied={copied}
-        onArm={arm}
+        onExpand={expand}
+        onCollapse={collapse}
+        onTogglePause={() => setPaused((current) => !current)}
         onCopy={copyAll}
         onClear={() => setAnnotations([])}
       />
@@ -364,42 +396,62 @@ function Field({
 }
 
 /**
- * Collapsed to a single button until there is something to do, then a pill.
+ * Collapsed to a single button, expanded to a pill.
  *
- * Bottom right, and out of the way on purpose: this is the tool's chrome
- * sitting on top of the thing being judged, so it should occupy as little of
- * the screen as it can while still being findable without being remembered.
- * Collapsed it is one button; the count, copy and discard only exist once there
- * is a note to count, copy or discard.
+ * Bottom right and out of the way on purpose: this is the tool's chrome sitting
+ * on top of the thing being judged, so it should occupy as little of the screen
+ * as it can while still being findable without being remembered.
+ *
+ * Pause rather than an on/off toggle, because turning it off to click something
+ * would also put away the notes already taken. Paused, the notes stay on screen
+ * and the prototype takes its own clicks again — which is most of what you do
+ * between one note and the next.
+ *
+ * One button closes, and closing is collapsing. Two controls for "stop" and
+ * "put away" would be two ways to describe the same intention.
  */
 function Bar({
-  armed,
+  open,
+  paused,
   count,
   copied,
-  onArm,
+  onExpand,
+  onCollapse,
+  onTogglePause,
   onCopy,
   onClear,
 }: {
-  armed: boolean
+  open: boolean
+  paused: boolean
   count: number
   copied: boolean
-  onArm: () => void
+  onExpand: () => void
+  onCollapse: () => void
+  onTogglePause: () => void
   onCopy: () => void
   onClear: () => void
 }) {
-  const expanded = armed || count > 0
-
-  if (!expanded) {
+  if (!open) {
     return (
       <div className="pointer-events-auto absolute right-4 bottom-4">
         <button
           type="button"
-          onClick={onArm}
-          title="Inspect"
-          aria-label="Inspect"
-          className="flex size-9 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-400 shadow-xl transition-colors hover:text-neutral-100"
+          onClick={onExpand}
+          title={count > 0 ? `Inspect · ${count} kept` : 'Inspect'}
+          aria-label={
+            count > 0 ? `Inspect, ${count} ${count === 1 ? 'note' : 'notes'} kept` : 'Inspect'
+          }
+          className="relative flex size-9 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-400 shadow-xl transition-colors hover:text-neutral-100"
         >
           <Crosshair className="size-4" aria-hidden />
+
+          {/* Notes are hidden while collapsed, so without this there is nothing
+              to say they still exist. */}
+          {count > 0 && (
+            <span className="absolute -top-1 -right-1 flex min-w-4 items-center justify-center rounded-full bg-pink-600 px-1 font-mono text-[10px] leading-4 text-white tabular-nums">
+              {count}
+            </span>
+          )}
         </button>
       </div>
     )
@@ -408,11 +460,11 @@ function Bar({
   return (
     <div className="pointer-events-auto absolute right-4 bottom-4 flex items-center gap-1 rounded-full border border-neutral-800 bg-neutral-900 px-1.5 py-1.5 shadow-xl">
       <IconButton
-        label={armed ? 'Stop inspecting · Esc' : 'Inspect'}
-        active={armed}
-        onClick={onArm}
+        label={paused ? 'Resume inspecting' : 'Pause inspecting'}
+        active={!paused}
+        onClick={onTogglePause}
       >
-        <Crosshair className="size-4" aria-hidden />
+        {paused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
       </IconButton>
 
       {count > 0 && (
@@ -433,14 +485,11 @@ function Bar({
         </>
       )}
 
-      {armed && (
-        <>
-          <span aria-hidden className="mx-0.5 h-4 w-px bg-neutral-800" />
-          <IconButton label="Stop inspecting · Esc" onClick={onArm}>
-            <X className="size-4" aria-hidden />
-          </IconButton>
-        </>
-      )}
+      <span aria-hidden className="mx-0.5 h-4 w-px bg-neutral-800" />
+
+      <IconButton label="Close · Esc" onClick={onCollapse}>
+        <X className="size-4" aria-hidden />
+      </IconButton>
     </div>
   )
 }
