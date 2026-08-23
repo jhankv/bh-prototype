@@ -16,6 +16,8 @@ export type Annotation = {
   id: number
   /** Kept so the numbered marker can be redrawn wherever the element now is. */
   element: Element
+  /** Kept so the marker keeps the colour the element had when it was picked. */
+  isComponent: boolean
   /** Present when the sandbox index recognised the element. */
   hit: ComponentHit | null
   chain: string[]

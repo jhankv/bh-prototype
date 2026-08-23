@@ -24,7 +24,7 @@ Everything below follows from that. A feature that does not improve the report d
 | | What it is |
 | --- | --- |
 | **Pink** | A component boundary — Banhaten's, or one of ours |
-| **Teal** | Layout and markup that is not a component |
+| **Blue** | Layout and markup that is not a component |
 
 That is the question a designer is actually asking while pointing at a screen,
 and it is deliberately not the same as who owns the code.
@@ -53,7 +53,7 @@ we write in a view.
 
 Reading fibers is coupled to a React internal, which is normally a bad trade.
 Here it is bounded: this code is dev-only, inside a frame that is itself
-dev-only, and if the shape ever changes the Inspector degrades to teal rather
+dev-only, and if the shape ever changes the Inspector degrades to blue rather
 than breaking a prototype.
 
 **Banhaten or ours** comes from the index built from the sandbox's own source —
@@ -139,7 +139,7 @@ Two, and both are the point rather than caveats.
 - Line and column numbers
   
 ## 9. Definition of done
-1. Alt-hover colours by kind: pink on a Banhaten component, pink on a component of ours, teal on a layout wrapper.
+1. Alt-hover colours by kind: pink on a Banhaten component, pink on a component of ours, blue on a layout wrapper.
   
 2. An annotation carries box, container, and at least one resolved `--bh-*` token.
   

@@ -33,7 +33,7 @@ type Target = {
   element: Element
   /** Null when the sandbox index does not recognise it: then it is ours. */
   hit: ComponentHit | null
-  /** Pink when a component's own root, teal when the markup between them. */
+  /** Pink when a component's own root, blue when the markup between them. */
   isComponent: boolean
   rect: DOMRect
 }
@@ -202,13 +202,14 @@ export function Inspector({ sandbox }: { sandbox: string }) {
   function save() {
     if (!draft) return
 
-    const { element, hit } = draft.target
+    const { element, hit, isComponent } = draft.target
 
     setAnnotations((current) => [
       ...current,
       {
         id: current.length + 1,
         element,
+        isComponent,
         hit,
         chain: componentChain(element),
         measurement: measure(element),
@@ -248,7 +249,12 @@ export function Inspector({ sandbox }: { sandbox: string }) {
           judged, so putting the tool away has to put them away too. */}
       {open &&
         annotations.map((annotation, order) => (
-          <Marker key={annotation.id} index={order + 1} element={annotation.element} />
+          <Marker
+            key={annotation.id}
+            index={order + 1}
+            element={annotation.element}
+            isComponent={annotation.isComponent}
+          />
         ))}
 
       {draft && (
@@ -276,11 +282,11 @@ export function Inspector({ sandbox }: { sandbox: string }) {
   )
 }
 
-/** Pink for a component of any origin, teal for the markup between them. */
+/** Pink for a component of any origin, blue for the markup between them. */
 function tint(isComponent: boolean) {
   return isComponent
-    ? { outline: 'outline-pink-500', fill: 'bg-pink-500' }
-    : { outline: 'outline-teal-500', fill: 'bg-teal-500' }
+    ? { outline: 'outline-pink-500', faded: 'outline-pink-400/60', fill: 'bg-pink-500' }
+    : { outline: 'outline-blue-500', faded: 'outline-blue-400/60', fill: 'bg-blue-500' }
 }
 
 function Highlight({ target }: { target: Target }) {
@@ -313,17 +319,34 @@ function Highlight({ target }: { target: Target }) {
   )
 }
 
-function Marker({ index, element }: { index: number; element: Element }) {
+/**
+ * A saved note keeps the colour its element had when it was picked.
+ *
+ * Marking every note in one colour was the first version and it quietly undid
+ * the distinction: you could see that something was a component while choosing
+ * it, and then not see it afterwards, which is exactly when you are reading
+ * back what you selected.
+ */
+function Marker({
+  index,
+  element,
+  isComponent,
+}: {
+  index: number
+  element: Element
+  isComponent: boolean
+}) {
   const rect = element.getBoundingClientRect()
+  const colour = tint(isComponent)
 
   return (
     <>
       <div
-        className="absolute rounded-[3px] outline-2 outline-offset-1 outline-pink-400/60"
+        className={`absolute rounded-[3px] outline-2 outline-offset-1 ${colour.faded}`}
         style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
       />
       <div
-        className="absolute flex size-4 items-center justify-center rounded-full bg-pink-500 font-mono text-[10px] leading-none text-white shadow"
+        className={`absolute flex size-4 items-center justify-center rounded-full font-mono text-[10px] leading-none text-white shadow ${colour.fill}`}
         style={{ left: rect.left - 6, top: rect.top - 6 }}
       >
         {index}
