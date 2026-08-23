@@ -245,7 +245,7 @@ function Controls({
 }) {
   const { zoomIn, zoomOut, centerView, zoomToElement } = useControls()
 
-  useWheelGestures(MIN_SCALE, MAX_SCALE)
+  useWheelGestures(MIN_SCALE, MAX_SCALE, activeFrameId)
 
   /**
    * Figma's ⌘0, pointed at the selected frame.

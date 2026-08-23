@@ -73,6 +73,24 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
   /** What the toolbar's open-in-a-tab link hands you: exactly what you see now. */
   const standaloneUrl = urlFor(sandbox, appearance)
 
+  /**
+   * Hand the frame the keyboard as soon as it is activated, rather than waiting
+   * for a click to land inside it.
+   *
+   * Activating is a click on an overlay in THIS document, so without this the
+   * frame is interactive but not focused: Escape does not release it until you
+   * have clicked something inside, because the forwarder listens in there.
+   *
+   * It may also be why scrolling a freshly selected frame sometimes does
+   * nothing until you click inside it — the overlay unmounts under a stationary
+   * cursor, and a browser re-hit-tests on the next pointer move, not on the DOM
+   * change. That part is a hypothesis: it could not be reproduced here, because
+   * the automation used to drive this app emits no wheel events at all.
+   */
+  useEffect(() => {
+    if (active) iframe.current?.contentWindow?.focus()
+  }, [active])
+
   useEffect(() => {
     pushAppearance(iframe.current?.contentWindow ?? null, appearance)
   }, [appearance])
