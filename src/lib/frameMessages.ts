@@ -11,12 +11,14 @@ export const FRAME_MESSAGE_SOURCE = 'prototype-playground-frame'
 export type FrameMessage = {
   source: typeof FRAME_MESSAGE_SOURCE
   type: 'release' | 'ready' | 'zoom' | 'wheel'
+  /** TEMPORARY DIAGNOSTIC, only on 'wheel'. See reportWheelToCanvas. */
+  wheel?: { cancelled: boolean; moved: boolean }
 }
 
-function toCanvas(type: FrameMessage['type']): void {
+function toCanvas(type: FrameMessage['type'], wheel?: FrameMessage['wheel']): void {
   if (window.parent === window) return
 
-  const message: FrameMessage = { source: FRAME_MESSAGE_SOURCE, type }
+  const message: FrameMessage = { source: FRAME_MESSAGE_SOURCE, type, wheel }
   window.parent.postMessage(message, window.location.origin)
 }
 
@@ -70,17 +72,39 @@ export function announceFrameReady(): void {
  * Remove once the cause is known.
  */
 export function reportWheelToCanvas(): () => void {
-  function onWheel() {
-    toCanvas('wheel')
+  function onWheel(event: WheelEvent) {
+    const scroller = document.scrollingElement ?? document.documentElement
+    const before = scroller.scrollTop
+
+    // Read after the frame the browser would have scrolled in, not during
+    // dispatch — at dispatch time nothing has moved yet even when it will.
+    requestAnimationFrame(() => {
+      toCanvas('wheel', {
+        cancelled: event.defaultPrevented,
+        moved: scroller.scrollTop !== before,
+      })
+    })
   }
 
-  window.addEventListener('wheel', onWheel, { passive: true, capture: true })
-  return () => window.removeEventListener('wheel', onWheel, { capture: true })
+  // Last in the bubble phase, so `defaultPrevented` reflects every other
+  // listener in this document — including any inside the design system.
+  window.addEventListener('wheel', onWheel, { passive: true })
+  return () => window.removeEventListener('wheel', onWheel)
 }
 
 /** TEMPORARY DIAGNOSTIC. See reportWheelToCanvas. */
-export function onFrameWheel(handler: () => void): () => void {
-  return onFrameMessage('wheel', () => true, handler)
+export function onFrameWheel(handler: (wheel: NonNullable<FrameMessage['wheel']>) => void) {
+  function onMessage(event: MessageEvent) {
+    if (event.origin !== window.location.origin) return
+
+    const data = event.data as FrameMessage | undefined
+    if (data?.source !== FRAME_MESSAGE_SOURCE || data.type !== 'wheel' || !data.wheel) return
+
+    handler(data.wheel)
+  }
+
+  window.addEventListener('message', onMessage)
+  return () => window.removeEventListener('message', onMessage)
 }
 
 /** Called in the canvas. Ignores anything not from a frame on this origin. */

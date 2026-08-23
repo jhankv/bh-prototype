@@ -425,14 +425,22 @@ function Key({ children }: { children: React.ReactNode }) {
  *             place.
  */
 function WheelProbe() {
-  const [counts, setCounts] = useState({ frame: 0, canvas: 0 })
+  const [counts, setCounts] = useState({ frame: 0, cancelled: 0, moved: 0, canvas: 0 })
 
   useEffect(() => {
     const wrapper = document.querySelector('.react-transform-wrapper')
     if (!wrapper) return
 
     const onCanvasWheel = () => setCounts((c) => ({ ...c, canvas: c.canvas + 1 }))
-    const stopListening = onFrameWheel(() => setCounts((c) => ({ ...c, frame: c.frame + 1 })))
+
+    const stopListening = onFrameWheel((wheel) =>
+      setCounts((c) => ({
+        ...c,
+        frame: c.frame + 1,
+        cancelled: c.cancelled + (wheel.cancelled ? 1 : 0),
+        moved: c.moved + (wheel.moved ? 1 : 0),
+      })),
+    )
 
     wrapper.addEventListener('wheel', onCanvasWheel, { passive: true, capture: true })
 
@@ -448,6 +456,10 @@ function WheelProbe() {
       className="absolute right-4 bottom-4 rounded-lg border border-shell-line bg-shell-surface px-3 py-2 font-mono text-[11px] text-shell-muted shadow-sm"
     >
       wheel → frame <span className="text-shell-ink">{counts.frame}</span>
+      <span className="mx-1.5 opacity-30">·</span>
+      cancelled <span className="text-shell-ink">{counts.cancelled}</span>
+      <span className="mx-1.5 opacity-30">·</span>
+      moved <span className="text-shell-ink">{counts.moved}</span>
       <span className="mx-1.5 opacity-30">·</span>
       canvas <span className="text-shell-ink">{counts.canvas}</span>
     </div>
