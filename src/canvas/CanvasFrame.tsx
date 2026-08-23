@@ -161,13 +161,26 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
         style={{ height: frame.height }}
       >
         {mounted ? (
-          <iframe
-            ref={iframe}
-            src={iframeSrc}
-            title={frame.id}
-            className="size-full border-0"
-            style={{ pointerEvents: active ? 'auto' : 'none' }}
-          />
+          /**
+           * `pointer-events` is deliberately NOT toggled here, and the overlay
+           * below does the blocking instead.
+           *
+           * Flipping it on the iframe made a freshly selected frame ignore the
+           * wheel until something inside it was clicked. Measured: the event
+           * reached the frame's document, nothing called preventDefault, and
+           * the page still did not move — while the arrow keys scrolled it
+           * fine. Keyboard scrolling is resolved on the main thread; wheel
+           * scrolling is resolved by the compositor against its own map of
+           * which regions scroll, and that map is built when the page paints.
+           * Turning `pointer-events` back on told the main thread immediately
+           * and left the compositor believing the region was still inert. A
+           * click forced it to rebuild, which is why clicking inside "fixed" it.
+           *
+           * An overlay in this document sits above the iframe and takes the
+           * events while the frame is inactive, so nothing about the iframe
+           * itself ever has to change.
+           */
+          <iframe ref={iframe} src={iframeSrc} title={frame.id} className="size-full border-0" />
         ) : (
           <div className="size-full animate-pulse bg-shell-bg" />
         )}
@@ -177,7 +190,7 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
             type="button"
             onClick={() => onActivate(frame.id)}
             aria-label={`Interact with ${frame.id}`}
-            className="absolute inset-0 cursor-pointer bg-transparent"
+            className="absolute inset-0 z-10 cursor-pointer bg-transparent"
           />
         )}
 
