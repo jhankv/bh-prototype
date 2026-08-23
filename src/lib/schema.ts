@@ -25,6 +25,15 @@ export const FrameSchema = z.object({
   // zod v4 defaults take the OUTPUT shape, so build it from the schema itself.
   appearance: AppearanceSchema.default(() => AppearanceSchema.parse({})),
   caption: z.string().optional(),
+  /**
+   * The screen this frame reproduces, when it reproduces one.
+   *
+   * A faithful reproduction is only worth calling faithful if the reader can
+   * check it, and a defect claimed against a real product is only credible next
+   * to the product. Recorded per frame rather than per project because two
+   * frames of one project can model two different screens.
+   */
+  reference: z.url().optional(),
 })
 
 export const SectionSchema = z.object({

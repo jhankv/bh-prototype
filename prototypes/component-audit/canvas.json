@@ -17,7 +17,8 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "Toggle, Badge, Menu, Input(shortcut), Avatar, Button. Rows with a description sit directly below rows without one."
+          "caption": "Toggle, Badge, Menu, Input(shortcut), Avatar, Button. Rows with a description sit directly below rows without one.",
+          "reference": "https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e"
         },
         {
           "id": "mercury-rtl",
@@ -33,7 +34,8 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same screen in Arabic. The control has to mirror, not only the text."
+          "caption": "The same screen in Arabic. The control has to mirror, not only the text.",
+          "reference": "https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e"
         }
       ]
     },
@@ -54,7 +56,8 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "Checkbox, Select, SegmentedControl, Table. Two filter rows that have to line up with each other."
+          "caption": "Checkbox, Select, SegmentedControl, Table. Two filter rows that have to line up with each other.",
+          "reference": "https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17"
         },
         {
           "id": "neon-rtl",
@@ -70,7 +73,8 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid."
+          "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid.",
+          "reference": "https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17"
         }
       ]
     },
@@ -91,7 +95,8 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "Toolbar, Tooltip, Menu. The bold tooltip is held open, as it is in the reference."
+          "caption": "Toolbar, Tooltip, Menu. The bold tooltip is held open, as it is in the reference.",
+          "reference": "https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a"
         },
         {
           "id": "coda-rtl",
@@ -107,7 +112,8 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same editor in Arabic. Read the shortcut inside the open tooltip."
+          "caption": "The same editor in Arabic. Read the shortcut inside the open tooltip.",
+          "reference": "https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a"
         }
       ]
     },
@@ -128,7 +134,8 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "Progress and Spinner. Four indicators at four fills, with labels of four different lengths."
+          "caption": "Progress and Spinner. Four indicators at four fills, with labels of four different lengths.",
+          "reference": "https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67"
         },
         {
           "id": "import-rtl",
@@ -144,7 +151,8 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same dialog in Arabic. Latin filenames inside an RTL row."
+          "caption": "The same dialog in Arabic. Latin filenames inside an RTL row.",
+          "reference": "https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67"
         }
       ]
     },
@@ -165,7 +173,8 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "EmptyState, surrounded by chrome. Alone on a white page it always looks fine."
+          "caption": "EmptyState, surrounded by chrome. Alone on a white page it always looks fine.",
+          "reference": "https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f"
         },
         {
           "id": "empty-rtl",
@@ -181,7 +190,8 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same page in Arabic."
+          "caption": "The same page in Arabic.",
+          "reference": "https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f"
         }
       ]
     },

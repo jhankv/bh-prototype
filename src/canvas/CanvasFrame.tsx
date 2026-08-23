@@ -199,8 +199,26 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
         {active && <SelectionRing />}
       </div>
 
-      {frame.caption && (
-        <p className="px-1 text-xs leading-relaxed text-shell-muted">{frame.caption}</p>
+      {(frame.caption || frame.reference) && (
+        <p className="px-1 text-xs leading-relaxed text-shell-muted">
+          {frame.caption}
+          {frame.reference && (
+            <>
+              {frame.caption && ' '}
+              {/* Opens outside the canvas on purpose. The reference is the thing
+                  being compared against, so it has to sit beside the frame in
+                  the reader's own window rather than replace it. */}
+              <a
+                href={frame.reference}
+                target="_blank"
+                rel="noreferrer"
+                className="text-shell-accent underline underline-offset-2 hover:no-underline"
+              >
+                Reference ↗
+              </a>
+            </>
+          )}
+        </p>
       )}
     </div>
   )

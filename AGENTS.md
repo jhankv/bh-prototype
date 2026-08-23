@@ -53,12 +53,12 @@ There is no registry to update.
       "frames": [
         {
           "id": "orders-ltr-light",
-          "type": "view",
           "src": "views/OrdersTable.tsx",
           "sandbox": "banhaten",
           "x": 0, "y": 0, "width": 1440, "height": 900,
           "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
-          "caption": "Orders list — the filter bar is the focus."
+          "caption": "Orders list — the filter bar is the focus.",
+          "reference": "https://mobbin.com/screens/…"
         }
       ]
     }
@@ -67,8 +67,14 @@ There is no registry to update.
 ```
 
 - `id` must be unique across the whole canvas.
-- `src` is relative to the project folder.
-- `type` is `view` (default) or `document`.
+- `src` is relative to the project folder. A `.md` or `.mdx` path makes the
+  frame a document; anything else is a view. There is no `type` field.
+- `reference` is optional, and belongs on any frame that **reproduces a real
+  screen**. It renders as a `Reference ↗` link at the end of the caption,
+  opening outside the canvas. A faithful reproduction is only worth calling
+  faithful if the reader can check it, and a defect claimed against a real
+  product is only credible next to the product. Put it on the frame rather than
+  the project: two frames of one project can model two different screens.
 - Sections are logical groups; the title floats above the bounding box of its frames.
 - Lay frames out left to right in a section, with roughly 60px between them
   and 140px between section rows.
