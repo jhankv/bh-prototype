@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   Columns3,
   LayoutGrid,
-  ListFilter,
   Plus,
   RefreshCw,
   Rows3,
@@ -94,6 +93,7 @@ const COPY = {
 
   pageSize: { en: 'Rows per page', ar: 'صفوف لكل صفحة' },
   offset: { en: 'Offset', ar: 'الإزاحة' },
+  more: { en: 'More actions', ar: 'إجراءات أخرى' },
 } as const
 
 /**
@@ -136,6 +136,14 @@ export default function TableStudio() {
     Select,
     SelectMenuItem,
     Table,
+    Toolbar,
+    ToolbarButton,
+    ToolbarFilterButton,
+    ToolbarMoreButton,
+    ToolbarSection,
+    ToolbarSelect,
+    ToolbarSpacer,
+    ToolbarText,
   } = useDS()
   const c = useCopy(COPY)
 
@@ -212,53 +220,62 @@ export default function TableStudio() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--bh-border-default)] px-4 py-2.5">
-          {/* The ambiguous control. See the file comment. */}
-          <SegmentedControl
-            aria-label={c.viewLabel}
-            value={view}
-            onValueChange={(value: string) => setView(value)}
-          >
-            <SegmentedControlItem value="table" aria-label={c.viewTable}>
-              <Table2 aria-hidden="true" className="size-3.5" />
-            </SegmentedControlItem>
-            <SegmentedControlItem value="grid" aria-label={c.viewGrid}>
-              <LayoutGrid aria-hidden="true" className="size-3.5" />
-            </SegmentedControlItem>
-            <SegmentedControlItem value="rows" aria-label={c.viewRows}>
-              <Rows3 aria-hidden="true" className="size-3.5" />
-            </SegmentedControlItem>
-          </SegmentedControl>
+        {/* This is what `Toolbar` is for, and the match is close enough to be
+            worth stating: Neon's row is a filter button, a columns button, an
+            add action, a result count and two page selects. Banhaten exports
+            `ToolbarFilterButton` (whose label already defaults to "Filters"),
+            `ToolbarText`, `ToolbarSelect`, `ToolbarMoreButton` and
+            `ToolbarSpacer` — and `expanded/Table.tsx` is the only file in the
+            design system that imports any of them. It is a list toolbar, so it
+            gets a list. */}
+        <div className="border-b border-[var(--bh-border-default)] px-4 py-2">
+          <Toolbar wrap>
+            <ToolbarSection>
+              {/* The ambiguous control. See the file comment. */}
+              <SegmentedControl
+                aria-label={c.viewLabel}
+                value={view}
+                onValueChange={(value: string) => setView(value)}
+              >
+                <SegmentedControlItem value="table" aria-label={c.viewTable}>
+                  <Table2 aria-hidden="true" className="size-3.5" />
+                </SegmentedControlItem>
+                <SegmentedControlItem value="grid" aria-label={c.viewGrid}>
+                  <LayoutGrid aria-hidden="true" className="size-3.5" />
+                </SegmentedControlItem>
+                <SegmentedControlItem value="rows" aria-label={c.viewRows}>
+                  <Rows3 aria-hidden="true" className="size-3.5" />
+                </SegmentedControlItem>
+              </SegmentedControl>
 
-          <Button variant="secondary" size="sm">
-            <ListFilter aria-hidden="true" className="size-3.5" />
-            {c.filters}
-          </Button>
-          <Button variant="secondary" size="sm">
-            <Columns3 aria-hidden="true" className="size-3.5" />
-            {c.columns}
-          </Button>
-          <Button size="sm">
-            <Plus aria-hidden="true" className="size-3.5" />
-            {c.addRecord}
-          </Button>
+              <ToolbarFilterButton label={c.filters} />
 
-          <span className="ms-auto font-mono text-xs text-[var(--bh-content-subtle)]">
-            {c.rowsTiming}
-          </span>
+              <ToolbarButton>
+                <Columns3 aria-hidden="true" className="size-3.5" />
+                {c.columns}
+              </ToolbarButton>
 
-          <div className="w-[76px]">
-            <Select selectValue="50" value="50" size="sm" aria-label={c.pageSize}>
-              <SelectMenuItem value="50" label="50" />
-              <SelectMenuItem value="100" label="100" />
-            </Select>
-          </div>
-          <div className="w-[76px]">
-            <Select selectValue="0" value="0" size="sm" aria-label={c.offset}>
-              <SelectMenuItem value="0" label="0" />
-              <SelectMenuItem value="50" label="50" />
-            </Select>
-          </div>
+              {/* Neon's primary action is a filled button, and `ToolbarButton`
+                  has no filled variant — only `default`, `soft` and `link`. So
+                  the real `Button` goes in the toolbar rather than a toolbar
+                  button pretending to be primary. Whether a list toolbar should
+                  be able to carry its own primary action is a question for the
+                  audit; inventing a variant that does not exist would bury it. */}
+              <Button size="sm">
+                <Plus aria-hidden="true" className="size-3.5" />
+                {c.addRecord}
+              </Button>
+            </ToolbarSection>
+
+            <ToolbarSpacer />
+
+            <ToolbarSection>
+              <ToolbarText>{c.rowsTiming}</ToolbarText>
+              <ToolbarSelect value="50" aria-label={c.pageSize} />
+              <ToolbarSelect value="0" aria-label={c.offset} />
+              <ToolbarMoreButton label={c.more} />
+            </ToolbarSection>
+          </Toolbar>
         </div>
 
         {/* The reason this screen was chosen: two filter rows, each one a run of

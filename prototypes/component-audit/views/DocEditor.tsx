@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ArrowLeft,
   Bell,
@@ -23,20 +24,35 @@ import { useCopy } from '@/copy'
  *
  * https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a
  *
- * Chosen for one detail visible in the reference: the tooltip under the bold
- * button reads **Bold ⌘ B**. A shortcut printed inside a tooltip is a shape
- * this design system has an opinion about — `TooltipContent` takes `shortcut`
- * and `showShortcut` — and it is a shape the existing findings have never
- * reached, because every shortcut examined so far arrived through `Kbd` or
- * `Input kind="shortcut"`.
+ * **This screen does not use `Toolbar`, and that is the finding rather than an
+ * omission.** The first attempt did, and it looked wrong — controls at form
+ * width, no grouping, no surface. Checking why: `Toolbar` is imported by exactly
+ * one file in the whole design system, `expanded/Table.tsx`, and its exports are
+ * `ToolbarSearch`, `ToolbarFilterButton`, `ToolbarMoreButton`, `ToolbarBadge`
+ * and `ToolbarText`. Search, filters, more, a count. It is a **list toolbar**.
+ * A rich-text formatting bar is a different instrument, and forcing one into
+ * the other would have produced a convincing false defect — the worst thing
+ * this playground can make.
  *
- * The tooltip on the bold button is left `open`, as it is in the reference.
- * That is deliberate: a tooltip that only exists on hover cannot be compared
- * between two frames on a canvas, and cannot be seen at all in a screenshot.
+ * So the controls here are the ones whose contracts actually match:
  *
- * The document body is plain markup. Banhaten ships no prose or editor
- * component, and the toolbar is the subject here — the paragraph is only there
- * to give it something to float over and a selection to act on.
+ * - **Bold, italic, underline, strikethrough** are independent states that can
+ *   all be on at once, which is `ToggleGroup type="multiple"` exactly. Each item
+ *   carries its own `aria-pressed`.
+ * - **Link, comment, image, AI** fire and forget, so they are a `ButtonGroup`,
+ *   not toggles. Putting an action in a toggle group would lie to a screen
+ *   reader about whether it is currently on.
+ * - **The style picker** opens a list and commits a value, which is `Select`.
+ * - Both groups take `mode="iconOnly"`, which is the variant these components
+ *   have for exactly this shape.
+ *
+ * The floating surface — the rounded panel with a shadow that the bar sits on —
+ * is plain markup, because Banhaten ships no floating-toolbar surface and
+ * inventing one as a component would put ours under test instead of theirs.
+ *
+ * The formatting works. Pressing bold bolds the selected run, and the style
+ * picker changes it. A toolbar whose buttons do nothing cannot show whether its
+ * pressed state reads as pressed, which is most of what there is to look at.
  */
 
 const COPY = {
@@ -51,20 +67,22 @@ const COPY = {
   messages: { en: 'Messages', ar: 'الرسائل' },
   notifications: { en: 'Notifications', ar: 'الإشعارات' },
 
-  body: {
-    en: 'During this week’s standup, the product team discussed progress made on current tasks and any obstacles encountered. They also planned upcoming work, identified dependencies, and committed to resolving any roadblocks to keep the project on track.',
-    ar: 'خلال اجتماع الوقوف لهذا الأسبوع، ناقش فريق المنتج التقدم المحرز في المهام الحالية وأي عقبات واجهتهم. كما خططوا للعمل القادم، وحددوا الاعتماديات، والتزموا بحل أي عوائق للحفاظ على مسار المشروع.',
-  },
-  selection: {
+  lead: {
     en: 'During this week’s standup,',
     ar: 'خلال اجتماع الوقوف لهذا الأسبوع،',
   },
+  rest: {
+    en: ' the product team discussed progress made on current tasks and any obstacles encountered. They also planned upcoming work, identified dependencies, and committed to resolving any roadblocks to keep the project on track.',
+    ar: ' ناقش فريق المنتج التقدم المحرز في المهام الحالية وأي عقبات واجهتهم. كما خططوا للعمل القادم، وحددوا الاعتماديات، والتزموا بحل أي عوائق للحفاظ على مسار المشروع.',
+  },
 
-  style: { en: 'Text', ar: 'نص' },
+  styleLabel: { en: 'Paragraph style', ar: 'نمط الفقرة' },
   styleBody: { en: 'Body', ar: 'نص أساسي' },
-  styleHeading: { en: 'Heading 1', ar: 'عنوان ١' },
-  colour: { en: 'Text colour', ar: 'لون النص' },
-  align: { en: 'Alignment', ar: 'المحاذاة' },
+  styleHeading: { en: 'Heading 2', ar: 'عنوان ٢' },
+  styleQuote: { en: 'Quote', ar: 'اقتباس' },
+
+  formatLabel: { en: 'Text formatting', ar: 'تنسيق النص' },
+  actionsLabel: { en: 'Insert', ar: 'إدراج' },
 
   bold: { en: 'Bold', ar: 'عريض' },
   italic: { en: 'Italic', ar: 'مائل' },
@@ -77,9 +95,9 @@ const COPY = {
 } as const
 
 /**
- * The shortcuts as a keyboard prints them. `⌘` is a bidi-neutral symbol and the
- * letter beside it is strong Latin, which is the pair that F-001 was about —
- * reached here through `TooltipShortcut` rather than through `Kbd`.
+ * The shortcuts as a keyboard prints them. `⌘` is a bidi-neutral symbol beside a
+ * strong Latin letter — the pair F-001 was about — reached here through
+ * `TooltipShortcut`, which is its own span rather than `Kbd`.
  */
 const SHORTCUTS = {
   bold: '⌘B',
@@ -89,22 +107,48 @@ const SHORTCUTS = {
   link: '⌘K',
 } as const
 
+const MARKS = {
+  bold: 'font-bold',
+  italic: 'italic',
+  underline: 'underline',
+  strike: 'line-through',
+} as const
+
+const STYLES = {
+  body: 'text-base leading-7',
+  heading: 'text-2xl font-semibold leading-snug',
+  quote: 'border-s-2 border-[var(--bh-border-default)] ps-4 text-base leading-7 italic',
+} as const
+
 export default function DocEditor() {
   const {
     Avatar,
     AvatarFallback,
     Button,
+    ButtonGroup,
     MenuContent,
     MenuItem,
     MenuRoot,
     MenuTrigger,
-    Toolbar,
-    ToolbarSelect,
+    Select,
+    SelectMenuItem,
+    ToggleGroup,
     TooltipProvider,
   } = useDS()
   const c = useCopy(COPY)
 
-  const [before, rest] = splitOnce(String(c.body), String(c.selection))
+  // Bold arrives already on, matching the reference, so the pressed and
+  // unpressed states of one group are both visible without touching anything.
+  const [marks, setMarks] = useState<string[]>(['bold'])
+  const [style, setStyle] = useState<keyof typeof STYLES>('body')
+
+  const styleLabel =
+    style === 'body' ? c.styleBody : style === 'heading' ? c.styleHeading : c.styleQuote
+
+  const markClass = marks
+    .map((mark) => MARKS[mark as keyof typeof MARKS])
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <TooltipProvider>
@@ -151,53 +195,85 @@ export default function DocEditor() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-[760px] px-8 pt-10 pb-20">
+        <main className="mx-auto max-w-[760px] px-8 pt-12 pb-20">
           <h1 className="text-4xl font-bold">{c.docTitle}</h1>
 
-          {/* The toolbar floats over the text, which is the arrangement the
-              reference uses and the one that matters: it has to read against
-              prose rather than against a chrome surface of its own. */}
-          <div className="relative mt-6">
-            <div className="absolute -top-2 start-0 z-10 -translate-y-full">
-              <Toolbar>
-                <ToolbarSelect value={c.styleBody} aria-label={c.style} />
+          {/* The bar overlaps the heading, as it does in the reference — it
+              floats over the document rather than beside it. The gap is tuned so
+              the overlap clips the heading's descenders and not its x-height:
+              a title cut in half is our layout, not Coda's. */}
+          <div className="relative mt-16">
+            {/* The floating surface is ours. Banhaten has no component for a bar
+                that hovers over prose, and the shape only reads correctly with
+                one, so it is stated here rather than faked with a component
+                that means something else. */}
+            <div className="absolute -top-3 start-0 z-10 -translate-y-full">
+              <div className="flex items-center gap-1.5 rounded-[var(--bh-radius-lg-8)] border border-[var(--bh-border-default)] bg-[var(--bh-bg-default,white)] p-1.5 shadow-[var(--shadow-md)]">
+                <div className="w-[132px]">
+                  <Select
+                    size="sm"
+                    aria-label={c.styleLabel}
+                    selectValue={style}
+                    value={styleLabel}
+                    onValueChange={(next: string) => setStyle(next as keyof typeof STYLES)}
+                  >
+                    <SelectMenuItem value="body" label={c.styleBody} />
+                    <SelectMenuItem value="heading" label={c.styleHeading} />
+                    <SelectMenuItem value="quote" label={c.styleQuote} />
+                  </Select>
+                </div>
 
-                <FormatButton shortcut={SHORTCUTS.bold} label={c.bold} defaultOpen>
-                  <Bold aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton shortcut={SHORTCUTS.italic} label={c.italic}>
-                  <Italic aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton shortcut={SHORTCUTS.underline} label={c.underline}>
-                  <Underline aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton shortcut={SHORTCUTS.strike} label={c.strike}>
-                  <Strikethrough aria-hidden="true" className="size-4" />
-                </FormatButton>
+                <Divider />
 
-                <ToolbarSelect value={c.colour} aria-label={c.colour} />
+                {/* Independent states that can all be on at once. */}
+                <ToggleGroup
+                  type="multiple"
+                  mode="iconOnly"
+                  size="sm"
+                  aria-label={c.formatLabel}
+                  value={marks}
+                  onValueChange={(next: string | string[]) =>
+                    setMarks(Array.isArray(next) ? next : [next])
+                  }
+                >
+                  <MarkButton value="bold" label={c.bold} shortcut={SHORTCUTS.bold} defaultOpen>
+                    <Bold aria-hidden="true" className="size-4" />
+                  </MarkButton>
+                  <MarkButton value="italic" label={c.italic} shortcut={SHORTCUTS.italic}>
+                    <Italic aria-hidden="true" className="size-4" />
+                  </MarkButton>
+                  <MarkButton value="underline" label={c.underline} shortcut={SHORTCUTS.underline}>
+                    <Underline aria-hidden="true" className="size-4" />
+                  </MarkButton>
+                  <MarkButton value="strike" label={c.strike} shortcut={SHORTCUTS.strike}>
+                    <Strikethrough aria-hidden="true" className="size-4" />
+                  </MarkButton>
+                </ToggleGroup>
 
-                <FormatButton shortcut={SHORTCUTS.link} label={c.link}>
-                  <Link2 aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton label={c.comment}>
-                  <MessageSquare aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton label={c.image}>
-                  <Image aria-hidden="true" className="size-4" />
-                </FormatButton>
-                <FormatButton label={c.ai}>
-                  <Sparkles aria-hidden="true" className="size-4" />
-                </FormatButton>
-              </Toolbar>
+                <Divider />
+
+                {/* Actions, not states. A toggle group here would tell a screen
+                    reader that "Comment" is currently on. */}
+                <ButtonGroup mode="iconOnly" size="sm" aria-label={c.actionsLabel}>
+                  <ActionButton label={c.link} shortcut={SHORTCUTS.link}>
+                    <Link2 aria-hidden="true" className="size-4" />
+                  </ActionButton>
+                  <ActionButton label={c.comment}>
+                    <MessageSquare aria-hidden="true" className="size-4" />
+                  </ActionButton>
+                  <ActionButton label={c.image}>
+                    <Image aria-hidden="true" className="size-4" />
+                  </ActionButton>
+                  <ActionButton label={c.ai}>
+                    <Sparkles aria-hidden="true" className="size-4" />
+                  </ActionButton>
+                </ButtonGroup>
+              </div>
             </div>
 
-            <p className="text-base leading-7">
-              {before}
-              <mark className="bg-[var(--bh-bg-accent-sky-subtle,#dbeafe)] text-[var(--foreground)]">
-                {c.selection}
-              </mark>
-              {rest}
+            <p className={STYLES[style]}>
+              <mark className={`bg-[#dbeafe] text-inherit ${markClass}`}>{c.lead}</mark>
+              {c.rest}
             </p>
           </div>
         </main>
@@ -207,35 +283,71 @@ export default function DocEditor() {
 }
 
 /**
- * One toolbar button and the tooltip that names it.
+ * One item of the formatting toggle group, wrapped in the tooltip that names it
+ * and prints its shortcut.
  *
- * `defaultOpen` holds one of them open, matching the reference. Radix keeps a
- * `defaultOpen` tooltip open until something else takes over, which is what
- * makes it comparable between two frames instead of only reachable by hovering
- * inside an iframe on a canvas.
+ * `defaultOpen` holds the first one open, matching the reference. A tooltip that
+ * only exists on hover cannot be compared between two frames on a canvas, and
+ * cannot be seen in a screenshot at all.
  */
-function FormatButton({
+function MarkButton({
+  value,
   label,
   shortcut,
   defaultOpen,
   children,
 }: {
+  value: string
   label: string
   shortcut?: string
   defaultOpen?: boolean
   children: React.ReactNode
 }) {
-  const { Tooltip, TooltipContent, TooltipTrigger, ToolbarIconButton } = useDS()
+  const { ToggleGroupItem, Tooltip, TooltipContent, TooltipTrigger } = useDS()
 
   return (
     <Tooltip defaultOpen={defaultOpen}>
       <TooltipTrigger asChild>
-        <ToolbarIconButton aria-label={label}>{children}</ToolbarIconButton>
+        <ToggleGroupItem value={value} aria-label={label}>
+          {children}
+        </ToggleGroupItem>
       </TooltipTrigger>
       <TooltipContent side="bottom" shortcut={shortcut} showShortcut={Boolean(shortcut)}>
         {label}
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+function ActionButton({
+  label,
+  shortcut,
+  children,
+}: {
+  label: string
+  shortcut?: string
+  children: React.ReactNode
+}) {
+  const { ButtonGroupItem, Tooltip, TooltipContent, TooltipTrigger } = useDS()
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <ButtonGroupItem aria-label={label}>{children}</ButtonGroupItem>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" shortcut={shortcut} showShortcut={Boolean(shortcut)}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+function Divider() {
+  return (
+    <span
+      aria-hidden="true"
+      className="h-5 w-px shrink-0 bg-[var(--bh-border-default)]"
+    />
   )
 }
 
@@ -245,11 +357,4 @@ function PlainIcon({ label, children }: { label: string; children: React.ReactNo
       {children}
     </button>
   )
-}
-
-/** Splits the body once so the selected run can be marked without a rich editor. */
-function splitOnce(text: string, needle: string): [string, string] {
-  const at = text.indexOf(needle)
-  if (at === -1) return ['', text]
-  return [text.slice(0, at), text.slice(at + needle.length)]
 }
