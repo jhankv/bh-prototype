@@ -44,6 +44,8 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
 
   const sandboxes = useMemo(() => (themeable ? availableSandboxes() : []), [themeable])
 
+  const select = useClickWithoutDrag(() => onActivate(frame.id))
+
   const urlFor = (forSandbox: string, forAppearance: Appearance) =>
     frameUrl(slug, {
       src: frame.src,
@@ -140,7 +142,7 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
           // a postage stamp, and its label is drawn at canvas scale beside it.
           <button
             type="button"
-            onClick={() => onActivate(frame.id)}
+            {...select}
             title={`Select ${frame.id}`}
             className="flex w-full cursor-pointer items-baseline justify-between gap-3 px-1 text-start"
           >
@@ -188,7 +190,7 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
         {mounted && !active && (
           <button
             type="button"
-            onClick={() => onActivate(frame.id)}
+            {...select}
             aria-label={`Interact with ${frame.id}`}
             className="absolute inset-0 z-10 cursor-pointer bg-transparent"
           />
@@ -202,6 +204,36 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
       )}
     </div>
   )
+}
+
+/** How far the pointer may travel between press and release and still be a click. */
+const DRAG_SLOP = 4
+
+/**
+ * A drag is not a click.
+ *
+ * A button fires `click` whenever the press and the release both land on it,
+ * however far the pointer travelled in between — so panning the canvas across a
+ * frame selected that frame when the drag ended. Measured in screen pixels
+ * rather than canvas ones, because the threshold is about what the hand did,
+ * not about how far the content happened to move underneath it.
+ */
+function useClickWithoutDrag(onSelect: () => void) {
+  const pressedAt = useRef<{ x: number; y: number } | null>(null)
+
+  return {
+    onPointerDown(event: React.PointerEvent) {
+      pressedAt.current = { x: event.clientX, y: event.clientY }
+    },
+    onClick(event: React.MouseEvent) {
+      const from = pressedAt.current
+      pressedAt.current = null
+
+      if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > DRAG_SLOP) return
+
+      onSelect()
+    },
+  }
 }
 
 /**
