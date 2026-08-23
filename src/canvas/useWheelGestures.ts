@@ -30,31 +30,7 @@ const PAGE_HEIGHT = 800
 
 type Transform = { x: number; y: number; scale: number }
 
-/**
- * The live frame's window, but only if the cursor is inside it.
- *
- * Tested by coordinates rather than by `event.target`, deliberately. The whole
- * reason a wheel meant for a frame can arrive here is that the browser resolved
- * the wrong target — asking that same target where the pointer is would inherit
- * the mistake. A rectangle does not go stale.
- */
-function liveFrameUnder(activeFrameId: string | null, x: number, y: number): Window | null {
-  if (!activeFrameId) return null
-
-  const box = document.querySelector(`[data-frame-box="${CSS.escape(activeFrameId)}"]`)
-  if (!box) return null
-
-  const rect = box.getBoundingClientRect()
-  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null
-
-  return box.querySelector('iframe')?.contentWindow ?? null
-}
-
-export function useWheelGestures(
-  minScale: number,
-  maxScale: number,
-  activeFrameId: string | null,
-): void {
+export function useWheelGestures(minScale: number, maxScale: number): void {
   const { setTransform } = useControls()
   const context = useTransformContext()
 
@@ -76,32 +52,6 @@ export function useWheelGestures(
     function onWheel(event: WheelEvent) {
       // Not passive: otherwise the browser scrolls or zooms the whole page.
       event.preventDefault()
-
-      /**
-       * A wheel over the live frame should scroll that frame, and normally the
-       * browser sends it straight there without this listener ever seeing it.
-       * When it does arrive here instead, the frame has been robbed of a scroll
-       * it should have had — so hand it over rather than panning the canvas
-       * underneath a prototype the user is plainly reading.
-       *
-       * Reported as: select a frame, scroll, nothing moves; click any text
-       * inside it and scrolling works from then on. A click is what makes a
-       * browser resolve the pointer's target again, which is the tell.
-       *
-       * Modifier-scroll is not forwarded: zoom belongs to the canvas wherever
-       * the cursor happens to be.
-       */
-      if (!event.ctrlKey && !event.metaKey) {
-        const frame = liveFrameUnder(activeFrameId, event.clientX, event.clientY)
-
-        if (frame) {
-          frame.scrollBy({
-            left: toPixels(event.deltaX, event.deltaMode),
-            top: toPixels(event.deltaY, event.deltaMode),
-          })
-          return
-        }
-      }
 
       const now = event.timeStamp
       const continuing = gesture.current && now - gesture.current.at < GESTURE_GAP_MS
@@ -130,7 +80,7 @@ export function useWheelGestures(
 
     element.addEventListener('wheel', onWheel, { passive: false })
     return () => element.removeEventListener('wheel', onWheel)
-  }, [activeFrameId, context, maxScale, minScale, setTransform])
+  }, [context, maxScale, minScale, setTransform])
 }
 
 /**

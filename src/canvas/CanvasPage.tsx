@@ -3,7 +3,7 @@ import { Link, useParams } from 'wouter'
 import { TransformComponent, TransformWrapper, useControls } from 'react-zoom-pan-pinch'
 import { ArrowLeft, Maximize2, Minus, Plus } from 'lucide-react'
 import { findProject, loadCanvas } from '@/lib/projects'
-import { onFrameRelease, onFrameWheel, onFrameZoom } from '@/lib/frameMessages'
+import { onFrameRelease, onFrameZoom } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
 import { useProgressiveMount } from './useProgressiveMount'
@@ -187,7 +187,6 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
         </TransformComponent>
 
         <Controls content={content} activeFrameId={activeFrameId} />
-        <WheelProbe />
       </div>
     </TransformWrapper>
   )
@@ -246,7 +245,7 @@ function Controls({
 }) {
   const { zoomIn, zoomOut, centerView, zoomToElement } = useControls()
 
-  useWheelGestures(MIN_SCALE, MAX_SCALE, activeFrameId)
+  useWheelGestures(MIN_SCALE, MAX_SCALE)
 
   /**
    * Figma's ⌘0, pointed at the selected frame.
@@ -401,67 +400,3 @@ function Key({ children }: { children: React.ReactNode }) {
   )
 }
 
-/**
- * TEMPORARY DIAGNOSTIC — remove once the scroll complaint is understood.
- *
- * A selected frame sometimes ignores the wheel until something inside it is
- * clicked. It cannot be reproduced from here: the automation used to drive this
- * app emits no wheel events at all, verified by listening for them on both
- * documents and seeing none.
- *
- * So the question is narrowed to one a person can answer by looking. Every
- * wheel event has exactly three possible fates, and each rules out a different
- * cause:
- *
- *   frame   — the browser routed it correctly, and the frame chose not to
- *             scroll. The fault is inside the prototype, not in the canvas.
- *   canvas  — it was routed to the wrong document. The forwarding added for
- *             this should then have caught it, so if the frame still does not
- *             move, that forwarding is wrong.
- *   neither — nothing counts up at all: the browser is handing the event to an
- *             element that is no longer in any tree, which no listener can see.
- *             That is the case no amount of code here can intercept, and the
- *             fix would have to be never removing the overlay in the first
- *             place.
- */
-function WheelProbe() {
-  const [counts, setCounts] = useState({ frame: 0, cancelled: 0, moved: 0, canvas: 0 })
-
-  useEffect(() => {
-    const wrapper = document.querySelector('.react-transform-wrapper')
-    if (!wrapper) return
-
-    const onCanvasWheel = () => setCounts((c) => ({ ...c, canvas: c.canvas + 1 }))
-
-    const stopListening = onFrameWheel((wheel) =>
-      setCounts((c) => ({
-        ...c,
-        frame: c.frame + 1,
-        cancelled: c.cancelled + (wheel.cancelled ? 1 : 0),
-        moved: c.moved + (wheel.moved ? 1 : 0),
-      })),
-    )
-
-    wrapper.addEventListener('wheel', onCanvasWheel, { passive: true, capture: true })
-
-    return () => {
-      wrapper.removeEventListener('wheel', onCanvasWheel, { capture: true })
-      stopListening()
-    }
-  }, [])
-
-  return (
-    <div
-      data-canvas-chrome=""
-      className="absolute right-4 bottom-4 rounded-lg border border-shell-line bg-shell-surface px-3 py-2 font-mono text-[11px] text-shell-muted shadow-sm"
-    >
-      wheel → frame <span className="text-shell-ink">{counts.frame}</span>
-      <span className="mx-1.5 opacity-30">·</span>
-      cancelled <span className="text-shell-ink">{counts.cancelled}</span>
-      <span className="mx-1.5 opacity-30">·</span>
-      moved <span className="text-shell-ink">{counts.moved}</span>
-      <span className="mx-1.5 opacity-30">·</span>
-      canvas <span className="text-shell-ink">{counts.canvas}</span>
-    </div>
-  )
-}

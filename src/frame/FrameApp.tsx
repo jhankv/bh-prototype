@@ -15,7 +15,6 @@ import {
   announceFrameReady,
   forwardShortcutsToCanvas,
   onAppearanceMessage,
-  reportWheelToCanvas,
 } from '@/lib/frameMessages'
 import { CopyHandoff } from './CopyHandoff'
 import { Inspector } from './inspector/Inspector'
@@ -82,7 +81,6 @@ function auditFor(path: string): LazyExoticComponent<ComponentType> | null {
 
 export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   useEffect(forwardShortcutsToCanvas, [])
-  useEffect(reportWheelToCanvas, [])
 
   /**
    * The URL sets the appearance this document opens in; the canvas can change

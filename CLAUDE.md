@@ -110,10 +110,24 @@ and the pristine-versus-proposed comparison is the point of the tool. Views call
 
 **3. Frames are inert until clicked, and talk back by message.** An iframe
 swallows pointer events, so a frame under the cursor would stop the canvas
-panning. Releasing one needs a message, not a keyboard handler: once a frame is
-used, focus lives **inside** the iframe and the canvas window receives no keydown
-at all. `src/lib/frameMessages.ts` carries three origin-checked messages —
-Escape and readiness upward, appearance downward.
+panning. An inactive frame is covered by an overlay in the shell's document,
+which takes the events instead.
+
+That overlay is not a style choice, and **the iframe's own `pointer-events` must
+never be toggled**. Doing so made a freshly selected frame ignore the scroll
+wheel until something inside it was clicked. It took three wrong guesses and an
+on-screen counter to find: the wheel *was* delivered to the frame's document,
+nothing called `preventDefault`, the page did not move — and the arrow keys
+scrolled it perfectly. Keyboard scrolling is resolved on the main thread; wheel
+scrolling is resolved by the compositor against its own map of which regions
+scroll, and that map is built when the page paints. Flipping `pointer-events`
+told the main thread at once and left the compositor believing the region was
+inert. Leave the iframe alone and change what sits on top of it.
+
+Releasing a frame needs a message, not a keyboard handler: once a frame is used,
+focus lives **inside** the iframe and the canvas window receives no keydown at
+all. `src/lib/frameMessages.ts` carries three origin-checked messages — Escape
+and readiness upward, appearance downward.
 
 Appearance goes by message rather than by rebuilding the frame's `src` because a
 new URL reloads the document, and the state you were in is usually *how* you

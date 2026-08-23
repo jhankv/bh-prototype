@@ -10,15 +10,13 @@ export const FRAME_MESSAGE_SOURCE = 'prototype-playground-frame'
 
 export type FrameMessage = {
   source: typeof FRAME_MESSAGE_SOURCE
-  type: 'release' | 'ready' | 'zoom' | 'wheel'
-  /** TEMPORARY DIAGNOSTIC, only on 'wheel'. See reportWheelToCanvas. */
-  wheel?: { cancelled: boolean; moved: boolean }
+  type: 'release' | 'ready' | 'zoom'
 }
 
-function toCanvas(type: FrameMessage['type'], wheel?: FrameMessage['wheel']): void {
+function toCanvas(type: FrameMessage['type']): void {
   if (window.parent === window) return
 
-  const message: FrameMessage = { source: FRAME_MESSAGE_SOURCE, type, wheel }
+  const message: FrameMessage = { source: FRAME_MESSAGE_SOURCE, type }
   window.parent.postMessage(message, window.location.origin)
 }
 
@@ -57,54 +55,6 @@ export function forwardShortcutsToCanvas(): () => void {
  */
 export function announceFrameReady(): void {
   toCanvas('ready')
-}
-
-/**
- * TEMPORARY DIAGNOSTIC. Reports that a wheel reached this frame's document.
- *
- * There is a reproducible complaint that a freshly selected frame ignores the
- * scroll wheel until something inside it is clicked, and it cannot be
- * reproduced here — the automation used to drive this app emits no wheel events
- * at all. So the app counts them instead: a wheel either lands in the frame,
- * lands on the canvas, or lands nowhere, and only the third case would mean the
- * browser is routing it to an element that no longer exists.
- *
- * Remove once the cause is known.
- */
-export function reportWheelToCanvas(): () => void {
-  function onWheel(event: WheelEvent) {
-    const scroller = document.scrollingElement ?? document.documentElement
-    const before = scroller.scrollTop
-
-    // Read after the frame the browser would have scrolled in, not during
-    // dispatch — at dispatch time nothing has moved yet even when it will.
-    requestAnimationFrame(() => {
-      toCanvas('wheel', {
-        cancelled: event.defaultPrevented,
-        moved: scroller.scrollTop !== before,
-      })
-    })
-  }
-
-  // Last in the bubble phase, so `defaultPrevented` reflects every other
-  // listener in this document — including any inside the design system.
-  window.addEventListener('wheel', onWheel, { passive: true })
-  return () => window.removeEventListener('wheel', onWheel)
-}
-
-/** TEMPORARY DIAGNOSTIC. See reportWheelToCanvas. */
-export function onFrameWheel(handler: (wheel: NonNullable<FrameMessage['wheel']>) => void) {
-  function onMessage(event: MessageEvent) {
-    if (event.origin !== window.location.origin) return
-
-    const data = event.data as FrameMessage | undefined
-    if (data?.source !== FRAME_MESSAGE_SOURCE || data.type !== 'wheel' || !data.wheel) return
-
-    handler(data.wheel)
-  }
-
-  window.addEventListener('message', onMessage)
-  return () => window.removeEventListener('message', onMessage)
 }
 
 /** Called in the canvas. Ignores anything not from a frame on this origin. */
