@@ -20,6 +20,14 @@ the frame on the canvas.
 
 Each has an `-rtl` twin rendering the same screen in Arabic.
 
+Three frames are **galleries** rather than reproductions — `buttons`, `inputs`
+and `inputs-proposed`. They show every variant of one component at once, which no
+real screen does. Both instruments are needed and they find different things: a
+gallery finds gaps in variant coverage, a composition finds disagreements
+between components. `input-2` and `input-3` below came from a gallery and no
+composition would have surfaced them, because a real form uses one variant per
+field.
+
 **Every screen is a faithful reproduction of a real product**, not a layout of
 our own. That is deliberate: without it, any defect can be answered with "that
 layout is not real". Where a screen needed something Banhaten does not ship —
@@ -427,6 +435,7 @@ no-op into a compile error.
 
 **File:** `input.tsx` · **Severity:** major
 **Status:** FIXED in `banhaten-proposed`
+**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
 
 `isRequired` drew an asterisk carrying `aria-hidden="true"`, and the control set
 `required` from the **native** prop only — `isRequired` never reached the input.
@@ -449,6 +458,7 @@ existing consumer. This states the fact without changing the mechanics.
 
 **File:** `input.tsx` · **Severity:** minor
 **Status:** FIXED in `banhaten-proposed`
+**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
 
 The optional marker was gated on both the flag and the text, and `optionalText`
 had no default. So `<Input label="Company" isOptional />` rendered a label

@@ -158,12 +158,13 @@ it. A table of uniformly Arabic rows would look correct and prove nothing.
 
 This rule paid for itself immediately: with the console in Arabic, the first tab
 renders `ل الحالات` instead of `كل الحالات`, and the table footer turned out to
-be the only English left on the screen (F-105).
+be the only English left on the screen (`pagination-1`).
 
 ### Two document formats, two jobs
 
-`documents/findings.md` is the **ledger**: prose, history, rejected hypotheses,
-read end to end. It stays markdown.
+`documents/observations.md` is the **ledger**: prose, history, rejected
+hypotheses, read end to end. It stays markdown, and there is exactly one of it —
+in `prototypes/component-audit/`.
 
 `documents/<component>-audit.mdx` is an **audit**: one component, and the
 evidence rendered live inside the paragraph that makes the claim about it.
@@ -275,22 +276,43 @@ it.
 
 ## Writing findings
 
-One entry per defect in `documents/findings.md`. `F-000` below is a template —
-real findings continue the numbering already used in those files:
+Every finding lives in `prototypes/component-audit/documents/observations.md`,
+grouped under the component it is about. That is the single ledger; do not start
+a second one, because two ledgers means two truths and neither can be trusted.
+
+**Name an entry after its component**, numbered in the order it was found:
 
 ```markdown
-### F-000 · Table — row density breaks with avatar + badge
-**Component:** table   **Severity:** major   **Modes:** all
-**Repro:** frame `orders-dense-ltr`
-**What breaks:** …
-**Expected:** …
-**Proposed fix:** `sandboxes/banhaten-proposed` — see `banhaten diff table`
+### `table-4` · Row density breaks with an avatar and a badge in one cell
+**File:** `expanded/Table.tsx` · **Severity:** major · **Status:** open
+**Repro:** frame `neon`, the customer column at 900px.
+What breaks, measured. Why it matters. Then the fix, or the question.
 ```
 
-Severity is one of `major` `minor` `mixed` `question`.
+A name carries its subject before the reader reaches the text, and it survives a
+retitle — which matters, because entries cite each other (`kbd-2` exists only to
+narrow `kbd-1`). Never number findings `F-001`; that scheme said nothing to
+anyone outside the repo.
+
+Severity is `major` `minor` or omitted. Status is `open`, `FIXED in
+banhaten-proposed`, or **Question** — the last meaning more than one answer is
+reasonable and the choice belongs to the design system's owners, not to us.
+
+**Always give a `Repro` line naming the frame.** A finding nobody can reproduce
+is an opinion.
 
 Every finding ends as one of exactly two artifacts: a note, or a diff. Never
 leave a finding only in a conversation.
+
+### Which of the two
+
+Patch it in `banhaten-proposed` when there is **one right answer** — most often
+when a component's own `role`, type or documentation already promises the
+behaviour and the code does not deliver it. Restoring a promise is a correction.
+
+Leave it open when a fix would change behaviour for existing consumers, add API,
+or pick between outcomes that produce different products. Those are decisions,
+and taking them silently is how an audit loses its standing.
 
 ---
 

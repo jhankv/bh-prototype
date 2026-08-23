@@ -96,7 +96,7 @@ const COPY = {
 
 /**
  * The shortcuts as a keyboard prints them. `⌘` is a bidi-neutral symbol beside a
- * strong Latin letter — the pair F-001 was about — reached here through
+ * strong Latin letter — the pair kbd-1 was about — reached here through
  * `TooltipShortcut`, which is its own span rather than `Kbd`.
  */
 const SHORTCUTS = {

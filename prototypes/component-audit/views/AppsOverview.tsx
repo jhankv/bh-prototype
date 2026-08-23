@@ -87,7 +87,7 @@ export default function AppsOverview() {
       </header>
 
       {/* Plain markup: these are the reference's own page tabs, and Banhaten's
-          `Tabs` is already covered by F-102 on a different surface. Using it
+          `Tabs` is already covered by page-header-1 on a different surface. Using it
           here would re-test a known defect instead of testing `EmptyState`. */}
       <nav className="flex gap-5 border-b border-[var(--bh-border-default)] px-5 text-sm">
         {tabs.map((tab, index) => (

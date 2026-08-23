@@ -196,13 +196,66 @@
       ]
     },
     {
+      "title": "Variant galleries \u2014 every state of one component at once",
+      "frames": [
+        {
+          "id": "buttons",
+          "src": "views/Buttons.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 4180,
+          "width": 900,
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Every Button variant, size, density and state. A gallery finds gaps in variant coverage; a composition finds disagreements between components. Both are needed."
+        },
+        {
+          "id": "inputs",
+          "src": "views/Inputs.tsx",
+          "sandbox": "banhaten",
+          "x": 960,
+          "y": 4180,
+          "width": 900,
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Every Input variant, size, state and affix. This frame produced input-2 and input-3."
+        },
+        {
+          "id": "inputs-proposed",
+          "src": "views/Inputs.tsx",
+          "sandbox": "banhaten-proposed",
+          "x": 1920,
+          "y": 4180,
+          "width": 900,
+          "height": 1180,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Same file, our patched sandbox. Compare the isRequired and isOptional rows against the frame to its left."
+        }
+      ]
+    },
+    {
       "title": "Notes",
       "frames": [
         {
           "id": "notes",
           "src": "documents/observations.md",
           "x": 0,
-          "y": 4180,
+          "y": 5500,
           "width": 760,
           "height": 700,
           "caption": "What the eye caught, before any source was read."
