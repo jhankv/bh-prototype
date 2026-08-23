@@ -162,12 +162,19 @@ be the only English left on the screen (`pagination-1`).
 
 ### Two document formats, two jobs
 
-`documents/observations.mdx` is the **ledger**: prose, history, rejected
-hypotheses, read end to end. There is exactly one of it, in
-`prototypes/component-audit/`.
+Findings live in `prototypes/component-audit/documents/`, **split by story** —
+`keyboard`, `direction`, `forms`, `data`, with `index` explaining how to read
+them. One story per document, and each one small enough that the copy button
+produces a prompt an agent can actually use. Do not let one grow past roughly a
+hundred and fifty lines; split it instead.
 
-It is `.mdx` rather than `.md` so an entry can carry a `<Compare>` figure beside
-the claim it makes. Use one when a fix is **visible** and the difference is small
+`method.md` is separate and is **not part of the report**. It holds how we work,
+what we nearly got wrong, and what is still uncovered. A document that mixes
+findings about the design system with cautions about our own tooling makes the
+reader sort them, and some will sort wrong.
+
+Reports are `.mdx` rather than `.md` so an entry can carry a `<Compare>` figure
+beside the claim it makes. Use one when a fix is **visible** and the difference is small
 enough to hunt for — `input-3` is one word inside a parenthesis, and no reader
 was ever going to find it across two 900px galleries. Do not use one when the fix
 is invisible: `input-2` changes an ARIA attribute and nothing on screen moves, so

@@ -1,0 +1,143 @@
+# Forms — `input`, `badge`, `avatar`
+
+Flags that render nothing, vocabularies that disagree, and one question with no
+obvious answer.
+
+---
+
+### `input-1` · `shortcutKeys` is silently ignored unless `kind="shortcut"`
+
+**File:** `input.tsx` · **Status:** Question
+
+`shortcutKeys` lives on `InputModeRenderProps`, which is intersected into
+**every** kind variant. So `<Input shortcutKeys={['Mod','K']} />` typechecks,
+passes lint, and renders nothing. It cost us one debugging cycle.
+
+Making the shortcut props exclusive to `kind: "shortcut"` would turn a silent
+no-op into a compile error.
+
+---
+
+### `input-2` · `isRequired` is decorative, and assistive technology is told nothing
+
+**File:** `input.tsx` · **Severity:** major · **Status:** FIXED in `banhaten-proposed`
+**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
+
+`isRequired` drew an asterisk carrying `aria-hidden="true"`, and the control set
+`required` from the **native** prop only — `isRequired` never reached the input.
+
+**There is no figure for this one, and there cannot be.** The fix is an
+attribute; nothing on screen changes.
+
+| | Pristine | Proposed |
+| --- | --- | --- |
+| `aria-required` | absent | `"true"` |
+| Announced | "Email, edit text" | "Email, edit text, required" |
+
+That invisibility is the finding rather than a caveat about it. A sighted user
+sees the asterisk either way; the person it was drawn for was told nothing.
+
+```diff
++ aria-required={isRequired || required || undefined}
+  required={required}
+```
+
+`aria-required` rather than native `required` **on purpose**: the native
+attribute would switch on browser form validation and change behaviour for every
+existing consumer. This states the fact without changing the mechanics.
+
+---
+
+### `input-3` · `isOptional` renders nothing unless `optionalText` is also passed
+
+**File:** `input.tsx` · **Severity:** minor · **Status:** FIXED in `banhaten-proposed`
+**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
+
+The optional marker was gated on both the flag and the text, and `optionalText`
+had no default. So `<Input label="Company" isOptional />` rendered a label
+indistinguishable from one with no flag at all.
+
+The asymmetry is the tell: `isRequired` alone draws its asterisk, `isOptional`
+alone draws nothing. Either the flag means something by itself or it should not
+exist.
+
+<Compare src="views/snippets/InputOptionalCase.tsx" viewport={620} height={150} />
+
+Middle field, top line. Pristine says `Company`; patched says `Company
+(optional)`. Same file, same props, one sandbox apart.
+
+Fix: `optionalText ?? (isOptional ? "(optional)" : undefined)`.
+
+**Open question.** The default string is English. In an Arabic-first system that
+arguably belongs in the locale layer, not the component.
+
+---
+
+### `badge-1` · Two colour vocabularies for one idea
+
+**Files:** `badge.tsx`, `expanded/Table.tsx` · **Status:** Question
+
+`Badge` accepts `color`: `neutral · blue · green · amber · danger · purple ·
+fuchsia · rose · sky · golden`. A badge cell inside `Table` accepts `tone`:
+`blue · fuchsia · amber · neutral · success · warning · danger`.
+
+`green` and `golden` are missing from the second; `success` and `warning` from
+the first. `expanded/Table.tsx` bridges them with a private `badgeColor()`
+mapping `success → green`, `warning → amber`.
+
+It renders correctly. The cost is that whoever learns one vocabulary guesses
+wrong in the other, and neither type says so.
+
+---
+
+### `badge-2` · An invalid colour renders an unstyled badge instead of failing
+
+**File:** `badge.tsx` · **Severity:** minor
+
+Passing anything outside the union — `red` is the obvious guess for a failure
+state — produces a badge with no background, no border and no padding. It renders
+as bare text that does not read as a badge at all.
+
+TypeScript catches the mistake; a JS codebase, or a value arriving from data,
+does not. A status column quietly loses its most important state.
+
+**Suggested:** a `defaultVariants.color` of `neutral`, and a development warning
+naming the invalid value and the valid set.
+
+---
+
+### `badge-3` · Five order statuses, four tones
+
+**Files:** `badge.tsx`, `expanded/Table.tsx` · **Status:** Question
+
+`partially refunded` has no tone of its own and falls back to `neutral` — the
+same tone as `refunded`. Two different states render identically.
+
+Only a gap if the tone set is meant to be exhaustive, which is worth asking.
+
+---
+
+### `avatar-1` · Initials are not meaningful for Arabic names
+
+**File:** `avatar.tsx` · **Status:** Question
+
+The fallback takes the first letter of the first two words:
+
+| Name | Initials |
+| --- | --- |
+| عاشور عوضية | عع |
+| سفيان تومي | ست |
+| عبد الرحمن بن محمد بن عبد الله آل سعود الشمري | عا |
+
+Arabic script is cursive, so isolated letters lifted out of a word render in
+forms a reader does not associate with the name. And initials are not an Arabic
+naming convention at all — `عع` carries no signal, while `ست` reads as an
+unrelated word.
+
+Compounding it, Arabic given names are heavily concentrated (عبد, محمد, أحمد), so
+first-letter initials collide constantly. Three different customers in one
+dataset all showed `عا`.
+
+**Not filed as a defect** because there may be no good answer. Worth discussing:
+fall back to a generated colour or icon when the name is non-Latin, or drop
+initials entirely.

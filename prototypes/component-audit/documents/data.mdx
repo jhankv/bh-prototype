@@ -1,0 +1,109 @@
+# Data surfaces — `Table`, `PageHeader`, `pagination`
+
+Three findings about text a data surface prints: a count nobody measured, labels
+that get cut, and strings that exist but cannot be reached.
+
+*All three were recorded from a Sales Console composition that is no longer on a
+canvas. The patches are in `banhaten-proposed`; the screens that produced them
+need rebuilding.*
+
+---
+
+### `table-1` · The footer prints a row count nobody measured
+
+**Files:** `expanded/Table.tsx`, `pagination.tsx` · **Severity:** major
+**Status:** FIXED in `banhaten-proposed`
+
+With `pagination={{ pageSize: 8, totalRows: 12, showCaption: true }}` the footer
+rendered **two summaries that disagreed**:
+
+| Slot | Rendered |
+| --- | --- |
+| `toolbar-text` | `Showing 1 to 8 of 12 rows` — correct |
+| `pagination-caption` | `Showing 1 to 10 of 20 results` — invented |
+
+`Pagination` has two text slots, `caption` and `summary`. `DataTable` passed
+`summary` and never `caption`, so `caption ?? messages.caption` fell through to
+the default string.
+
+**Why it matters.** That default is not a placeholder — it is a well-formed
+sentence containing two plausible numbers. A table whose job is to say how much
+data exists reported a quantity that was never measured, and it looked correct
+enough to ship.
+
+```diff
+  showCaption={paginationConfig.showCaption ?? false}
++ caption={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
+  summary={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
+```
+
+**Worth discussing:** whether a default message should ever be a sentence with
+numbers in it. An empty string fails visibly; this failed silently.
+
+---
+
+### `page-header-1` · It clips its own tab labels, with no way to opt out
+
+**Files:** `expanded/PageHeader.tsx`, `tabs.tsx`, `tabs.css` · **Severity:** major
+**Status:** open — needs a design decision, not a patch
+
+`All statuses` rendered as `ll statuses` in LTR and `All statuse` in RTL. Every
+tab was exactly `65.4px` wide regardless of its label:
+
+| Label | Box | Text needs | Result |
+| --- | --- | --- | --- |
+| All statuses | 65.39 | 87.08 | clipped 21.7px |
+| Refunded | 65.41 | 68.58 | clipped 3.2px |
+| Pending | 65.41 | 62.00 | fits |
+| Fulfilled | 65.39 | 59.23 | fits |
+
+Three rules combining:
+
+1. `PageHeader` hardcodes `fullWidth` on `<Tabs>`.
+2. `.ds-tabs__tab { flex: 1 0 0px }` — every tab takes an equal share of a zero
+   basis, so width is `list ÷ count`, never content.
+3. `.ds-tabs__label { flex: 0 0 auto; white-space: nowrap }` refuses to shrink,
+   and the list's `overflow: auto` clips what spills.
+
+**Why it matters.** `Refunded` loses three pixels — small enough to pass review
+and large enough to be wrong, which is the worst size for a defect. And it scales
+with tab count: five tabs in a 391px header already breaks, with no warning.
+
+**No escape hatch.** `PageHeaderTabs` is
+`Pick<TabsProps, "activeIndex" | "ariaLabel" | "defaultActiveIndex" | "items" | "onActiveIndexChange">`
+— `fullWidth` is not in the list. And `Tabs` sets `ds-tabs--hug` when `fullWidth`
+is false, but **no CSS rule for that class exists anywhere in the package**. The
+hug mode is a dead class.
+
+**Why not patched.** Three reasonable fixes exist — truncate the label honestly,
+let the list scroll instead of clip, or expose `fullWidth` — and they produce
+different products. Clipping the first letter is the one outcome nobody chose,
+but choosing the replacement is yours.
+
+---
+
+### `pagination-1` · Arabic strings exist and nothing can reach them
+
+**Files:** `pagination.tsx`, `expanded/Table.tsx` · **Severity:** major
+**Status:** open
+
+With a console fully translated and `dir="rtl"`, every string was Arabic except
+the two in the table footer, which read `Showing 1 to 8 of 12 rows`.
+
+**This is not a missing feature.** `pagination.tsx` exports a complete Arabic
+message set as `arabicPaginationMessages`. `DataTable` never references it — zero
+occurrences. `Pagination` resolves its strings as
+`{ ...defaultPaginationMessages, ...messageOverrides }` and nothing consults
+`dir`. So `DataTable` passes `dir` down, the layout mirrors, and the words stay
+English.
+
+**Why it matters.** The work is done and the wiring is missing, which is the
+failure mode most likely to survive review: a reader greps for Arabic support,
+finds it, and concludes the component is covered. A team shipping an Arabic
+console discovers by looking at the screen that they must hand-write every label
+— including the caption `table-1` shows is wrong anyway.
+
+**Two candidate fixes, not equivalent.** Selecting messages from `dir` inside
+`Pagination` makes RTL correct by default. Forwarding a `messages` prop through
+`DataTable` makes it *possible*. The first is a behaviour change and belongs to
+you.

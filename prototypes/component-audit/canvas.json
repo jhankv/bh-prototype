@@ -249,16 +249,61 @@
       ]
     },
     {
-      "title": "Notes",
+      "title": "Reports \u2014 one story each, small enough to copy",
       "frames": [
         {
-          "id": "notes",
-          "src": "documents/observations.mdx",
+          "id": "index",
+          "src": "documents/index.mdx",
           "x": 0,
           "y": 5500,
-          "width": 900,
-          "height": 900,
-          "caption": "What the eye caught, before any source was read."
+          "width": 820,
+          "height": 1000,
+          "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
+        },
+        {
+          "id": "keyboard",
+          "src": "documents/keyboard.mdx",
+          "x": 880,
+          "y": 5500,
+          "width": 820,
+          "height": 1000,
+          "caption": "toolbar and button-group. Three findings and the one cause that explains them."
+        },
+        {
+          "id": "direction",
+          "src": "documents/direction.mdx",
+          "x": 1760,
+          "y": 5500,
+          "width": 820,
+          "height": 1000,
+          "caption": "RTL and bidi. Three of these are the same defect in three files."
+        },
+        {
+          "id": "forms",
+          "src": "documents/forms.mdx",
+          "x": 2640,
+          "y": 5500,
+          "width": 820,
+          "height": 1000,
+          "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
+        },
+        {
+          "id": "data",
+          "src": "documents/data.mdx",
+          "x": 3520,
+          "y": 5500,
+          "width": 820,
+          "height": 1000,
+          "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
+        },
+        {
+          "id": "method",
+          "src": "documents/method.md",
+          "x": 4400,
+          "y": 5500,
+          "width": 820,
+          "height": 1000,
+          "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."
         }
       ]
     }
