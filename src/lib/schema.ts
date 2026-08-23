@@ -15,7 +15,6 @@ export const AppearanceSchema = z.object({
 
 export const FrameSchema = z.object({
   id: z.string().min(1),
-  type: z.enum(['view', 'document']).default('view'),
   /** Path relative to the project folder, e.g. "views/orders-table.tsx". */
   src: z.string().min(1),
   sandbox: z.string().default('none'),
@@ -49,6 +48,19 @@ export type Frame = z.infer<typeof FrameSchema>
 export type Section = z.infer<typeof SectionSchema>
 export type Canvas = z.infer<typeof CanvasSchema>
 export type Manifest = z.infer<typeof ManifestSchema>
+
+/**
+ * What a frame renders is its file, not a separate field.
+ *
+ * Views are `.tsx` under `views/` and documents are `.md`/`.mdx` under
+ * `documents/`; the globs that load them already enforce that split, so a
+ * `type` field alongside `src` could
+ * only ever repeat it or contradict it — and `type: "view"` pointing at a `.md`
+ * was a state the schema allowed and nothing could render.
+ */
+export function isDocument(src: string): boolean {
+  return src.endsWith('.md') || src.endsWith('.mdx')
+}
 
 /** Flattens a zod error into a short, human-readable line for an error frame. */
 export function formatIssues(error: z.ZodError): string {

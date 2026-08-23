@@ -58,7 +58,6 @@
       "frames": [
         {
           "id": "findings",
-          "type": "document",
           "src": "documents/findings.md",
           "x": 0,
           "y": 1320,

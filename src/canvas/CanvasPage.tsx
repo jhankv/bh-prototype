@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'wouter'
 import { TransformComponent, TransformWrapper, useControls } from 'react-zoom-pan-pinch'
 import { ArrowLeft, Maximize2, Minus, Plus } from 'lucide-react'
 import { findProject, loadCanvas } from '@/lib/projects'
-import { onFrameRelease } from '@/lib/frameMessages'
+import { onFrameRelease, onFrameZoom } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
 import { useProgressiveMount } from './useProgressiveMount'
-import { useWheelZoom } from './useWheelZoom'
+import { useWheelGestures } from './useWheelGestures'
 import type { Canvas, Section } from '@/lib/schema'
 
 const MIN_SCALE = 0.05
@@ -139,9 +139,9 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       // collapses it to 1e-7, so zooming out hard loses the canvas entirely.
       // A precision canvas wants hard stops; Figma has no rubber-banding either.
       disablePadding
-      // Zoom is handled by useWheelZoom instead — the built-in one is additive
-      // and scales with |deltaY|, which made a single mouse tick cross the whole
-      // range. Trackpad two-finger panning is separate and stays enabled.
+      // The wheel belongs to useWheelGestures — scroll pans, modifier-scroll
+      // zooms. The library's own trackpad panning ships disabled, and turning it
+      // on would have it negotiating with our zoom over the same event.
       wheel={{ disabled: true }}
       panning={{ activationKeys: [' '] }}
       doubleClick={{ disabled: true }}
@@ -149,6 +149,21 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       onPanningStop={() => setPanning(false)}
     >
       <div
+        /**
+         * Pressing empty canvas clears the selection, the way it does in every
+         * canvas tool. On pointerdown rather than click, so the frame lets go
+         * the instant you commit to leaving it.
+         *
+         * A press that lands inside a frame is the frame's business, and one
+         * that lands on the zoom bar is nobody's — reaching for a control is
+         * not the same gesture as reaching for the background. While a frame is
+         * live its own iframe takes the press, so this never sees it.
+         */
+        onPointerDown={(event) => {
+          const target = event.target as Element | null
+          if (target?.closest('[data-frame], [data-canvas-chrome]')) return
+          setActiveFrameId(null)
+        }}
         className={`relative flex-1 overflow-hidden bg-shell-bg ${
           panning ? 'cursor-grabbing' : spaceArmed ? 'cursor-grab' : ''
         }`}
@@ -171,7 +186,7 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
           </div>
         </TransformComponent>
 
-        <Controls content={content} />
+        <Controls content={content} activeFrameId={activeFrameId} />
       </div>
     </TransformWrapper>
   )
@@ -221,10 +236,70 @@ function SectionGroup({
   )
 }
 
-function Controls({ content }: { content: { width: number; height: number } }) {
-  const { zoomIn, zoomOut, centerView } = useControls()
+function Controls({
+  content,
+  activeFrameId,
+}: {
+  content: { width: number; height: number }
+  activeFrameId: string | null
+}) {
+  const { zoomIn, zoomOut, centerView, zoomToElement } = useControls()
 
-  useWheelZoom(MIN_SCALE, MAX_SCALE)
+  useWheelGestures(MIN_SCALE, MAX_SCALE)
+
+  /**
+   * Figma's ⌘0, pointed at the selected frame.
+   *
+   * It has to arrive two ways. Fired at the canvas it is a keydown like any
+   * other; fired at a frame the user is working inside, focus is in the iframe
+   * and this window never hears it, so the frame forwards it as a message. Same
+   * handler either way — the shortcut should not care where the caret is.
+   */
+  const zoomToFrame = useCallback(() => {
+    if (!activeFrameId) return
+
+    const node = document.querySelector<HTMLElement>(
+      `[data-frame-box="${CSS.escape(activeFrameId)}"]`,
+    )
+    if (node) zoomToElement(node, 1, 240)
+  }, [activeFrameId, zoomToElement])
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (!activeFrameId) return
+
+      // ⌘0 is the one people reach for, but the browser owns it too and does not
+      // always hand it over. Figma's actual zoom-to-selection is Shift+2, which
+      // nothing competes for — so both work, and one of them is guaranteed to.
+      //
+      // Shift+2 is deliberately not forwarded from inside a frame: there it is
+      // the "@" key, and a prototype you are typing into must keep its own
+      // keyboard. ⌘0 types nothing, which is what makes it safe to forward.
+      // Matched on `code`, the physical key, not `key`, the character it
+      // produces. Shift+2 is "@" on a US layout and a double quote on a Spanish
+      // one — a shortcut bound to the character silently stops existing when
+      // someone changes keyboard layout. `code` is where the finger goes.
+      const noModifiers = !event.metaKey && !event.ctrlKey && !event.altKey
+
+      const zoomKey =
+        (event.code === 'Digit0' && (event.metaKey || event.ctrlKey)) ||
+        (event.code === 'Digit2' && event.shiftKey && noModifiers)
+
+      if (!zoomKey) return
+
+      // With no selection the browser keeps its own reset-zoom shortcut.
+      event.preventDefault()
+      zoomToFrame()
+    }
+
+    window.addEventListener('keydown', onKey)
+    const stopListening = onFrameZoom(zoomToFrame)
+
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      stopListening()
+    }
+  }, [activeFrameId, zoomToFrame])
 
   /**
    * Fit is not decorative. A canvas is thousands of pixels wide, so opening one
@@ -240,9 +315,33 @@ function Controls({ content }: { content: { width: number; height: number } }) {
     centerView(Math.max(scale, MIN_SCALE), 0)
   }, [centerView, content.height, content.width])
 
-  // Fit on open, after layout has settled enough to measure the wrapper.
+  /**
+   * Fit on open, after layout has settled enough to measure the wrapper — and
+   * exactly once.
+   *
+   * Depending on `fit` alone means "on every render", which is not obvious and
+   * cost real time to find: `useControls()` builds a fresh object of fresh
+   * functions on every call, so `centerView`, and therefore `fit`, has a new
+   * identity each time. Every re-render re-fitted the canvas and threw away the
+   * zoom the user had chosen — and selecting a frame is a re-render.
+   *
+   * The guard is a ref rather than empty deps so the effect still closes over a
+   * `fit` that can measure, instead of a stale one captured before layout. It
+   * is raised inside the frame callback, not beside it: StrictMode mounts,
+   * cleans up and mounts again, so a flag set on the way in would be true on the
+   * second pass while the first pass's fit had already been cancelled — and the
+   * canvas would open unfitted, which is how this was caught.
+   */
+  const fitted = useRef(false)
+
   useEffect(() => {
-    const frame = requestAnimationFrame(fit)
+    if (fitted.current) return
+
+    const frame = requestAnimationFrame(() => {
+      fitted.current = true
+      fit()
+    })
+
     return () => cancelAnimationFrame(frame)
   }, [fit])
 
@@ -250,7 +349,10 @@ function Controls({ content }: { content: { width: number; height: number } }) {
     'flex size-7 items-center justify-center rounded text-shell-muted hover:bg-shell-bg hover:text-shell-ink'
 
   return (
-    <div className="absolute bottom-4 left-4 flex items-center gap-0.5 rounded-lg border border-shell-line bg-shell-surface p-1 shadow-sm">
+    <div
+      data-canvas-chrome=""
+      className="absolute bottom-4 left-4 flex items-center gap-0.5 rounded-lg border border-shell-line bg-shell-surface p-1 shadow-sm"
+    >
       <button type="button" onClick={() => zoomOut()} className={button} aria-label="Zoom out">
         <Minus className="size-4" aria-hidden />
       </button>
@@ -276,11 +378,13 @@ function ShortcutHint() {
 
   return (
     <p className="ms-2 me-1 flex items-center gap-1.5 text-[11px] whitespace-nowrap text-shell-muted">
-      <Key>Space</Key>
-      <span className="opacity-60">+ drag to pan</span>
+      <span className="opacity-60">Scroll to pan</span>
       <span className="mx-0.5 opacity-30">·</span>
       <Key>{zoomKey}</Key>
       <span className="opacity-60">+ scroll to zoom</span>
+      <span className="mx-0.5 opacity-30">·</span>
+      <Key>Space</Key>
+      <span className="opacity-60">+ drag</span>
     </p>
   )
 }

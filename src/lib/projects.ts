@@ -83,11 +83,10 @@ export function loadCanvas(slug: string): Loaded<Canvas> {
 /** Builds the standalone, shareable URL for one frame. */
 export function frameUrl(
   slug: string,
-  frame: { type: string; src: string; sandbox: string; appearance: Record<string, string> },
+  frame: { src: string; sandbox: string; appearance: Record<string, string> },
 ): string {
   const params = new URLSearchParams({
     project: slug,
-    type: frame.type,
     src: frame.src,
     sandbox: frame.sandbox,
     ...frame.appearance,

@@ -42,7 +42,6 @@
       "frames": [
         {
           "id": "findings",
-          "type": "document",
           "src": "documents/findings.md",
           "x": 3040,
           "y": 0,
@@ -52,7 +51,6 @@
         },
         {
           "id": "pageheader-audit",
-          "type": "document",
           "src": "documents/pageheader-audit.mdx",
           "x": 4040,
           "y": 0,

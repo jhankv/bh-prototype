@@ -3,8 +3,9 @@ import { availableSandboxes } from '@/ds/registry'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
 import { onFrameReady, pushAppearance } from '@/lib/frameMessages'
 import { frameUrl } from '@/lib/projects'
-import type { Appearance, Frame } from '@/lib/schema'
+import { isDocument, type Appearance, type Frame } from '@/lib/schema'
 import { FrameToolbar } from './FrameToolbar'
+import { useCanvasScale } from './useCanvasScale'
 
 type CanvasFrameProps = {
   slug: string
@@ -39,13 +40,12 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
 
   // A document frame renders prose, not a design system — nothing to theme,
   // and no second version of prose to compare it against.
-  const themeable = frame.type !== 'document' && frame.sandbox !== 'none'
+  const themeable = !isDocument(frame.src) && frame.sandbox !== 'none'
 
   const sandboxes = useMemo(() => (themeable ? availableSandboxes() : []), [themeable])
 
   const urlFor = (forSandbox: string, forAppearance: Appearance) =>
     frameUrl(slug, {
-      type: frame.type,
       src: frame.src,
       sandbox: forSandbox,
       appearance: appearanceToParams(forAppearance),
@@ -93,6 +93,10 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
 
   return (
     <div
+      // Marks everything that belongs to this frame, chrome included, so the
+      // canvas can tell a click that lands on a frame from one that lands on
+      // nothing without every child having to stop the event itself.
+      data-frame=""
       className="absolute flex flex-col gap-2"
       style={{ left: frame.x, top: frame.y, width: frame.width }}
     >
@@ -113,20 +117,29 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
             onRelease={() => onActivate(null)}
           />
         ) : (
-          <div className="flex items-baseline justify-between gap-3 px-1">
+          // The name selects the frame, as it does in Figma. It is often the
+          // only part of a frame you can reach: at low zoom the frame itself is
+          // a postage stamp, and its label is drawn at canvas scale beside it.
+          <button
+            type="button"
+            onClick={() => onActivate(frame.id)}
+            title={`Select ${frame.id}`}
+            className="flex w-full cursor-pointer items-baseline justify-between gap-3 px-1 text-start"
+          >
             <span className="truncate text-sm font-medium text-shell-ink">{frame.id}</span>
             <span className="shrink-0 font-mono text-[11px] text-shell-muted">
               {describeAppearance(appearance)}
             </span>
-          </div>
+          </button>
         )}
       </div>
 
       <div
         ref={box}
-        className={`relative overflow-hidden rounded-lg border bg-white transition-colors ${
-          active ? 'border-shell-accent' : 'border-shell-line'
-        }`}
+        // Lets a keyboard shortcut in the canvas find this frame's box without
+        // the canvas having to keep a ref to every frame it renders.
+        data-frame-box={frame.id}
+        className="relative overflow-hidden rounded-lg border border-shell-line bg-white"
         style={{ height: frame.height }}
       >
         {mounted ? (
@@ -149,11 +162,39 @@ export function CanvasFrame({ slug, frame, active, onActivate, mounted }: Canvas
             className="absolute inset-0 cursor-pointer bg-transparent"
           />
         )}
+
+        {active && <SelectionRing />}
       </div>
 
       {frame.caption && (
         <p className="px-1 text-xs leading-relaxed text-shell-muted">{frame.caption}</p>
       )}
     </div>
+  )
+}
+
+/**
+ * The blue ring on the selected frame, drawn at a constant thickness on screen.
+ *
+ * A plain border would not do. It lives inside the transformed layer, so a 1px
+ * border is 1px only at 100%: at the zoom a ten-frame canvas opens at it is
+ * under half a pixel, and the one thing the ring has to say — *this* is the
+ * frame you are about to change — is exactly what it stops saying when you zoom
+ * out far enough to need it. Dividing by the scale keeps it two real pixels
+ * everywhere, which is what Figma draws and why its selection never thins out.
+ *
+ * Its own component so that subscribing to the zoom re-renders four lines of
+ * chrome rather than every frame on the canvas, and `inset` so the box's own
+ * `overflow-hidden` cannot clip it.
+ */
+function SelectionRing() {
+  const scale = useCanvasScale()
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-10 rounded-lg"
+      style={{ boxShadow: `inset 0 0 0 ${2 / scale}px var(--color-shell-accent)` }}
+    />
   )
 }

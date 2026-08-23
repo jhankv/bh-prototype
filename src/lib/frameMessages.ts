@@ -3,13 +3,14 @@ import { AppearanceSchema, type Appearance } from './schema'
 /**
  * Once a frame is activated the user clicks inside it, and keyboard focus moves
  * into the iframe document. From then on the canvas window never sees a keydown
- * — Escape would be dead exactly when it is needed. The frame forwards it.
+ * — every canvas shortcut is dead exactly when it is needed, so the frame
+ * forwards the ones that belong to the canvas rather than to the prototype.
  */
 export const FRAME_MESSAGE_SOURCE = 'prototype-playground-frame'
 
 export type FrameMessage = {
   source: typeof FRAME_MESSAGE_SOURCE
-  type: 'release' | 'ready'
+  type: 'release' | 'ready' | 'zoom'
 }
 
 function toCanvas(type: FrameMessage['type']): void {
@@ -19,10 +20,24 @@ function toCanvas(type: FrameMessage['type']): void {
   window.parent.postMessage(message, window.location.origin)
 }
 
-/** Called inside a frame document. */
-export function forwardEscapeToCanvas(): () => void {
+/**
+ * Called inside a frame document.
+ *
+ * Only shortcuts the canvas owns are forwarded. Everything else stays with the
+ * prototype — a frame you are typing into must keep its own keyboard.
+ */
+export function forwardShortcutsToCanvas(): () => void {
   function onKey(event: KeyboardEvent) {
-    if (event.key === 'Escape') toCanvas('release')
+    if (event.key === 'Escape') {
+      toCanvas('release')
+      return
+    }
+
+    // `code`, not `key`: the physical key, so the shortcut survives a layout.
+    if (event.code === 'Digit0' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault()
+      toCanvas('zoom')
+    }
   }
 
   window.addEventListener('keydown', onKey)
@@ -45,6 +60,11 @@ export function announceFrameReady(): void {
 /** Called in the canvas. Ignores anything not from a frame on this origin. */
 export function onFrameRelease(handler: () => void): () => void {
   return onFrameMessage('release', () => true, handler)
+}
+
+/** Fires when the focused frame asks the canvas to zoom to it. */
+export function onFrameZoom(handler: () => void): () => void {
+  return onFrameMessage('zoom', () => true, handler)
 }
 
 /**

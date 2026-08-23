@@ -9,8 +9,13 @@ import {
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
+import { isDocument } from '@/lib/schema'
 import { DesignSystemProvider } from '@/ds'
-import { announceFrameReady, forwardEscapeToCanvas, onAppearanceMessage } from '@/lib/frameMessages'
+import {
+  announceFrameReady,
+  forwardShortcutsToCanvas,
+  onAppearanceMessage,
+} from '@/lib/frameMessages'
 import { CopyHandoff } from './CopyHandoff'
 import { Inspector } from './inspector/Inspector'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -75,7 +80,7 @@ function auditFor(path: string): LazyExoticComponent<ComponentType> | null {
 }
 
 export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
-  useEffect(forwardEscapeToCanvas, [])
+  useEffect(forwardShortcutsToCanvas, [])
 
   /**
    * The URL sets the appearance this document opens in; the canvas can change
@@ -100,13 +105,12 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
 
   const search = new URLSearchParams(window.location.search)
   const project = search.get('project') ?? ''
-  const type = search.get('type') ?? 'view'
   const src = search.get('src') ?? ''
   const sandbox = search.get('sandbox') ?? 'none'
 
   const path = `/prototypes/${project}/${src}`
 
-  if (type === 'document') {
+  if (isDocument(src)) {
     if (path.endsWith('.mdx')) {
       const Audit = auditFor(path)
       const raw = auditSources[path]

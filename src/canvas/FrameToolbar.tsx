@@ -61,10 +61,24 @@ export function FrameToolbar({
 
   return (
     <div
-      className="absolute bottom-full left-0 z-20"
-      // Counter-scaled so the chrome stays screen-sized at any zoom, anchored at
-      // the bottom-left corner so it grows upward off the frame's top edge.
-      style={{ transform: `scale(${1 / scale})`, transformOrigin: 'bottom left' }}
+      className="absolute bottom-full left-1/2 z-20"
+      /**
+       * Counter-scaled so the chrome stays screen-sized at any zoom, and
+       * centred on the frame rather than pinned to its left edge — the toolbar
+       * belongs to the whole frame, so hanging it off one corner reads as if it
+       * belonged to that corner.
+       *
+       * The two halves of the transform work in different units, which is what
+       * makes this hold at every zoom. `scale` runs first, about the bottom
+       * centre, so the frame's top edge stays put while the bar grows upward.
+       * `translateX(-50%)` then resolves against the element's *untransformed*
+       * width, so the shift is exactly half of what `left-1/2` overshot by,
+       * whatever the scale happens to be.
+       */
+      style={{
+        transform: `translateX(-50%) scale(${1 / scale})`,
+        transformOrigin: 'bottom center',
+      }}
     >
       {/* Inside the counter-scale, so the gap is 8 screen pixels at every zoom. */}
       <div className="pb-2">
@@ -139,7 +153,7 @@ export function FrameToolbar({
           <Divider />
 
           <IconButton
-            label="Zoom to this frame"
+            label={`Zoom to this frame · 0`}
             onClick={() => target.current && zoomToElement(target.current, 1, 240)}
           >
             <Scan className="size-3.5" aria-hidden />

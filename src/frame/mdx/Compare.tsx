@@ -72,7 +72,10 @@ function frameSrc(
   { src, mode = 'light', dir = 'ltr', theme = 'blue', radius = 'default' }: CompareProps,
   sandbox: string,
 ): string {
-  const params = new URLSearchParams({ project, type: 'view', src, sandbox, mode, theme, radius, dir })
+  // Spelled out rather than routed through appearanceToParams, which omits
+  // defaults. A Compare figure is evidence: it should keep rendering what the
+  // prose says it renders even if a default changes underneath it.
+  const params = new URLSearchParams({ project, src, sandbox, mode, theme, radius, dir })
   return `/frame.html?${params}`
 }
 
