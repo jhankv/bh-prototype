@@ -1,7 +1,7 @@
 {
   "sections": [
     {
-      "title": "Mercury — notification settings",
+      "title": "Mercury \u2014 notification settings",
       "frames": [
         {
           "id": "mercury",
@@ -11,7 +11,12 @@
           "y": 0,
           "width": 1420,
           "height": 900,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
           "caption": "Toggle, Badge, Menu, Input(shortcut), Avatar, Button. Rows with a description sit directly below rows without one."
         },
         {
@@ -22,13 +27,18 @@
           "y": 0,
           "width": 1420,
           "height": 900,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
           "caption": "The same screen in Arabic. The control has to mirror, not only the text."
         }
       ]
     },
     {
-      "title": "Neon — table browser",
+      "title": "Neon \u2014 table browser",
       "frames": [
         {
           "id": "neon",
@@ -38,7 +48,12 @@
           "y": 1040,
           "width": 1420,
           "height": 820,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
           "caption": "Checkbox, Select, SegmentedControl, Table. Two filter rows that have to line up with each other."
         },
         {
@@ -49,8 +64,124 @@
           "y": 1040,
           "width": 1420,
           "height": 820,
-          "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "rtl" },
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
           "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid."
+        }
+      ]
+    },
+    {
+      "title": "Coda \u2014 document editor",
+      "frames": [
+        {
+          "id": "coda",
+          "src": "views/DocEditor.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 2000,
+          "width": 1420,
+          "height": 520,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Toolbar, Tooltip, Menu. The bold tooltip is held open, as it is in the reference."
+        },
+        {
+          "id": "coda-rtl",
+          "src": "views/DocEditor.tsx",
+          "sandbox": "banhaten",
+          "x": 1480,
+          "y": 2000,
+          "width": 1420,
+          "height": 520,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "The same editor in Arabic. Read the shortcut inside the open tooltip."
+        }
+      ]
+    },
+    {
+      "title": "PandaDoc \u2014 bulk import",
+      "frames": [
+        {
+          "id": "import",
+          "src": "views/BulkImport.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 2660,
+          "width": 1000,
+          "height": 620,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Progress and Spinner. Four indicators at four fills, with labels of four different lengths."
+        },
+        {
+          "id": "import-rtl",
+          "src": "views/BulkImport.tsx",
+          "sandbox": "banhaten",
+          "x": 1060,
+          "y": 2660,
+          "width": 1000,
+          "height": 620,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "The same dialog in Arabic. Latin filenames inside an RTL row."
+        }
+      ]
+    },
+    {
+      "title": "Laravel Cloud \u2014 nothing created yet",
+      "frames": [
+        {
+          "id": "empty",
+          "src": "views/AppsOverview.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 3420,
+          "width": 1000,
+          "height": 620,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "EmptyState, surrounded by chrome. Alone on a white page it always looks fine."
+        },
+        {
+          "id": "empty-rtl",
+          "src": "views/AppsOverview.tsx",
+          "sandbox": "banhaten",
+          "x": 1060,
+          "y": 3420,
+          "width": 1000,
+          "height": 620,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "The same page in Arabic."
         }
       ]
     },
@@ -61,7 +192,7 @@
           "id": "notes",
           "src": "documents/observations.md",
           "x": 0,
-          "y": 2000,
+          "y": 4180,
           "width": 760,
           "height": 700,
           "caption": "What the eye caught, before any source was read."
