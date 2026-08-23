@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
-import { Check, Copy, Crosshair, Trash2 } from 'lucide-react'
+import { Check, Copy, Crosshair, Trash2, X } from 'lucide-react'
 import { loadIndex, resolve, type ComponentHit } from './componentIndex'
 import { componentChain, isComponentRoot } from './fiber'
 import { measure } from './measure'
@@ -363,6 +363,15 @@ function Field({
   )
 }
 
+/**
+ * Collapsed to a single button until there is something to do, then a pill.
+ *
+ * Bottom right, and out of the way on purpose: this is the tool's chrome
+ * sitting on top of the thing being judged, so it should occupy as little of
+ * the screen as it can while still being findable without being remembered.
+ * Collapsed it is one button; the count, copy and discard only exist once there
+ * is a note to count, copy or discard.
+ */
 function Bar({
   armed,
   count,
@@ -378,24 +387,37 @@ function Bar({
   onCopy: () => void
   onClear: () => void
 }) {
+  const expanded = armed || count > 0
+
+  if (!expanded) {
+    return (
+      <div className="pointer-events-auto absolute right-4 bottom-4">
+        <button
+          type="button"
+          onClick={onArm}
+          title="Inspect"
+          aria-label="Inspect"
+          className="flex size-9 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-400 shadow-xl transition-colors hover:text-neutral-100"
+        >
+          <Crosshair className="size-4" aria-hidden />
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="pointer-events-auto absolute bottom-3 left-3 flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900 p-1 shadow-xl">
-      <button
-        type="button"
+    <div className="pointer-events-auto absolute right-4 bottom-4 flex items-center gap-1 rounded-full border border-neutral-800 bg-neutral-900 px-1.5 py-1.5 shadow-xl">
+      <IconButton
+        label={armed ? 'Stop inspecting · Esc' : 'Inspect'}
+        active={armed}
         onClick={onArm}
-        title={armed ? 'Stop inspecting · Esc' : 'Inspect'}
-        aria-label={armed ? 'Stop inspecting' : 'Inspect'}
-        className={`flex size-7 items-center justify-center rounded transition-colors ${
-          armed ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
-        }`}
       >
         <Crosshair className="size-4" aria-hidden />
-      </button>
+      </IconButton>
 
       {count > 0 && (
         <>
-          <span aria-hidden className="mx-0.5 h-4 w-px bg-neutral-700" />
-          <span className="px-1 font-mono text-[11px] text-neutral-400">{count}</span>
+          <span className="px-1 font-mono text-[11px] text-neutral-500 tabular-nums">{count}</span>
 
           <IconButton label={copied ? 'Copied' : 'Copy for your agent'} onClick={onCopy}>
             {copied ? (
@@ -410,6 +432,15 @@ function Bar({
           </IconButton>
         </>
       )}
+
+      {armed && (
+        <>
+          <span aria-hidden className="mx-0.5 h-4 w-px bg-neutral-800" />
+          <IconButton label="Stop inspecting · Esc" onClick={onArm}>
+            <X className="size-4" aria-hidden />
+          </IconButton>
+        </>
+      )}
     </div>
   )
 }
@@ -417,10 +448,12 @@ function Bar({
 function IconButton({
   children,
   label,
+  active = false,
   onClick,
 }: {
   children: React.ReactNode
   label: string
+  active?: boolean
   onClick: () => void
 }) {
   return (
@@ -429,7 +462,11 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="flex size-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+      className={`flex size-7 items-center justify-center rounded-full transition-colors ${
+        active
+          ? 'bg-pink-600 text-white hover:bg-pink-500'
+          : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
+      }`}
     >
       {children}
     </button>
