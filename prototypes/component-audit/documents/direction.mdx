@@ -1,7 +1,6 @@
-# Direction — RTL and bidi
+# Direction: RTL and bidi
 
-Six findings and one cause. Three of them are the same defect in three files, and
-the last entry says why that matters more than the three patches do.
+Six findings and one cause. Three of them are the same defect in three files.
 
 ---
 
@@ -18,13 +17,13 @@ the Unicode algorithm reorders it to follow the paragraph direction.
 | `⇧⌘P` | `P⌘⇧` | `⇧⌘P` |
 | `Ctrl+S` | `Ctrl+S` | `Ctrl+S` |
 
-Only bidi-neutral glyphs are affected — `Ctrl+S` is correct in both directions
+Only bidi-neutral glyphs are affected. `Ctrl+S` is correct in both directions
 because those are strong LTR characters. So the bug hides wherever a team writes
-shortcuts in ASCII and surfaces only on Apple modifiers.
+shortcuts in ASCII, and surfaces only on Apple modifiers.
 
 **Why it matters.** A shortcut is not prose. `⌘K` is `⌘K` on every keyboard in
-the world, including an Arabic one — the physical keys do not mirror. A reader
-seeing `K⌘` is being told to press them in the wrong order.
+the world, including an Arabic one, because the physical keys do not mirror. A
+reader seeing `K⌘` is being told to press them in the wrong order.
 
 Fix: `dir="ltr"` on the `Kbd` root.
 
@@ -35,10 +34,10 @@ Fix: `dir="ltr"` on the `Kbd` root.
 **File:** `kbd.tsx` · **Status:** narrowing, not a defect
 
 `Input kind="shortcut"` renders through `KbdShortcut`. Measured in RTL: `⌘` at
-x=1036.7, `K` at x=1064.7 — correct order, because pristine `kbd.tsx` already
-sets `dir="ltr"` on the `KbdShortcut` wrapper.
+x=1036.7, `K` at x=1064.7. Correct order, because pristine `kbd.tsx` already sets
+`dir="ltr"` on the `KbdShortcut` wrapper.
 
-So `kbd-1` affects only **direct `<Kbd>⌘K</Kbd>` usage**, where the glyphs are
+So `kbd-1` affects only direct `<Kbd>⌘K</Kbd>` usage, where the glyphs are
 children of the `<kbd>` element itself. Anyone reaching for `KbdShortcut` or
 `Input kind="shortcut"` was already safe.
 
@@ -51,22 +50,22 @@ This narrows the report rather than widening it.
 **Files:** `tooltip.tsx`, `kbd.tsx` · **Severity:** major · **Status:** open
 **Repro:** frames `coda` and `coda-rtl`, the tooltip held open under the bold button.
 
-In `coda` the shortcut reads `⌘B`. In `coda-rtl` it reads **`B⌘`**.
+In `coda` the shortcut reads `⌘B`. In `coda-rtl` it reads `B⌘`.
 
 `TooltipContent` renders its shortcut through `TooltipShortcut`, which is its own
-`<span>` — **not** `Kbd`. So the `dir="ltr"` that fixes `kbd-1` never reaches it.
-Same mechanism, different component, and the fix does not travel.
+`<span>` rather than `Kbd`. So the `dir="ltr"` that fixes `kbd-1` never reaches
+it. Same mechanism, different component, and the fix does not travel.
 
 ---
 
 ### `table-2` · A name truncates from its start when its script opposes the document
 
-**File:** `expanded/Table.tsx` (`avatarText` cell) · **Severity:** major
+**File:** `expanded/Table.tsx`, the `avatarText` cell · **Severity:** major
 **Status:** FIXED in `banhaten-proposed`
 
 The name and caption carried no `dir`, so both inherited the document direction.
 `text-overflow: ellipsis` clips at the visual end of the line. When a string runs
-opposite to the document, its *logical start* sits at the *visual end* — so the
+opposite to the document, its logical start sits at the visual end, so the
 ellipsis ate the beginning of the name.
 
 | | Pristine | Proposed |
@@ -76,8 +75,8 @@ ellipsis ate the beginning of the name.
 
 **Why it matters.** A customer column exists to identify a person, and the
 identifying part of a name is its beginning. An operator running an English
-catalogue in an Arabic interface sees every long name arrive already useless —
-and the cell still looks tidy, so nobody reports it.
+catalogue in an Arabic interface sees every long name arrive already useless. The
+cell still looks tidy, so nobody reports it.
 
 Fix: `dir="auto"` on both, giving each string its own base direction.
 
@@ -95,8 +94,8 @@ Same mechanism as `table-2`. `ds-breadcrumbs__label` carried no `dir`.
 | Standalone | `… de la Vega y Santibáñez` | `Maximiliano Alessandro …` |
 | Inside `PageHeader` | `lez de la Vega y Santibáñez` | `Maximiliano Alessandro Fer…` |
 
-Inside `PageHeader` it was worse: clipped mid-word with no ellipsis at all, so
-nothing signalled that text was missing.
+Inside `PageHeader` it was worse. The label clipped mid-word with no ellipsis at
+all, so nothing signalled that text was missing.
 
 Fix: `dir="auto"` on the label span. `PageHeader` delegates its breadcrumbs to
 this component, so one change covered both.
@@ -108,7 +107,7 @@ this component, so one change covered both.
 **File:** `expanded/PageHeader.tsx` · **Severity:** major
 **Status:** FIXED in `banhaten-proposed`
 
-The description rendered with its final period at the **front**:
+The description rendered with its final period at the front:
 
 ```
 .Every completed transaction across Retail, Online and Wholesale…
@@ -128,21 +127,22 @@ Fix: `dir="auto"` on both the title and the description.
 `table-2`, `breadcrumbs-1` and `page-header-2` look like three defects. They are
 one, and this is the entry worth acting on.
 
-**Our first hypothesis was wrong.** A first pass suggested Banhaten had no bidi
+Our first hypothesis was wrong. A first pass suggested Banhaten had no bidi
 isolation anywhere. That search ran from the wrong directory. The real count:
 
 | | `dir="auto"` occurrences |
 | --- | --- |
 | Core components | **39** |
-| `expanded/` | **2** (both in `EmptyState`) |
+| `expanded/` | **2**, both in `EmptyState` |
 
-So this is not a missing concept. Banhaten applies the correct pattern throughout
-its core and the team clearly knows it. The gap is that the `expanded/` family —
-`Table`, `Breadcrumbs`, `PageHeader` — was authored without it.
+Banhaten applies the correct pattern throughout its core, and the team clearly
+knows it. The gap is that the `expanded/` family, meaning `Table`, `Breadcrumbs`
+and `PageHeader`, was authored without it.
 
 Those same four files are also the only four of twenty-four with no `data-slot`
 attributes.
 
-**That reframes the report.** It is not "please learn about bidi". It is "your own
-convention did not reach these four files." `expanded/` is a second-class citizen
-of this design system, and that is worth more than three separate patches.
+That reframes the report. The problem is not bidi awareness. It is that your own
+convention did not reach these four files, and `expanded/` looks like a
+second-class citizen of the package. Acting on that is worth more than the three
+separate patches.

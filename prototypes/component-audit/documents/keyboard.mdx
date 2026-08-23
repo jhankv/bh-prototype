@@ -1,18 +1,17 @@
-# Keyboard — `toolbar`, `button-group`
+# Keyboard: `toolbar`, `button-group`
 
-Three findings and one cause. The last entry explains the first three, so read it
-if you read nothing else.
+Three findings and one cause. The last entry explains the first three.
 
 ---
 
 ### `toolbar-1` · It promises keyboard navigation and has none
 
-**File:** `toolbar.tsx` · **Severity:** major · **Status:** open — one right answer
+**File:** `toolbar.tsx` · **Severity:** major · **Status:** open, one right answer
 **Repro:** frame `neon`, the row above the filters. Tab into it, then press `→`.
 
 `Toolbar` sets `role="toolbar"`. That role tells assistive technology two things:
-the bar is **one** tab stop, and arrow keys move between the controls inside it.
-Neither happens — the file has no keyboard handler.
+the bar is one tab stop, and arrow keys move between the controls inside it.
+Neither happens. The file has no keyboard handler.
 
 | | |
 | --- | --- |
@@ -21,12 +20,12 @@ Neither happens — the file has no keyboard handler.
 | Arrow key from the first control | focus does not move |
 
 **Why it matters.** A wrong role is worse than no role. Someone using a screen
-reader is told arrow keys will work, tries them, nothing moves — and cannot tell
-whether the announcement was wrong or their own input was. With `role="group"`
-they would simply Tab: slower, never misleading.
+reader is told arrow keys will work, tries them, and nothing moves. They cannot
+tell whether the announcement was wrong or their own input was. With
+`role="group"` they would simply Tab, which is slower but never misleading.
 
-**Not a feature request.** The component already claims this. Adding the roving
-tabindex does not change what `Toolbar` is; it makes it do what it says.
+The component already claims this behaviour, so adding the roving tabindex does
+not change what `Toolbar` is. It makes it do what it says.
 
 Reference: [W3C ARIA Toolbar Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/),
 whose own worked example is a text formatting toolbar.
@@ -35,14 +34,14 @@ whose own worked example is a text formatting toolbar.
 
 ### `toolbar-2` · There is no separator
 
-**File:** `toolbar.tsx` · **Severity:** minor · **Status:** Question — new API
+**File:** `toolbar.tsx` · **Severity:** minor · **Status:** Question, new API
 **Repro:** frame `coda`, the two thin lines between the control groups.
 
 A toolbar groups its controls and divides the groups with a rule.
 [Radix ships `Toolbar.Separator`](https://www.radix-ui.com/primitives/docs/components/toolbar)
 for this. Banhaten has none, so those lines are hand-written spans.
 
-They look right and are structurally wrong: a drawn line is invisible to
+They look right and are structurally wrong. A drawn line is invisible to
 assistive technology, where a real separator announces that one group has ended
 and another begun.
 
@@ -57,12 +56,12 @@ and another begun.
 leaves every button inside focusable. Tab stops on an empty container that does
 nothing, then again on each button in it.
 
-Measured on that bar: **11** tab stops, two of which are the containers
-themselves — "Text formatting" and "Insert".
+Measured on that bar: 11 tab stops, two of which are the containers themselves,
+labelled "Text formatting" and "Insert".
 
-**Why not patched.** Removing `tabIndex` from the wrapper changes the tab order
-of every screen already using `ButtonGroup`. Same reasoning as `input-2`, which
-chose `aria-required` over the native attribute: a fix that silently changes
+**Why we did not patch it.** Removing `tabIndex` from the wrapper changes the tab
+order of every screen already using `ButtonGroup`. Same reasoning as `input-2`,
+which chose `aria-required` over the native attribute. A fix that quietly changes
 behaviour for existing consumers is a decision, not a correction.
 
 ---
@@ -72,7 +71,7 @@ behaviour for existing consumers is a decision, not a correction.
 **Files:** `toolbar.tsx`, `button-group.tsx` · **Status:** Question
 **Repro:** frames `neon` and `coda`, both bars.
 
-Nearly every interactive component in Banhaten wraps a Radix primitive —
+Nearly every interactive component in Banhaten wraps a Radix primitive.
 `avatar`, `checkbox`, `dropdown-menu`, `select`, `switch`, `tabs` and `tooltip`
 are all in `package.json`. **`@radix-ui/react-toolbar` and
 `@radix-ui/react-toggle-group` are not.** Those two are written by hand.
@@ -81,15 +80,15 @@ And they are exactly the two with the gaps:
 
 | | `role` | Arrow keys | One tab stop |
 | --- | --- | --- | --- |
-| `ToggleGroup` | `group` | yes — Bold → `→` → Italic | no |
-| `ButtonGroup` | `group` | no — Link → `→` → stays on Link | no |
+| `ToggleGroup` | `group` | yes: Bold, `→`, Italic | no |
+| `ButtonGroup` | `group` | no: Link, `→`, stays on Link | no |
 | `Toolbar` | `toolbar` | no handler at all | no |
 
-`ToggleGroup` is the near miss: someone wrote the arrow keys, including the RTL
+`ToggleGroup` is the near miss. Someone wrote the arrow keys, including the RTL
 reversal, and stopped before the roving tabindex. Half the pattern is easy to
 mistake for all of it.
 
-**The question.** Adopting `@radix-ui/react-toolbar` would close `toolbar-1` and
-`toolbar-2` together and bring the two outliers back in line with the rest of the
-package. Whether that is worth a dependency is yours to answer, and it is the one
-we would most like answered.
+Adopting `@radix-ui/react-toolbar` would close `toolbar-1` and `toolbar-2`
+together and bring the two outliers back in line with the rest of the package.
+Whether that is worth a dependency is yours to answer, and it is the answer we
+would most like to have.

@@ -1,81 +1,88 @@
-# Banhaten audit — start here
+# Banhaten audit: start here
 
-Four short reports, each one a single story. Read whichever concerns you; none
-of them needs the others.
+Four short reports. Each one is a single story, and none of them needs the
+others.
 
-| Report | What it covers |
+| Report | Covers |
 | --- | --- |
-| **Keyboard** | `toolbar` `button-group` — focus management, and why it is missing |
-| **Direction** | `kbd` `tooltip` `Table` `Breadcrumbs` `PageHeader` — RTL and bidi |
-| **Forms** | `input` `badge` `avatar` — flags that do nothing, vocabularies that disagree |
-| **Data** | `Table` `PageHeader` `pagination` — counts, labels, and untranslated strings |
+| **Keyboard** | `toolbar`, `button-group`. Focus management, and why it is missing |
+| **Direction** | `kbd`, `tooltip`, `Table`, `Breadcrumbs`, `PageHeader`. RTL and bidi |
+| **Forms** | `input`, `badge`, `avatar`. Flags that do nothing, vocabularies that disagree |
+| **Data** | `Table`, `PageHeader`, `pagination`. Counts, labels, untranslated strings |
 
 ## How an entry is named
 
-After its component, numbered in the order we found it — `toolbar-1`, `badge-2`.
-The name carries the subject before you reach the text, and it survives a
-retitle, which matters because entries cite each other.
+After its component, numbered in the order we found it. So `toolbar-1`,
+`badge-2`. The name carries the subject before you reach the text, and it
+survives a retitle, which matters because entries cite each other.
 
-**Status** is one of three:
+Status is one of three:
 
-- **FIXED in `banhaten-proposed`** — a patch exists; run `banhaten diff` to see it
-- **open** — a defect with one right answer, not yet patched
-- **Question** — more than one answer is reasonable, and the choice is yours
+**FIXED in `banhaten-proposed`.** A patch exists. Run `banhaten diff` to see it.
+
+**open.** A defect with one right answer, not yet patched.
+
+**Question.** More than one answer is reasonable, and the choice is yours.
 
 We patch only when the component already promises the behaviour and the code
 does not deliver it. Anything that would change behaviour for existing consumers,
 add API, or pick between different products is left as a Question. Taking those
-decisions silently is how an audit loses its standing.
+decisions quietly is how an audit loses its standing.
 
 ## Where to see it
 
-Every entry names a **frame**. That name is the label above the frame on the
-canvas.
+Every entry names a frame. That name is the label above the frame on the canvas.
 
 | Frame | Reproduces |
 | --- | --- |
-| `mercury` | [Mercury — notification settings](https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e) |
-| `neon` | [Neon — table browser](https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17) |
-| `coda` | [Coda — document editor](https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a) |
-| `import` | [PandaDoc — bulk import](https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67) |
-| `empty` | [Laravel Cloud — nothing created yet](https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f) |
-| `buttons` `inputs` | Variant galleries — every state of one component at once |
+| `mercury` | [Mercury, notification settings](https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e) |
+| `neon` | [Neon, table browser](https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17) |
+| `coda` | [Coda, document editor](https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a) |
+| `import` | [PandaDoc, bulk import](https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67) |
+| `empty` | [Laravel Cloud, nothing created yet](https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f) |
+| `buttons`, `inputs` | Variant galleries. Every state of one component at once |
 
 Each reproduction has an `-rtl` twin in Arabic.
 
-**Every screen is a faithful reproduction of a real product.** Without that, any
-defect can be answered with "that layout is not real". Where a screen needed
-something Banhaten does not ship — navigation lists, prose, page tabs — that is
-plain markup, so a defect there would be ours and not yours.
+Every screen reproduces a real product. Without that, any defect can be answered
+with "that layout is not real". Where a screen needed something Banhaten does not
+ship, like navigation lists or prose or page tabs, that part is plain markup. A
+defect there would be ours, not yours.
 
 ## Verified good
 
 Checked deliberately and found correct, so nobody re-checks them.
 
-- **RTL layout**: column order, sort affordances, filter chips, search field and
-  its icon, pagination controls, page header actions and breadcrumbs all mirror.
-- **Theming**: `brown` and `sharp` change brand colour and radius with nothing
-  hardcoded leaking through.
-- **Dark mode**: status colours, row separators and surfaces hold.
-- **Arabic typography**: IBM Plex Sans Arabic loads and renders at table density.
-- **Alignment**: `align: "end"` resolves to the left edge in RTL for numerics.
-- **Already carrying `dir="auto"`**: `tag`, `badge`, `button`.
+**RTL layout.** Column order, sort affordances, filter chips, the search field
+and its icon, pagination controls, page header actions and breadcrumbs all
+mirror.
+
+**Theming.** `brown` and `sharp` change brand colour and radius with nothing
+hardcoded leaking through.
+
+**Dark mode.** Status colours, row separators and surfaces hold.
+
+**Arabic typography.** IBM Plex Sans Arabic loads and renders at table density.
+
+**Alignment.** `align: "end"` resolves to the left edge in RTL for numerics.
+
+**Already carrying `dir="auto"`:** `tag`, `badge`, `button`.
 
 ## Investigated and rejected
 
-Knowing what is *not* broken is what keeps the rest credible.
+Knowing what is *not* broken keeps the rest credible.
 
 **`Table` does not draw its own progress bar.** It defines a local `Progress`
-function, which looked like a second implementation. It is not — the function
-wraps `components/ui/progress` with three preset props:
+function, which looked like a second implementation. It is a wrapper around
+`components/ui/progress` with three preset props:
 
 ```ts
 import { Progress as ProgressPrimitive } from "@/components/ui/progress";
 ```
 
-A convenience wrapper, not a fork. No divergence is possible.
+One implementation, so no divergence is possible.
 
-**Currency renders as `$US ١٢٬٤٨٠٫٥٠` in RTL, not `US$ …`.** Not a defect.
-`Intl.NumberFormat("ar-EG")` emits the mark, then digits, then `US$`, and `$` is
-bidi-neutral, so the Unicode algorithm correctly places it left of `US` in an RTL
+**Currency renders as `$US ١٢٬٤٨٠٫٥٠` in RTL, not `US$ …`.** Correct.
+`Intl.NumberFormat("ar-EG")` emits the mark, then digits, then `US$`. The `$` is
+bidi-neutral, so the Unicode algorithm places it left of `US` in an RTL
 paragraph. Verified by reading the raw code points.
