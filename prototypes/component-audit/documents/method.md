@@ -46,20 +46,25 @@ component.
 
 ## Coverage
 
+Every component in the package now has a frame except one.
+
 | State | Components |
 | --- | --- |
-| On a frame | `avatar` `badge` `button` `button-group` `checkbox` `EmptyState` `input` `menu` `progress` `segmented-control` `select` `select-content` `spinner` `Table` `toggle` `toolbar` `tooltip` |
-| Findings written, frame lost | `PageHeader` `Breadcrumbs` `pagination` |
-| Never had a screen | `tag` `tabs` `kbd` used directly |
+| On a frame | `avatar` `badge` `Breadcrumbs` `button` `button-group` `checkbox` `EmptyState` `input` `kbd` `menu` `pagination` `PageHeader` `progress` `segmented-control` `select` `select-content` `spinner` `Table` `tabs` `tag` `toggle` `toolbar` `tooltip` |
 | Deliberately not visual | `table-elements` |
 
 `table-elements` exports structural wrappers with almost no styling. `TableCell`
 and `TableBody` add no classes at all, so a screen built on them would be showing
 our CSS, and any defect found would be ours. It belongs to pass 2.
 
-The next prototype should restore `PageHeader`, `Breadcrumbs` and `pagination` in
-one screen. Four findings are written that nobody can currently reproduce, which
-is the worst state for an entry to be in.
+Three screens closed that gap. Xero's bills list carries `PageHeader`,
+`Breadcrumbs`, `tabs` and `tag`. Remote's expenses list carries `pagination`
+through `DataTable`. Relume's shortcuts dialog carries `kbd` used directly, which
+is the one path `kbd-2` narrowed the defect down to.
+
+All three reproduced their findings on first run, and Xero's version of
+`page-header-1` is worse than the reading it replaces: two labels print on top of
+each other rather than losing a letter.
 
 ## Banhaten 0.4.0 exists
 

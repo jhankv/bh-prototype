@@ -249,13 +249,130 @@
       ]
     },
     {
+      "title": "Xero \u2014 bills list",
+      "frames": [
+        {
+          "id": "bills",
+          "src": "views/BillsList.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 4180,
+          "width": 1440,
+          "height": 900,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "PageHeader, Breadcrumbs, Tabs, Tag, Table. Six tabs from three characters to nineteen, which is where page-header-1 shows.",
+          "reference": "https://mobbin.com/screens/e2205dbe-6e99-4b94-b47c-0be070a76fe1"
+        },
+        {
+          "id": "bills-rtl",
+          "src": "views/BillsList.tsx",
+          "sandbox": "banhaten",
+          "x": 1500,
+          "y": 4180,
+          "width": 1440,
+          "height": 900,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "The same list in Arabic. Read the breadcrumb and the description for breadcrumbs-1 and page-header-2.",
+          "reference": "https://mobbin.com/screens/e2205dbe-6e99-4b94-b47c-0be070a76fe1"
+        }
+      ]
+    },
+    {
+      "title": "Remote \u2014 team expenses",
+      "frames": [
+        {
+          "id": "expenses",
+          "src": "views/ExpensesList.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 5220,
+          "width": 1200,
+          "height": 720,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "DataTable with pagination and showCaption on. The footer is where table-1 and pagination-1 live.",
+          "reference": "https://mobbin.com/screens/4cbe7498-0064-49a8-a80c-692431aaaae3"
+        },
+        {
+          "id": "expenses-rtl",
+          "src": "views/ExpensesList.tsx",
+          "sandbox": "banhaten",
+          "x": 1260,
+          "y": 5220,
+          "width": 1200,
+          "height": 720,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "Every string here is Arabic except the two in the footer. That is pagination-1.",
+          "reference": "https://mobbin.com/screens/4cbe7498-0064-49a8-a80c-692431aaaae3"
+        }
+      ]
+    },
+    {
+      "title": "Relume \u2014 keyboard shortcuts",
+      "frames": [
+        {
+          "id": "shortcuts",
+          "src": "views/ShortcutsDialog.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 6080,
+          "width": 1000,
+          "height": 760,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "The only screen using Kbd directly, which kbd-2 narrowed the defect down to.",
+          "reference": "https://mobbin.com/screens/d6b809da-7f84-4812-be03-d0b61decff90"
+        },
+        {
+          "id": "shortcuts-rtl",
+          "src": "views/ShortcutsDialog.tsx",
+          "sandbox": "banhaten",
+          "x": 1060,
+          "y": 6080,
+          "width": 1000,
+          "height": 760,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "Compare every key against the frame to its left.",
+          "reference": "https://mobbin.com/screens/d6b809da-7f84-4812-be03-d0b61decff90"
+        }
+      ]
+    },
+    {
       "title": "Reports \u2014 one story each, small enough to copy",
       "frames": [
         {
           "id": "index",
           "src": "documents/index.mdx",
           "x": 0,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
@@ -264,7 +381,7 @@
           "id": "keyboard",
           "src": "documents/keyboard.mdx",
           "x": 880,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "toolbar and button-group. Three findings and the one cause that explains them."
@@ -273,7 +390,7 @@
           "id": "direction",
           "src": "documents/direction.mdx",
           "x": 1760,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "RTL and bidi. Three of these are the same defect in three files."
@@ -282,7 +399,7 @@
           "id": "forms",
           "src": "documents/forms.mdx",
           "x": 2640,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
@@ -291,7 +408,7 @@
           "id": "data",
           "src": "documents/data.mdx",
           "x": 3520,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
@@ -300,7 +417,7 @@
           "id": "method",
           "src": "documents/method.md",
           "x": 4400,
-          "y": 5500,
+          "y": 7000,
           "width": 820,
           "height": 1000,
           "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."

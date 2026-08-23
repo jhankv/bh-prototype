@@ -3,9 +3,7 @@
 Three findings about text a data surface prints. A count nobody measured, labels
 that get cut, and strings that exist but cannot be reached.
 
-*All three came from a Sales Console composition that is no longer on a canvas.
-The patches are in `banhaten-proposed`. The screens that produced them need
-rebuilding.*
+*The patches are in `banhaten-proposed`. Run `banhaten diff` to see them.*
 
 ---
 
@@ -42,20 +40,60 @@ string fails visibly. This failed quietly.
 
 ---
 
+### `table-3` · A column with no `renderCell` prints nothing
+
+**File:** `expanded/Table.tsx` · **Severity:** minor · **Status:** Question
+**Repro:** frame `bills`. Every column there carries a `renderCell` because
+three of them came back empty without one.
+
+`TableColumn` requires `id` and makes both `renderCell` and `item` optional. So
+this typechecks:
+
+```ts
+{ id: 'reference', header: 'Reference', width: 120, sortable: true }
+```
+
+It renders an empty cell for every row, even though `id` matches a key on the
+row. The cell resolves `renderCell`, then `item`, then falls through to `null`.
+There is no fallback to `row[column.id]`.
+
+**Why it matters.** The column header appears, sorting works, the width is
+respected. Everything about the column looks configured except the data, so the
+first guess is that the rows are wrong rather than the column. We lost time to
+exactly that.
+
+**Two ways out, and they are different.** Falling back to `row[column.id]` when
+both renderers are absent makes the obvious config work. Requiring one of them in
+the type makes the mistake impossible. The second is stricter and would break
+existing code that leans on empty columns as spacers.
+
+---
+
 ### `page-header-1` · It clips its own tab labels, with no way to opt out
 
 **Files:** `expanded/PageHeader.tsx`, `tabs.tsx`, `tabs.css` · **Severity:** major
 **Status:** open, needs a design decision rather than a patch
+**Repro:** frame `bills`, the six tabs under the title.
 
-`All statuses` rendered as `ll statuses` in LTR and `All statuse` in RTL. Every
-tab was exactly 65.4px wide regardless of its label:
+Every tab gets the same width no matter what it says. On Xero's six tabs, in a
+554px list, that width is 79.08px for all of them:
 
 | Label | Box | Text needs | Result |
 | --- | --- | --- | --- |
-| All statuses | 65.39 | 87.08 | clipped 21.7px |
-| Refunded | 65.41 | 68.58 | clipped 3.2px |
-| Pending | 65.41 | 62.00 | fits |
-| Fulfilled | 65.39 | 59.23 | fits |
+| All | 79.08 | 18.20 | **61px wasted** |
+| Draft 13 | 79.09 | 54.44 | 25px wasted |
+| Awaiting approval 1 | 79.08 | 136.11 | **57px short** |
+| Awaiting payment 6 | 79.08 | 139.63 | **61px short** |
+| Paid | 79.08 | 30.83 | 48px wasted |
+| Repeating | 79.08 | 71.28 | fits |
+
+The same row wastes 61px on `All` and starves `Awaiting payment 6` by 61px, at
+the same time. Width has nothing to do with content.
+
+And it does not clip here. The two long labels overflow their boxes and **print
+on top of each other**, so the screen reads `Awaiting appro` with `Awaiti`
+stamped through it. The earlier reading of this defect, on four tabs of similar
+length, lost a letter. Six tabs of unequal length lose the sentence.
 
 Three rules combine to produce it:
 
@@ -65,10 +103,10 @@ Three rules combine to produce it:
 3. `.ds-tabs__label { flex: 0 0 auto; white-space: nowrap }` refuses to shrink,
    and the list's `overflow: auto` clips what spills.
 
-**Why it matters.** `Refunded` loses three pixels, which is small enough to pass
-review and large enough to be wrong. That is the worst size for a defect. It also
-scales with tab count: five tabs in a 391px header already breaks, with no
-warning.
+**Why it matters.** The failure scales with tab count and with label length, and
+nothing warns. A header that looked fine with four short tabs breaks the day
+somebody adds a fifth or renames one, and the component gives no signal that it
+has run out of room.
 
 There is no escape hatch. `PageHeaderTabs` is
 `Pick<TabsProps, "activeIndex" | "ariaLabel" | "defaultActiveIndex" | "items" | "onActiveIndexChange">`,
