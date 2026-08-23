@@ -1,20 +1,24 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { Check, Copy, Crosshair, Trash2 } from 'lucide-react'
 import { loadIndex, resolve, type ComponentHit } from './componentIndex'
 import { componentChain, isComponentRoot } from './fiber'
 import { measure } from './measure'
 import { compose, type Annotation } from './report'
 
 /**
- * Hold Alt to ask "what is this?", Alt-click to say something about it.
+ * Turn on inspect mode to ask "what is this?", then click to say something
+ * about it.
  *
  * A composition is where defects appear, and also where you stop being able to
  * name what you are looking at — a filter in a dashboard is a Select inside a
  * Toolbar inside a DataTable, and reading the view file to find out is the loop
  * this tool exists to remove.
  *
- * Alt is chosen over a toolbar toggle because there is no shell chrome inside a
- * frame, and because a mode you have to remember to leave is a mode you forget
- * you are in.
+ * This began as hold-Alt, on the reasoning that a mode you have to remember to
+ * leave is a mode you forget you are in. A visible control answers that better
+ * than an invisible shortcut did: the mode is on the screen, so there is nothing
+ * to forget. Holding a modifier also made annotating a two-handed gesture for
+ * something you do dozens of times in a sitting.
  *
  * It writes to the clipboard and nothing else. No file changes, nothing is
  * sent anywhere, and nothing survives a reload — the same standing the copy
@@ -72,61 +76,74 @@ export function Inspector({ sandbox }: { sandbox: string }) {
   }, [describe])
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Alt' || armed || draft) return
-      setArmed(true)
-
-      // Loading here rather than on mount keeps a frame nobody inspects free.
-      if (index.current) {
-        update()
-      } else {
-        loadIndex(sandbox).then((loaded) => {
-          index.current = loaded
-          update()
-        })
-      }
-    }
-
-    function onKeyUp(event: KeyboardEvent) {
-      if (event.key !== 'Alt') return
-      setArmed(false)
-      setTarget(null)
-    }
+    if (!armed) return
 
     function onMove(event: MouseEvent) {
       point.current = { x: event.clientX, y: event.clientY }
-      if (event.altKey && !draft) update()
+      if (!draft) update()
     }
 
-    // Alt+Tab and losing focus both leave the key "held" forever otherwise.
-    function onBlur() {
-      setArmed(false)
-      setTarget(null)
-    }
-
+    /**
+     * Inspect mode owns the click on the page — otherwise the prototype would
+     * follow the link or submit the form you were only trying to point at,
+     * which is the one thing a read-only tool must never cause.
+     *
+     * It does not own clicks on its own chrome, which it swallowed until this
+     * check existed: copy and discard were unreachable while inspecting, and
+     * only sometimes, because the guard above lets a click through whenever the
+     * cursor happens to be over nothing resolvable. Intermittently dead buttons
+     * are worse than dead ones.
+     */
     function onClick(event: MouseEvent) {
-      if (!event.altKey || !target) return
+      if (!target || draft) return
+      if ((event.target as Element | null)?.closest('[data-inspector]')) return
 
       event.preventDefault()
       event.stopPropagation()
       setDraft({ target, note: '' })
-      setArmed(false)
     }
 
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
     window.addEventListener('mousemove', onMove)
-    window.addEventListener('blur', onBlur)
     window.addEventListener('click', onClick, true)
 
     return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('blur', onBlur)
       window.removeEventListener('click', onClick, true)
     }
-  }, [armed, draft, sandbox, target, update])
+  }, [armed, draft, target, update])
+
+  /**
+   * Escape closes whatever is open, innermost first, and never reaches the
+   * canvas while this tool has something to close. Handled here rather than
+   * only on the field because the field loses focus the moment you click
+   * anything, and Escape has to work anyway — pressing it and having the whole
+   * frame deselect instead, losing the note, is the worst outcome available.
+   */
+  useEffect(() => {
+    if (!armed && !draft) return
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+
+      event.stopPropagation()
+      if (draft) setDraft(null)
+      else setArmed(false)
+    }
+
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [armed, draft])
+
+  // Losing the window while armed leaves a highlight stranded under a cursor
+  // that is somewhere else entirely.
+  useEffect(() => {
+    function onBlur() {
+      setTarget(null)
+    }
+
+    window.addEventListener('blur', onBlur)
+    return () => window.removeEventListener('blur', onBlur)
+  }, [])
 
   useEffect(() => {
     if (annotations.length === 0) return
@@ -143,6 +160,18 @@ export function Inspector({ sandbox }: { sandbox: string }) {
   useEffect(() => {
     if (draft) field.current?.focus()
   }, [draft])
+
+  function arm() {
+    if (armed) {
+      setArmed(false)
+      setTarget(null)
+      return
+    }
+
+    setArmed(true)
+    // Loading here rather than on mount keeps a frame nobody inspects free.
+    if (!index.current) loadIndex(sandbox).then((loaded) => (index.current = loaded))
+  }
 
   function save() {
     if (!draft) return
@@ -163,14 +192,17 @@ export function Inspector({ sandbox }: { sandbox: string }) {
     setDraft(null)
   }
 
+  /**
+   * Copying does not clear. Emptying the list on copy loses the record of what
+   * you asked for at exactly the moment you go and read the answer, and there
+   * is then no way to check whether the reply addressed all of it. Clearing is
+   * a separate, deliberate act.
+   */
   function copyAll() {
     navigator.clipboard.writeText(compose(annotations)).then(
       () => {
         setCopied(true)
-        setTimeout(() => {
-          setCopied(false)
-          setAnnotations([])
-        }, 900)
+        setTimeout(() => setCopied(false), 1200)
       },
       () => setCopied(false),
     )
@@ -178,10 +210,12 @@ export function Inspector({ sandbox }: { sandbox: string }) {
 
   const showing = draft?.target ?? (armed ? target : null)
 
-  if (!showing && annotations.length === 0) return null
-
   return (
-    <div className="pointer-events-none fixed inset-0 z-[2147483647]" aria-hidden="true">
+    <div
+      data-inspector=""
+      className="pointer-events-none fixed inset-0 z-[2147483647]"
+      aria-hidden="true"
+    >
       {showing && <Highlight target={showing} />}
 
       {annotations.map((annotation, order) => (
@@ -198,14 +232,14 @@ export function Inspector({ sandbox }: { sandbox: string }) {
         />
       )}
 
-      {annotations.length > 0 && !draft && (
-        <Bar
-          count={annotations.length}
-          copied={copied}
-          onCopy={copyAll}
-          onClear={() => setAnnotations([])}
-        />
-      )}
+      <Bar
+        armed={armed}
+        count={annotations.length}
+        copied={copied}
+        onArm={arm}
+        onCopy={copyAll}
+        onClear={() => setAnnotations([])}
+      />
     </div>
   )
 }
@@ -298,17 +332,13 @@ function Field({
         ref={ref}
         value={draft.note}
         onChange={(event) => onChange(event.target.value)}
-        // Escape is forwarded to the canvas to release the frame, which would
-        // throw the note away along with the selection. It belongs to the field
-        // while the field is open.
+        // Escape is caught on the window as well, so this only has to stop the
+        // canvas from also hearing it and releasing the whole frame.
         onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.stopPropagation()
-            onCancel()
-          }
+          if (event.key === 'Escape') event.stopPropagation()
           if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) onSave()
         }}
-        placeholder="What is wrong with it?"
+        placeholder="What is wrong with it?  ·  Esc discards"
         rows={3}
         className="w-full resize-none rounded border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-[12px] text-neutral-100 outline-none focus:border-neutral-500"
       />
@@ -334,36 +364,74 @@ function Field({
 }
 
 function Bar({
+  armed,
   count,
   copied,
+  onArm,
   onCopy,
   onClear,
 }: {
+  armed: boolean
   count: number
   copied: boolean
+  onArm: () => void
   onCopy: () => void
   onClear: () => void
 }) {
   return (
-    <div className="pointer-events-auto absolute bottom-3 left-3 flex items-center gap-1 rounded-lg border border-neutral-700 bg-neutral-900 p-1 shadow-xl">
-      <span className="px-1.5 font-mono text-[11px] text-neutral-400">
-        {count} {count === 1 ? 'note' : 'notes'}
-      </span>
+    <div className="pointer-events-auto absolute bottom-3 left-3 flex items-center gap-0.5 rounded-lg border border-neutral-700 bg-neutral-900 p-1 shadow-xl">
       <button
         type="button"
-        onClick={onCopy}
-        className="rounded bg-pink-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-pink-500"
+        onClick={onArm}
+        title={armed ? 'Stop inspecting · Esc' : 'Inspect'}
+        aria-label={armed ? 'Stop inspecting' : 'Inspect'}
+        className={`flex size-7 items-center justify-center rounded transition-colors ${
+          armed ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
+        }`}
       >
-        {copied ? 'Copied' : 'Copy for your agent'}
+        <Crosshair className="size-4" aria-hidden />
       </button>
-      <button
-        type="button"
-        onClick={onClear}
-        title="Discard without copying"
-        className="rounded px-2 py-1 text-[11px] text-neutral-400 hover:text-neutral-100"
-      >
-        Clear
-      </button>
+
+      {count > 0 && (
+        <>
+          <span aria-hidden className="mx-0.5 h-4 w-px bg-neutral-700" />
+          <span className="px-1 font-mono text-[11px] text-neutral-400">{count}</span>
+
+          <IconButton label={copied ? 'Copied' : 'Copy for your agent'} onClick={onCopy}>
+            {copied ? (
+              <Check className="size-4 text-green-400" aria-hidden />
+            ) : (
+              <Copy className="size-4" aria-hidden />
+            )}
+          </IconButton>
+
+          <IconButton label="Discard all notes" onClick={onClear}>
+            <Trash2 className="size-4" aria-hidden />
+          </IconButton>
+        </>
+      )}
     </div>
+  )
+}
+
+function IconButton({
+  children,
+  label,
+  onClick,
+}: {
+  children: React.ReactNode
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="flex size-7 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+    >
+      {children}
+    </button>
   )
 }
