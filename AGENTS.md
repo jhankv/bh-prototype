@@ -78,6 +78,11 @@ There is no registry to update.
 - Sections are logical groups; the title floats above the bounding box of its frames.
 - Lay frames out left to right in a section, with roughly 60px between them
   and 140px between section rows.
+- **Recompute every `y` when you add a section. Do not hand-write one.** Two
+  sections silently landed on the same `y` here and drew on top of each other,
+  and nothing complains: the canvas is data, and the shell renders exactly what
+  it is given. Walk the sections in order, set `x` from the running width, then
+  advance `y` by the tallest frame in the section plus the gap.
 
 Appearance values, matching Banhaten's HTML attributes:
 
