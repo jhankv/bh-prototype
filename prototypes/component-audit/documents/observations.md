@@ -10,13 +10,24 @@ each other.
 That is the control variable, and without it a finding can always be answered
 with "that layout is not real".
 
-| Surface | Reference | Components |
+**How to read an entry.** `F` is a **finding**, not a frame. The number is a
+stable handle so one finding can cite another — F-104 exists only to narrow what
+F-001 claimed, and it needs something to point at. The hundreds digit says where
+it came from: `F-0xx` Design System, `F-1xx` Sales Console, `F-2xx` this audit.
+`Q` is an open question rather than a defect.
+
+**To see one, open the frame named on its `Repro` line.** That name is the label
+on the canvas.
+
+| Frame | Reproduces | Components |
 | --- | --- | --- |
-| Notification settings | [Mercury](https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e) | `toggle` `badge` `menu` `input` `avatar` `button` |
-| Table browser | [Neon](https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17) | `checkbox` `select` `select-content` `segmented-control` `toolbar` `expanded/Table` |
-| Document editor | [Coda](https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a) | `button-group` `tooltip` `menu` `select` |
-| Bulk import | [PandaDoc](https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67) | `progress` `spinner` |
-| Nothing created yet | [Laravel Cloud](https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f) | `EmptyState` |
+| `mercury` | [Mercury — notification settings](https://mobbin.com/screens/cd614ddf-6c42-41be-b0ed-1e1a1653e70e) | `toggle` `badge` `menu` `input` `avatar` `button` |
+| `neon` | [Neon — table browser](https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17) | `checkbox` `select` `select-content` `segmented-control` `toolbar` `expanded/Table` |
+| `coda` | [Coda — document editor](https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a) | `button-group` `tooltip` `menu` `select` |
+| `import` | [PandaDoc — bulk import](https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67) | `progress` `spinner` |
+| `empty` | [Laravel Cloud — nothing created yet](https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f) | `EmptyState` |
+
+Each also has an `-rtl` twin rendering the same screen in Arabic.
 
 Nothing was added to any screen to raise coverage. Where a screen needed
 something Banhaten does not ship — navigation lists, prose, page tabs — that is
@@ -66,18 +77,20 @@ whose own worked example is a text formatting toolbar, and
 ### F-201 · `Toolbar` promises keyboard navigation and implements none
 
 **Component:** `toolbar.tsx` · **Severity:** major · **Status:** OPEN — fixable, one right answer
+**Repro:** frame `neon`, the row above the filters. Tab into it, then press `→`.
 
 `Toolbar` sets `role="toolbar"`. That role tells assistive technology two
 specific things: the bar is **one** tab stop, and arrow keys move between the
 controls inside it. Neither happens — `toolbar.tsx` contains no keyboard handler
 at all.
 
-Measured on the formatting bar:
+Measured on that toolbar:
 
 | | |
 | --- | --- |
-| Tab stops in the bar | **11** |
+| Tab stops inside it | **10** |
 | What the role promises | **1** |
+| Arrow key from the first control | focus does not move |
 
 **Why it matters.** A wrong role is worse than no role. Someone using a screen
 reader is told arrow keys will work, tries them, and nothing moves — and they
@@ -93,12 +106,15 @@ what it already says. That is why it is the only one of the four we would patch.
 ### F-202 · `ButtonGroup` makes the container a tab stop as well as every button
 
 **Component:** `button-group.tsx` · **Severity:** minor · **Status:** OPEN — needs a decision
+**Repro:** frame `coda`, the formatting bar. Tab through it.
 
 `ButtonGroup` renders `role="group"` with `tabIndex={0}` on the wrapper, and
 leaves every button inside focusable too. So Tab stops on an empty container
 that does nothing, then again on each button in it.
 
-Measured: two of the eleven tab stops above are container `<div>`s.
+Measured on the formatting bar in frame `coda`: **11** tab stops, of which two
+are the group containers themselves — the one labelled "Text formatting" and the
+one labelled "Insert".
 
 **Why we did not patch it.** Removing `tabIndex` from the wrapper changes the
 tab order of every screen already using `ButtonGroup`. That is the same reason
@@ -111,6 +127,7 @@ correction.
 ### F-203 · There is no separator for a toolbar
 
 **Component:** `toolbar.tsx` · **Severity:** minor · **Status:** OPEN — new API
+**Repro:** frame `coda`, the two thin lines between the control groups.
 
 A real toolbar groups its controls and divides the groups with a rule. Radix
 ships `Toolbar.Separator` for exactly this. Banhaten has no equivalent, so the
@@ -128,6 +145,7 @@ the package contains. That is yours.
 ### F-204 · The two hand-rolled components are the two with keyboard gaps
 
 **Components:** `toolbar.tsx`, `button-group.tsx` · **Severity:** question · **Status:** OPEN
+**Repro:** frames `neon` and `coda`, both bars.
 
 This is the observation worth sending upstream, because it explains the other
 three rather than adding to them.
