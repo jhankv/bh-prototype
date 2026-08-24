@@ -2,8 +2,6 @@
 
 Read this before creating or changing anything under `prototypes/`.
 
-Design reference: [`docs/specs/2026-08-21-playground-v1-design.md`](docs/specs/2026-08-21-playground-v1-design.md)
-
 ---
 
 ## The one rule that explains the rest
@@ -23,8 +21,10 @@ These terms are binding. Do not invent parallel names or structures.
 | **Project** | A folder under `prototypes/`. One card on the dashboard. |
 | **View** | One interactive React screen. A `.tsx` file with a default export. |
 | **Document** | A `.md` file rendered as a frame. Critiques, findings, notes. |
-| **Canvas** | `canvas.json` — points at views and documents and positions them. It never imports them. |
-| **Frame** | One entry in a canvas: what to render, where, how large, and in which appearance. |
+| **Canvas** | `canvas.json` — points at views and documents and groups them. It never imports them, and it no longer positions them: see `src/canvas/layout.ts`. |
+| **Section** | A titled group of frames on a canvas. One subject — a product screen, a set of galleries. |
+| **Row** | A line of frames inside a section, optionally labelled. A section is one unlabelled row unless it says otherwise. |
+| **Frame** | One entry in a canvas: what to render, how large, and in which appearance. A frame is not a view — `mercury` and `mercury-rtl` are two frames pointing at one view. |
 | **Sandbox** | An installed copy of Banhaten under `sandboxes/`. Today there is one, `banhaten`, and it is pristine. Frames declare which one they render against. |
 | **Finding** | A recorded defect or observation about a design system component. |
 
@@ -494,3 +494,13 @@ Breaking any of these breaks the tool's reason to exist.
 When you change the canvas schema, the project layout, or any invariant above,
 update this file in the same change. A stale rule file silently teaches the next
 agent to do the wrong thing.
+
+**Do not link a build-time document as if it were the contract.** This file used
+to open with a pointer to the v1 design spec, and three of the templates in it
+had gone stale without anyone noticing: `type: "view"`, frames carrying `x` and
+`y`, and a finding format with a **Proposed fix** field that the audit scope now
+forbids. The spec was never wrong — it correctly records what was decided in
+August. It was the link that was wrong, because a document describing how the
+tool was *built* cannot also describe how it *is* once you start iterating.
+
+The rule files carry the contract. History stays in `docs/`, unlinked.

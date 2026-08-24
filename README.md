@@ -53,4 +53,4 @@ database: add a folder under `prototypes/` and a card appears.
 
 - [`AGENTS.md`](AGENTS.md) — the vocabulary and rules for authoring prototypes.
 - [`CLAUDE.md`](CLAUDE.md) — commands and architecture for working on the tool.
-- [`docs/specs/2026-08-21-playground-v1-design.md`](docs/specs/2026-08-21-playground-v1-design.md) — why it is built this way, including what was measured and what turned out to be wrong.
+- [`docs/specs/2026-08-21-playground-v1-design.md`](docs/specs/2026-08-21-playground-v1-design.md) — how it started. A build plan from August, kept as a record. The two files above are the current contract; read this one for history, not for how the tool works today.

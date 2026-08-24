@@ -4,6 +4,26 @@
 **Date:** 2026-08-21
 **Research basis:** [`docs/research/2026-08-21-sublime-design-studio-teardown.md`](../research/2026-08-21-sublime-design-studio-teardown.md)
 
+> **This is a record of what was decided on 2026-08-21, not a description of what
+> the tool is today.** The binding contract is [`AGENTS.md`](../../AGENTS.md) for
+> prototypes and [`CLAUDE.md`](../../CLAUDE.md) for the shell.
+>
+> **Nothing links here any more, on purpose.** The reasoning that still holds —
+> why iframes, why no authoring UI, why the filesystem is the database, which
+> dependencies were chosen and rejected — has been absorbed into those two files,
+> where it is maintained. What is left here is the build plan: delivery phases, a
+> definition of done, and a first prototype that no longer exists.
+>
+> What has since changed, and where the current answer lives:
+>
+> | Here | Today |
+> | --- | --- |
+> | Frames carry `x` and `y` | Position is computed from the grouping — `src/canvas/layout.ts` |
+> | Frames carry `type: "view"` | Removed. The file extension decides — `isDocument()` in `src/lib/schema.ts` |
+> | Sections hold a flat `frames` list | Sections hold rows; `frames` is shorthand for one — AGENTS.md §`canvas.json` |
+> | `sandboxes/banhaten-proposed` holds our fixes | Deleted in `0a10b6c`. One pristine sandbox |
+> | Findings carry a **Proposed fix** | This is an audit. It reports causes and stops — AGENTS.md §Writing findings |
+
 ---
 
 ## 1. Purpose
@@ -164,6 +184,9 @@ Each sandbox keeps its own `banhaten.config.json`, which is what makes `banhaten
 
 ### 4.2 `canvas.json`
 
+**Superseded — do not copy this shape.** `type`, `x` and `y` are all gone, and
+sections take rows. The current shape is in AGENTS.md.
+
 ```json
 {
   "sections": [
@@ -188,6 +211,11 @@ Each sandbox keeps its own `banhaten.config.json`, which is what makes `banhaten
 `appearance` maps one-to-one onto Banhaten's documented HTML attributes: `class="dark"`, `data-theme`, `data-radius`, `dir`.
 
 ### 4.3 Finding format (`documents/findings.md`)
+
+**Superseded — do not copy this shape.** Ids are `component-n`, not `F-001`; the
+fields are File / Severity / Status; and **Proposed fix** no longer exists,
+because a report that arrives with a fix attached asks the reader to judge the
+problem and the solution at once. AGENTS.md §Writing findings has the live one.
 
 ```markdown
 ### F-001 · Table — row density breaks with avatar + badge

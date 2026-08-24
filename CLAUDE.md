@@ -38,8 +38,6 @@ Two audiences, two documents:
 - **[AGENTS.md](AGENTS.md)** — authoring prototypes (`prototypes/`, `sandboxes/`).
   Read it before touching either directory. Its vocabulary is binding.
 
-Design rationale lives in [`docs/specs/2026-08-21-playground-v1-design.md`](docs/specs/2026-08-21-playground-v1-design.md).
-
 ## Commands
 
 ```bash
@@ -52,8 +50,8 @@ npx tsc -p tsconfig.app.json --noEmit   # typecheck alone, faster than a build
 ```
 
 There is no test suite. This is an internal tool whose real test is daily use;
-`tsc -b`, `eslint`, and driving the running app are the checks. See §8 of the
-spec. **Verify UI behaviour by driving the app, not by reading the code** — the
+`tsc -b`, `eslint`, and driving the running app are the checks.
+**Verify UI behaviour by driving the app, not by reading the code** — the
 three worst bugs in this repo's history were all invisible on the page.
 
 After installing design system components, `pnpm install` is **required**, not a
@@ -178,6 +176,40 @@ Sandboxes are pnpm workspace packages because `banhaten init --cwd` writes a
 `package.json` and `tsconfig.json` into each directory. They are vendor code and
 are excluded from ESLint: linting them invites an agent to "fix" generated files,
 which breaks `banhaten update` and pollutes the proposal diff.
+
+## Dependencies
+
+Small on purpose, and each line is a decision someone can otherwise undo by
+reflex.
+
+| Need | Package | Why this one |
+| --- | --- | --- |
+| Canvas pan/zoom | `react-zoom-pan-pinch` | Ships `zoomToElement` and `KeepScale`, which is most of the feature list |
+| Routing | `wouter` | ~2.6 kB for two routes. `react-router` is far more machinery than a dashboard and a canvas need |
+| Markdown documents | `react-markdown` + `remark-gfm` | Findings documents use GFM tables |
+| Mock data | `@faker-js/faker` | Ships `locale/ar` beside `locale/en`, which the RTL frames need |
+| Schema validation | `zod` | Parses `canvas.json` at load time, so failures become error frames instead of thrown exceptions |
+| Icons | `lucide-react` | Already arrives with Banhaten. Zero marginal cost |
+
+**Rejected, and why it stays rejected.** `@xyflow/react` is a node-and-edge graph
+editor — we have frames, not graphs, and no edges at all. A hand-rolled pan/zoom
+layer is genuinely small until zoom-at-cursor, trackpad pinch, bounds clamping
+and zoom-to-frame, which is where it stops being small.
+
+**No global state library — the reflex to add one is the thing to resist.** Every
+piece of state here already has an owner, and a store would create a second
+source of truth beside the URL:
+
+| State | Lives in |
+| --- | --- |
+| Which project and canvas are open | The URL — it must be linkable |
+| Frame appearance | URL search params — every frame must open standalone |
+| Pan and zoom | `react-zoom-pan-pinch`, deliberately ephemeral |
+| Projects, views, documents | The filesystem, via `import.meta.glob` |
+| Findings | Markdown in git — reviewable, diffable, permanent |
+
+The URL has to be authoritative because every frame must open standalone by URL.
+Two sources of truth would drift, and the one that loses is the shareable one.
 
 ## Performance
 
