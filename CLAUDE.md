@@ -10,7 +10,7 @@ prototypes** built with a source-installed copy of Banhaten, rendered across
 appearance modes and against two versions of it at once.
 
 Its purpose is not to look nice. It is to **stress Banhaten components and
-produce actionable defect reports** — see `prototypes/*/documents/findings.md`.
+produce actionable defect reports** — see `prototypes/component-audit/documents/`.
 
 ### Scope: Banhaten only — on purpose
 
@@ -108,6 +108,20 @@ and the pristine-versus-proposed comparison is the point of the tool. Views call
 `useDS()` from `@/ds`, backed by a lazy per-sandbox registry in
 `src/ds/registry.ts`. Only capitalised exports are registered.
 
+That constrains **values**, not types, and the difference went unexamined long
+enough to cost real findings. `import type` is erased at build time, so
+`src/ds/types.ts` can intersect the pristine sandbox's modules and hand `useDS()`
+their real prop types without binding any frame to a sandbox. Before it existed
+every component arrived as `ComponentType<Record<string, unknown>>` and
+`variant="tertiary"`, `size="sm"` and a bare `dot` all compiled and did nothing.
+Turning it on found sixteen errors in one run.
+
+Two consequences worth knowing. `tsconfig.app.json` maps `@/*` to `src/` **and**
+to the sandbox root, because the Banhaten CLI writes `@/lib/utils` into the files
+it installs. And `noUnusedLocals` moved to ESLint, which already ignores
+`sandboxes/`: typing against vendor code puts it in the program, and those rules
+would then report errors in generated files nobody may fix.
+
 **3. Frames are inert until clicked, and talk back by message.** An iframe
 swallows pointer events, so a frame under the cursor would stop the canvas
 panning. An inactive frame is covered by an overlay in the shell's document,
@@ -143,13 +157,22 @@ first:
 - Every listener filters on message **type**, not just source. They share one
   window.
 
-### Two design systems, side by side
+### One design system today, two by construction
 
 `sandboxes/banhaten/` is **pristine** and never hand-edited, so `banhaten update`
-is always safe and demos show honest current behaviour. `sandboxes/banhaten-proposed/`
-holds our fixes; `npx banhaten diff --cwd sandboxes/banhaten-proposed` is the
-proposal sent upstream. A frame declares which one it renders against, so the
-same view file appears twice on one canvas — today's behaviour beside the fix.
+is always safe and demos show honest current behaviour.
+
+A second sandbox, `banhaten-proposed`, held our patches until the work became an
+audit rather than a proposal. It was removed: with nothing to compare against,
+the frame toolbar showed a switcher that changed nothing, and an unwatched copy
+of the design system is somewhere an accidental edit can hide. `AGENTS.md` has
+the three-command recipe for bringing it back.
+
+Nothing in the shell was changed for that. `src/ds/registry.ts` globs
+`sandboxes/*` and the toolbar renders its switcher only when more than one
+exists, so both the one-sandbox and two-sandbox cases already worked. A frame
+still declares which sandbox it renders against, which is what lets the same view
+file appear twice on one canvas when there is something to compare.
 
 Sandboxes are pnpm workspace packages because `banhaten init --cwd` writes a
 `package.json` and `tsconfig.json` into each directory. They are vendor code and
@@ -174,10 +197,26 @@ nothing.
 
 ## Recording findings
 
-A defect found while using the tool ends as exactly one of two artifacts: a note
-in `prototypes/*/documents/findings.md`, or a diff in `banhaten-proposed`. Never
-only in a conversation.
+A defect found while using the tool ends as a note in
+`prototypes/component-audit/documents/`. Never only in a conversation.
 
-Record rejected hypotheses too. `findings.md` documents one investigation that
-concluded "not a bug" — that entry is what stops the next person spending an hour
-on it, and it is why the report stays credible.
+**Report the cause, not the remedy.** This is an audit: it says what happens,
+where to reproduce it, and what in the source produces it, and it stops there.
+A report that arrives with fixes attached asks the reader to judge the problem
+and the solution at once, and a rejected fix takes a real finding with it.
+
+**Check the contract first.** `banhaten docs <component>` prints the prop table
+and the RTL rules each component publishes. A defect stated against a documented
+contract is a bug report; the same defect without one is an opinion about someone
+else's design. Re-reading the registry changed six of the first twenty-one
+entries here, in both directions, and stopped two wrong ones from being written.
+
+That rule also applies before writing a component call, not only before recording
+a defect — which is the moment it would have saved the most time. AGENTS.md
+carries the build-time version, together with the cross-component traps
+`banhaten docs` cannot warn about, because it documents one component at a time
+and those traps only exist between them.
+
+Record rejected hypotheses too. The reports document investigations that
+concluded "not a bug" — those entries are what stop the next person spending an
+hour on it, and they are why the report stays credible.

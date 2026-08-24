@@ -25,7 +25,7 @@ These terms are binding. Do not invent parallel names or structures.
 | **Document** | A `.md` file rendered as a frame. Critiques, findings, notes. |
 | **Canvas** | `canvas.json` — points at views and documents and positions them. It never imports them. |
 | **Frame** | One entry in a canvas: what to render, where, how large, and in which appearance. |
-| **Sandbox** | An installed copy of Banhaten under `sandboxes/` — `banhaten` (pristine) or `banhaten-proposed` (our fixes). Frames declare which one they render against. |
+| **Sandbox** | An installed copy of Banhaten under `sandboxes/`. Today there is one, `banhaten`, and it is pristine. Frames declare which one they render against. |
 | **Finding** | A recorded defect or observation about a design system component. |
 
 ---
@@ -293,11 +293,64 @@ not available through `useDS()`. Asking for a component the sandbox does not
 have throws a message naming it and the `banhaten add` command that installs
 it.
 
+### Read the component's contract before you call it
+
+Run `banhaten docs <component>` first. It prints the real prop table, the
+defaults, the RTL rules and the recommended recipe, and it is generated from the
+installed registry, so it is current in a way this file can never be. Also
+`banhaten search <need>` when you do not know which component you want, and
+`banhaten view <component>` before wrapping or extending one.
+
+Two rules from `.banhaten/USAGE.md` that this repo has broken more than once:
+
+- **One semantic `density` across every control in a row.** `compact` is 32px,
+  `default` is 36px, `comfortable` is 40px. Not `size`.
+- **Never a raw height, padding, radius or font-size utility on a design system
+  control.** Width and responsive layout utilities are fine.
+
+#### What `banhaten docs` will not tell you
+
+It documents one component at a time, so it cannot warn you about the traps that
+only exist between components. These cost this audit four findings:
+
+| Trap | What happens |
+| --- | --- |
+| `size="sm"` | Real on `Button`, `Table` and `Badge`. Absent from `Select` and `Input`, where it silently applies no padding and the control collapses onto its text. |
+| `density` | Every control accepts it. Nothing propagates it — no context, no cascade, not even from `Toolbar` to its own children. Miss one control and it renders 36 beside its neighbours at 32. |
+| Any out-of-union value | `cva` matches no rule and applies no class. `defaultVariants` does not rescue it: those apply when a prop is `undefined`, not when it is wrong. `variant="tertiary"`, `color="red"` and `size="sm"` all render something that looks deliberate. |
+| `dot`, `hasLeadingIcon` | Not props. `type="dot"` is, and `hasLeadingIcon` is deprecated in favour of passing `leadingIcon` alone. |
+
+**`tsc` catches all of it, and only since `src/ds/types.ts` existed.** `useDS()`
+returns the pristine sandbox's real module shapes, so an out-of-union value is a
+compile error in your editor. Before that it typed everything as
+`ComponentType<Record<string, unknown>>`, and every row above shipped at least
+once.
+
+Two things it still does not cover. `banhaten doctor` scans the sandbox, not
+`prototypes/`, so it sees none of your calls. And a value being inside a union
+says nothing about whether the component honours it — `isRequired` typechecks and
+never reaches the input.
+
+So: read the docs, then read the table above, then write the call, and let the
+compiler confirm rather than discover.
+
+When a value must be wrong on purpose — the specimen frames exist for exactly
+that — use `@ts-expect-error` with the entry name in the comment, never a cast.
+The directive fails when the error stops happening, which is precisely when that
+finding needs rereading.
+
 ## Writing findings
 
-Every finding lives in `prototypes/component-audit/documents/observations.md`,
-grouped under the component it is about. That is the single ledger; do not start
-a second one, because two ledgers means two truths and neither can be trusted.
+Findings live in `prototypes/component-audit/documents/`, split into four
+reports by subject — `keyboard`, `direction`, `forms`, `data` — with `index.mdx`
+explaining how to read them. Put an entry in the report its subject belongs to;
+do not start a fifth, because a reader who has to search two places trusts
+neither.
+
+`method.md` in the same folder is **not** part of the report. It is ours: how the
+two passes work, what the registry corrected, near-misses caught before they
+reached a report, and our own misuse of the package. Keep audit findings out of
+it and keep our own mistakes out of the four reports.
 
 **Name an entry after its component**, numbered in the order it was found:
 
@@ -313,25 +366,36 @@ retitle — which matters, because entries cite each other (`kbd-2` exists only 
 narrow `kbd-1`). Never number findings `F-001`; that scheme said nothing to
 anyone outside the repo.
 
-Severity is `major` `minor` or omitted. Status is `open`, `FIXED in
-banhaten-proposed`, or **Question** — the last meaning more than one answer is
-reasonable and the choice belongs to the design system's owners, not to us.
+Severity is `major` `minor` or omitted. Status is **Confirmed** — it reproduces
+on a named frame and the cause is identified in the source — or **Question**,
+meaning more than one answer is reasonable and the choice belongs to the design
+system's owners, not to us.
 
 **Always give a `Repro` line naming the frame.** A finding nobody can reproduce
 is an opinion.
 
-Every finding ends as one of exactly two artifacts: a note, or a diff. Never
-leave a finding only in a conversation.
+Every finding ends as a note in `prototypes/*/documents/`. Never leave one only
+in a conversation.
 
-### Which of the two
+### This is an audit. Do not write fixes.
 
-Patch it in `banhaten-proposed` when there is **one right answer** — most often
-when a component's own `role`, type or documentation already promises the
-behaviour and the code does not deliver it. Restoring a promise is a correction.
+Report what happens, where to see it, and what in the source causes it. Stop
+there. No patches, no diffs, no recommended API, and no "suggested:" paragraph.
 
-Leave it open when a fix would change behaviour for existing consumers, add API,
-or pick between outcomes that produce different products. Those are decisions,
-and taking them silently is how an audit loses its standing.
+The reason is not modesty. An audit that arrives with fixes attached asks the
+reader to review two things at once — whether the problem is real, and whether a
+stranger's solution is the one they want. The second question is easier, so it
+gets answered first, and a rejected fix takes a real finding down with it.
+
+State the cause, which is audit. Do not state the remedy, which is proposal.
+`dir` is missing from the label span → yes. Add `dir="auto"` → no.
+
+**Check the contract before calling something a defect.** Run
+`banhaten docs <component>` and read its RTL rules and prop table. Where a
+component declares a contract and breaks it, say so — that is a bug report. Where
+it declares nothing, say that instead and mark it a Question. The same defect
+without a contract behind it is an opinion about someone else's design, and it
+will be answered that way.
 
 ---
 
@@ -339,21 +403,38 @@ and taking them silently is how an audit loses its standing.
 
 | Sandbox | Rule |
 | --- | --- |
-| `sandboxes/banhaten/` | **Pristine.** Never edit. `banhaten update` must always be safe here. |
-| `sandboxes/banhaten-proposed/` | Our fixes. `banhaten diff --cwd sandboxes/banhaten-proposed` is the proposal we send upstream. |
+| `sandboxes/banhaten/` | **Pristine.** Never edit. `banhaten update` must always be safe here, and `banhaten diff` must always come back empty. |
+
+There used to be a second sandbox, `banhaten-proposed`, holding our patches. It
+was removed when the work became an audit: with nothing to compare against, the
+canvas toolbar showed a switcher that changed nothing, and an unwatched copy of
+the design system is somewhere an accidental edit can hide.
+
+Restoring it is three commands, so do it the moment a proposal is actually
+wanted — and not before:
+
+```bash
+cp -r sandboxes/banhaten sandboxes/banhaten-proposed
+# then set "name" to "@sandbox/banhaten-proposed" in its package.json
+pnpm install
+```
+
+The frame toolbar shows its sandbox switcher only when more than one exists, so
+it comes back on its own.
 
 `globals.css` in either sandbox is generated by the Banhaten CLI — never edit it
 by hand. `frame.css` is ours: it registers which sources this build generates
 classes for.
 
-Adding a component installs it into **both** sandboxes, or they drift:
+Adding a component:
 
 ```bash
 npx banhaten add <component> --cwd sandboxes/banhaten
-npx banhaten add <component> --cwd sandboxes/banhaten-proposed
-pnpm install   # NOT optional — add writes new deps into each sandbox's
+pnpm install   # NOT optional — add writes new deps into the sandbox's
                # package.json, and the build fails to resolve them until this runs
 ```
+
+If a second sandbox exists, install into **both** or they drift.
 
 `sandbox: "none"` means a view with no design system — the shell's own smoke
 tests. It mounts no provider and loads no sandbox stylesheet, so `useDS()` will
