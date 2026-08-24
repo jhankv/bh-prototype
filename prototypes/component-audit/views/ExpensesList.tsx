@@ -207,15 +207,18 @@ export default function ExpensesList() {
         {/* The footer is the point. `showCaption` turns on the slot that
             `table-1` found printing an invented count, and the same footer is
             where `pagination-1` says the Arabic strings never arrive. */}
-        <div className="min-w-0 overflow-x-auto">
-          <DataTable
-            columns={columns}
-            rows={rows}
-            size="sm"
-            search={{ placeholder: c.search, label: c.search }}
-            pagination={{ pageSize: 3, totalRows: rows.length, showCaption: true }}
-          />
-        </div>
+        {/* No scroll wrapper. `.ds-table-wrap` already carries `min-width: 0`,
+            `overflow: auto` and `contain: paint` around the grid alone. Wrapping
+            DataTable instead put the search field inside the clip too, and its
+            focus ring — 4px of box-shadow painted OUTSIDE the field's box — was
+            cut off on every side. See `input-4` for the ring, and method.md. */}
+        <DataTable
+          columns={columns}
+          rows={rows}
+          size="sm"
+          search={{ placeholder: c.search, label: c.search }}
+          pagination={{ pageSize: 3, totalRows: rows.length, showCaption: true }}
+        />
       </div>
     </div>
   )

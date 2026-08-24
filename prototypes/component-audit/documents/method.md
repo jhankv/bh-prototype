@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Five near-misses so far, each caught before it reached a report.
+Six near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,27 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**A focus ring cut off on every side.** Reported from the visual pass on frame
+`expenses`: click the search field and the ring comes back clipped. It looked
+like `input-4` getting worse, and the honest question — asked before we wrote
+anything — was whether it was Banhaten or us.
+
+It was us. `Table` already renders `.ds-table-wrap`, which carries `min-width:
+0`, `overflow: auto` AND `contain: paint` around the grid alone. We had wrapped
+`DataTable` in our own `overflow-x-auto`, which put the search field inside the
+clip as well. A focus ring is a `box-shadow`: it paints outside the element's box
+and reserves no layout space, so any clipping ancestor cuts it.
+
+The wrapper was redundant in five places. Removed from `ExpensesList` and
+`BillsList`; the three in `Specimens` are left alone because those frames are the
+evidence for `table-2`, `avatar-1` and `badge-1`, none of them contains a
+focusable control outside the grid, and changing specimen markup we cannot
+re-verify in a browser is how a specimen quietly stops demonstrating its finding.
+
+The general shape, worth carrying: **before wrapping a design system component,
+check what it already wraps itself in.** Redundant containment is invisible until
+something paints outside its own box.
 
 **A figure that measured 0×0.** After switching `forms.mdx` from `<Compare>` to
 `<Specimen>`, the figure's iframe reported a zero-sized box. Reverting the change

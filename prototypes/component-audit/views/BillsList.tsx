@@ -225,7 +225,7 @@ export default function BillsList() {
           )}
         </div>
 
-        <div className="mt-4 min-w-0 overflow-x-auto">
+        <div className="mt-4">
           <Table columns={columns} rows={BILLS} size="sm" />
         </div>
 
