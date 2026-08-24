@@ -18,8 +18,12 @@ export const FrameSchema = z.object({
   /** Path relative to the project folder, e.g. "views/orders-table.tsx". */
   src: z.string().min(1),
   sandbox: z.string().default('none'),
-  x: z.number(),
-  y: z.number(),
+  /**
+   * The viewport the frame opens at — NOT its place on the board.
+   *
+   * Position is derived from the grouping in `src/canvas/layout.ts`; size is
+   * authored, because a dialog and a table browser want different ones.
+   */
   width: z.number().positive().default(1440),
   height: z.number().positive().default(900),
   // zod v4 defaults take the OUTPUT shape, so build it from the schema itself.
@@ -36,10 +40,38 @@ export const FrameSchema = z.object({
   reference: z.url().optional(),
 })
 
-export const SectionSchema = z.object({
-  title: z.string().min(1),
-  frames: z.array(FrameSchema),
+export const RowSchema = z.object({
+  label: z.string().min(1).optional(),
+  frames: z.array(FrameSchema).min(1),
 })
+
+/**
+ * A section is one or more rows. Most are a single unlabelled row, so `frames`
+ * is accepted as shorthand for exactly that and normalised away here — the
+ * layout code then only ever sees rows, and never branches on which spelling
+ * the file used.
+ *
+ * Exactly one of the two, because a section carrying both would have to pick a
+ * winner, and every rule for picking one is a rule someone has to remember.
+ */
+export const SectionSchema = z
+  .object({
+    title: z.string().min(1),
+    frames: z.array(FrameSchema).min(1).optional(),
+    rows: z.array(RowSchema).min(1).optional(),
+  })
+  .superRefine((section, ctx) => {
+    if (!section.frames === !section.rows) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'a section needs exactly one of "frames" or "rows"',
+      })
+    }
+  })
+  .transform(({ title, frames, rows }) => ({
+    title,
+    rows: rows ?? [{ frames: frames ?? [] }],
+  }))
 
 export const CanvasSchema = z.object({
   sections: z.array(SectionSchema),
@@ -54,6 +86,7 @@ export const ManifestSchema = z.object({
 
 export type Appearance = z.infer<typeof AppearanceSchema>
 export type Frame = z.infer<typeof FrameSchema>
+export type Row = z.infer<typeof RowSchema>
 export type Section = z.infer<typeof SectionSchema>
 export type Canvas = z.infer<typeof CanvasSchema>
 export type Manifest = z.infer<typeof ManifestSchema>

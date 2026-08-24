@@ -69,11 +69,13 @@ export function loadCanvas(slug: string): Loaded<Canvas> {
 
   const ids = new Set<string>()
   for (const section of parsed.data.sections) {
-    for (const frame of section.frames) {
-      if (ids.has(frame.id)) {
-        return { ok: false, error: `Duplicate frame id "${frame.id}" in canvas.json` }
+    for (const row of section.rows) {
+      for (const frame of row.frames) {
+        if (ids.has(frame.id)) {
+          return { ok: false, error: `Duplicate frame id "${frame.id}" in canvas.json` }
+        }
+        ids.add(frame.id)
       }
-      ids.add(frame.id)
     }
   }
 

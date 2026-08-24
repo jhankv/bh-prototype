@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'wouter'
 import { TransformComponent, TransformWrapper, useControls } from 'react-zoom-pan-pinch'
 import { ArrowLeft, Maximize2, Minus, Plus } from 'lucide-react'
@@ -6,14 +6,13 @@ import { findProject, loadCanvas } from '@/lib/projects'
 import { onFrameRelease, onFrameZoom } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
+import { layout, type PlacedSection } from './layout'
 import { useProgressiveMount } from './useProgressiveMount'
 import { useWheelGestures } from './useWheelGestures'
-import type { Canvas, Section } from '@/lib/schema'
+import type { Canvas } from '@/lib/schema'
 
 const MIN_SCALE = 0.05
 const MAX_SCALE = 2
-/** Room for the section title above a frame, and breathing space around the edges. */
-const PADDING = 120
 
 export function CanvasPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -43,26 +42,17 @@ export function CanvasPage() {
   )
 }
 
-/** The bounding box of every frame, so the transform layer has real content to fit. */
-function measure(canvas: Canvas) {
-  const frames = canvas.sections.flatMap((section) => section.frames)
-
-  if (frames.length === 0) return { width: 1, height: 1 }
-
-  return {
-    width: Math.max(...frames.map((frame) => frame.x + frame.width)) + PADDING,
-    height: Math.max(...frames.map((frame) => frame.y + frame.height)) + PADDING,
-  }
-}
-
 function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
-  const content = useMemo(() => measure(canvas), [canvas])
+  const board = useMemo(() => layout(canvas), [canvas])
 
   // Frames mount one at a time so the canvas paints without waiting for all of
-  // them. Numbering is global across sections, in reading order.
+  // them. Numbering is global across sections and rows, in reading order.
   const order = useMemo(
-    () => canvas.sections.flatMap((section) => section.frames).map((frame) => frame.id),
-    [canvas],
+    () =>
+      board.sections.flatMap((section) =>
+        section.rows.flatMap((row) => row.frames.map((frame) => frame.id)),
+      ),
+    [board],
   )
   const mountedCount = useProgressiveMount(order.length)
 
@@ -170,10 +160,10 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       >
         <TransformComponent
           wrapperStyle={{ width: '100%', height: '100%' }}
-          contentStyle={{ width: content.width, height: content.height }}
+          contentStyle={{ width: board.width, height: board.height }}
         >
-          <div className="relative" style={{ width: content.width, height: content.height }}>
-            {canvas.sections.map((section) => (
+          <div className="relative" style={{ width: board.width, height: board.height }}>
+            {board.sections.map((section) => (
               <SectionGroup
                 key={section.title}
                 slug={slug}
@@ -186,15 +176,20 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
           </div>
         </TransformComponent>
 
-        <Controls content={content} activeFrameId={activeFrameId} />
+        <Controls content={board} activeFrameId={activeFrameId} />
       </div>
     </TransformWrapper>
   )
 }
 
 /**
- * Sections are logical groups, not containers. The title floats above the
- * bounding box of the frames it owns, so moving a frame moves the label.
+ * Sections are logical groups, not containers. Both labels float above the
+ * frames they own — they are positioned, not wrapped, so nothing sits between
+ * the transform layer and a frame.
+ *
+ * A section splits into rows when one line of frames stops being readable. The
+ * row label is lighter than the section title on purpose: the section is what
+ * you are looking at, the row is which cut of it.
  */
 function SectionGroup({
   slug,
@@ -204,33 +199,40 @@ function SectionGroup({
   isMounted,
 }: {
   slug: string
-  section: Section
+  section: PlacedSection
   activeFrameId: string | null
   onActivate: (id: string | null) => void
   isMounted: (id: string) => boolean
 }) {
-  if (section.frames.length === 0) return null
-
-  const left = Math.min(...section.frames.map((frame) => frame.x))
-  const top = Math.min(...section.frames.map((frame) => frame.y))
-
   return (
     <>
       <h2
         className="absolute text-xs font-semibold tracking-wide text-shell-muted uppercase"
-        style={{ left, top: top - 44 }}
+        style={{ left: section.x, top: section.y - 44 }}
       >
         {section.title}
       </h2>
-      {section.frames.map((frame) => (
-        <CanvasFrame
-          key={frame.id}
-          slug={slug}
-          frame={frame}
-          active={activeFrameId === frame.id}
-          onActivate={onActivate}
-          mounted={isMounted(frame.id)}
-        />
+      {section.rows.map((row) => (
+        <Fragment key={row.y}>
+          {row.label && (
+            <h3
+              className="absolute text-xs text-shell-muted"
+              style={{ left: row.x, top: row.y - 22 }}
+            >
+              {row.label}
+            </h3>
+          )}
+          {row.frames.map((frame) => (
+            <CanvasFrame
+              key={frame.id}
+              slug={slug}
+              frame={frame}
+              active={activeFrameId === frame.id}
+              onActivate={onActivate}
+              mounted={isMounted(frame.id)}
+            />
+          ))}
+        </Fragment>
       ))}
     </>
   )

@@ -35,7 +35,7 @@ These terms are binding. Do not invent parallel names or structures.
 ```
 prototypes/<slug>/
   manifest.json          # name, description, optional cover frame id
-  canvas.json            # sections -> frames
+  canvas.json            # sections -> rows -> frames
   views/*.tsx            # default-exported React components
   documents/*.md         # markdown, rendered as frames
 ```
@@ -55,7 +55,7 @@ There is no registry to update.
           "id": "orders-ltr-light",
           "src": "views/OrdersTable.tsx",
           "sandbox": "banhaten",
-          "x": 0, "y": 0, "width": 1440, "height": 900,
+          "width": 1440, "height": 900,
           "appearance": { "mode": "light", "theme": "blue", "radius": "default", "dir": "ltr" },
           "caption": "Orders list — the filter bar is the focus.",
           "reference": "https://mobbin.com/screens/…"
@@ -75,14 +75,31 @@ There is no registry to update.
   faithful if the reader can check it, and a defect claimed against a real
   product is only credible next to the product. Put it on the frame rather than
   the project: two frames of one project can model two different screens.
-- Sections are logical groups; the title floats above the bounding box of its frames.
-- Lay frames out left to right in a section, with roughly 60px between them
-  and 140px between section rows.
-- **Recompute every `y` when you add a section. Do not hand-write one.** Two
-  sections silently landed on the same `y` here and drew on top of each other,
-  and nothing complains: the canvas is data, and the shell renders exactly what
-  it is given. Walk the sections in order, set `x` from the running width, then
-  advance `y` by the tallest frame in the section plus the gap.
+- `width` and `height` are the **viewport the frame opens at**, not its place on
+  the board. There is no `x` or `y` — position is computed from the grouping by
+  `src/canvas/layout.ts`. Sections stack, rows stack inside them, frames run
+  left to right inside a row.
+- A section is a single row by default; write `frames` and stop thinking about
+  it. Swap `frames` for `rows` when one line stops being readable:
+
+  ```json
+  { "title": "Reports", "rows": [
+      { "label": "How to read this",  "frames": [ … ] },
+      { "label": "Findings, by area", "frames": [ … ] }
+  ] }
+  ```
+
+  A section takes exactly one of `frames` or `rows`; both, or neither, fails to
+  parse. Row `label` is optional, and an unlabelled row reserves no headroom —
+  which is what keeps an ordinary one-row section flush under its title.
+- Order is reading order, and it is the only ordering there is. Moving a frame
+  means moving it in the file; there is nothing else to keep in sync.
+
+  This replaced 52 hand-written coordinates. They drifted twice: two sections
+  were once written with the same `y` and drew on top of each other, and the
+  Reports section sat 40px too close to Specimens because its gap was measured
+  against the wrong frame height. Neither was visible, and nothing complained —
+  the canvas is data and the shell renders exactly what it is given.
 
 Appearance values, matching Banhaten's HTML attributes:
 

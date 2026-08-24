@@ -3,13 +3,14 @@ import { availableSandboxes } from '@/ds/registry'
 import { appearanceToParams, describeAppearance } from '@/lib/appearance'
 import { onFrameReady, pushAppearance } from '@/lib/frameMessages'
 import { frameUrl } from '@/lib/projects'
-import { isDocument, type Appearance, type Frame } from '@/lib/schema'
+import { isDocument, type Appearance } from '@/lib/schema'
 import { FrameToolbar } from './FrameToolbar'
+import type { PlacedFrame } from './layout'
 import { useCanvasScale } from './useCanvasScale'
 
 type CanvasFrameProps = {
   slug: string
-  frame: Frame
+  frame: PlacedFrame
   active: boolean
   onActivate: (id: string | null) => void
   /** False until this frame's turn in the progressive mount queue. */

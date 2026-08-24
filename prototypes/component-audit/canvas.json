@@ -1,14 +1,12 @@
 {
   "sections": [
     {
-      "title": "Mercury — notification settings",
+      "title": "Mercury \u2014 notification settings",
       "frames": [
         {
           "id": "mercury",
           "src": "views/NotificationSettings.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 0,
           "width": 1420,
           "height": 900,
           "appearance": {
@@ -24,8 +22,6 @@
           "id": "mercury-rtl",
           "src": "views/NotificationSettings.tsx",
           "sandbox": "banhaten",
-          "x": 1480,
-          "y": 0,
           "width": 1420,
           "height": 900,
           "appearance": {
@@ -40,14 +36,12 @@
       ]
     },
     {
-      "title": "Neon — table browser",
+      "title": "Neon \u2014 table browser",
       "frames": [
         {
           "id": "neon",
           "src": "views/TableStudio.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 1040,
           "width": 1420,
           "height": 820,
           "appearance": {
@@ -63,8 +57,6 @@
           "id": "neon-rtl",
           "src": "views/TableStudio.tsx",
           "sandbox": "banhaten",
-          "x": 1480,
-          "y": 1040,
           "width": 1420,
           "height": 820,
           "appearance": {
@@ -79,14 +71,12 @@
       ]
     },
     {
-      "title": "Coda — document editor",
+      "title": "Coda \u2014 document editor",
       "frames": [
         {
           "id": "coda",
           "src": "views/DocEditor.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 2000,
           "width": 1420,
           "height": 520,
           "appearance": {
@@ -102,8 +92,6 @@
           "id": "coda-rtl",
           "src": "views/DocEditor.tsx",
           "sandbox": "banhaten",
-          "x": 1480,
-          "y": 2000,
           "width": 1420,
           "height": 520,
           "appearance": {
@@ -118,14 +106,12 @@
       ]
     },
     {
-      "title": "PandaDoc — bulk import",
+      "title": "PandaDoc \u2014 bulk import",
       "frames": [
         {
           "id": "import",
           "src": "views/BulkImport.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 2660,
           "width": 1000,
           "height": 620,
           "appearance": {
@@ -141,8 +127,6 @@
           "id": "import-rtl",
           "src": "views/BulkImport.tsx",
           "sandbox": "banhaten",
-          "x": 1060,
-          "y": 2660,
           "width": 1000,
           "height": 620,
           "appearance": {
@@ -157,14 +141,12 @@
       ]
     },
     {
-      "title": "Laravel Cloud — nothing created yet",
+      "title": "Laravel Cloud \u2014 nothing created yet",
       "frames": [
         {
           "id": "empty",
           "src": "views/AppsOverview.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 3420,
           "width": 1000,
           "height": 620,
           "appearance": {
@@ -180,8 +162,6 @@
           "id": "empty-rtl",
           "src": "views/AppsOverview.tsx",
           "sandbox": "banhaten",
-          "x": 1060,
-          "y": 3420,
           "width": 1000,
           "height": 620,
           "appearance": {
@@ -196,14 +176,12 @@
       ]
     },
     {
-      "title": "Variant galleries — every state of one component at once",
+      "title": "Variant galleries \u2014 every state of one component at once",
       "frames": [
         {
           "id": "buttons",
           "src": "views/Buttons.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 4180,
           "width": 900,
           "height": 1180,
           "appearance": {
@@ -218,8 +196,6 @@
           "id": "inputs",
           "src": "views/Inputs.tsx",
           "sandbox": "banhaten",
-          "x": 960,
-          "y": 4180,
           "width": 900,
           "height": 1180,
           "appearance": {
@@ -233,14 +209,12 @@
       ]
     },
     {
-      "title": "Xero — bills list",
+      "title": "Xero \u2014 bills list",
       "frames": [
         {
           "id": "bills",
           "src": "views/BillsList.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 5500,
           "width": 1440,
           "height": 900,
           "appearance": {
@@ -256,8 +230,6 @@
           "id": "bills-rtl",
           "src": "views/BillsList.tsx",
           "sandbox": "banhaten",
-          "x": 1500,
-          "y": 5500,
           "width": 1440,
           "height": 900,
           "appearance": {
@@ -272,14 +244,12 @@
       ]
     },
     {
-      "title": "Remote — team expenses",
+      "title": "Remote \u2014 team expenses",
       "frames": [
         {
           "id": "expenses",
           "src": "views/ExpensesList.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 6540,
           "width": 1200,
           "height": 720,
           "appearance": {
@@ -295,8 +265,6 @@
           "id": "expenses-rtl",
           "src": "views/ExpensesList.tsx",
           "sandbox": "banhaten",
-          "x": 1260,
-          "y": 6540,
           "width": 1200,
           "height": 720,
           "appearance": {
@@ -311,14 +279,12 @@
       ]
     },
     {
-      "title": "Relume — keyboard shortcuts",
+      "title": "Relume \u2014 keyboard shortcuts",
       "frames": [
         {
           "id": "shortcuts",
           "src": "views/ShortcutsDialog.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 7400,
           "width": 1000,
           "height": 760,
           "appearance": {
@@ -334,8 +300,6 @@
           "id": "shortcuts-rtl",
           "src": "views/ShortcutsDialog.tsx",
           "sandbox": "banhaten",
-          "x": 1060,
-          "y": 7400,
           "width": 1000,
           "height": 760,
           "appearance": {
@@ -350,14 +314,12 @@
       ]
     },
     {
-      "title": "Specimens — the cases no product screen produces",
+      "title": "Specimens \u2014 the cases no product screen produces",
       "frames": [
         {
           "id": "specimens",
           "src": "views/Specimens.tsx",
           "sandbox": "banhaten",
-          "x": 0,
-          "y": 8300,
           "width": 1440,
           "height": 1300,
           "appearance": {
@@ -372,8 +334,6 @@
           "id": "specimens-rtl",
           "src": "views/Specimens.tsx",
           "sandbox": "banhaten",
-          "x": 1500,
-          "y": 8300,
           "width": 1440,
           "height": 1300,
           "appearance": {
@@ -387,13 +347,11 @@
       ]
     },
     {
-      "title": "Reports — one story each, small enough to copy",
+      "title": "Reports \u2014 one story each, small enough to copy",
       "frames": [
         {
           "id": "index",
           "src": "documents/index.mdx",
-          "x": 0,
-          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
@@ -401,8 +359,6 @@
         {
           "id": "keyboard",
           "src": "documents/keyboard.mdx",
-          "x": 880,
-          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "toolbar and button-group. Three findings and the one cause that explains them."
@@ -410,8 +366,6 @@
         {
           "id": "direction",
           "src": "documents/direction.mdx",
-          "x": 1760,
-          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "RTL and bidi. Three of these are the same defect in three files."
@@ -419,17 +373,13 @@
         {
           "id": "forms",
           "src": "documents/forms.mdx",
-          "x": 2640,
-          "y": 9700,
           "width": 820,
           "height": 1000,
-          "caption": "input, badge, avatar. Carries the only Compare figure — input-3."
+          "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
         },
         {
           "id": "data",
           "src": "documents/data.mdx",
-          "x": 3520,
-          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
@@ -437,8 +387,6 @@
         {
           "id": "method",
           "src": "documents/method.md",
-          "x": 4400,
-          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."
