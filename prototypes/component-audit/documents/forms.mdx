@@ -316,3 +316,49 @@ initials collide constantly. Three different customers in one dataset all showed
 We did not file this as a defect because there may be no good answer. Worth
 discussing: fall back to a generated colour or icon when the name is non-Latin,
 or drop initials entirely.
+
+---
+
+### `button-1` · Five of fourteen variants are not in the published contract
+
+**File:** `button.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `buttons`, the variant grid. `danger` and `destructive` sit two
+apart and are the same red; so do `soft-danger` and `soft-destructive`.
+
+`banhaten docs button` publishes nine variants:
+
+> `default`, `secondary`, `soft`, `outline`, `ghost`, `ghost-primary`, `danger`,
+> `soft-danger`, `white`
+
+`buttonVariants` defines fourteen. The five it does not publish fall into two
+groups, and they are not the same problem.
+
+**Two are undeclared aliases.** `destructive` and `soft-destructive` are
+byte-identical to `danger` and `soft-danger` — 359 and 474 characters, compared
+literally, not by eye. Same tokens, same hover, same focus shadow, same disabled
+state. Nothing in 103 lines of documentation mentions either name, and the only
+occurrence of the word "destructive" is prose describing the use case:
+"navigation actions, and destructive confirmations."
+
+**Three are simply unpublished.** `success`, `warning` and `link` are distinct
+from everything else and appear nowhere in the contract, so a consumer reading
+the docs cannot discover that they exist.
+
+Both groups reach the consumer the same way. `VariantProps<typeof
+buttonVariants>` derives from the implementation, so all fourteen typecheck and
+all fourteen autocomplete. The docs say nine. Whichever a team reads first is
+the API it gets, and two teams can ship two names for one button with nothing
+marking which is canonical — or a deprecation path if the alias is later removed.
+
+What makes this a defect rather than a preference is that **Banhaten already has
+a convention for exactly this, and Button does not follow it.** `banhaten docs
+badge` declares its own aliases:
+
+> `legacyVariants`: The previous variant prop is still accepted as a
+> compatibility shim.
+
+That declaration is why `badge`'s identical situation is recorded above as *not*
+a finding. Button's own `density` prop is documented the same careful way —
+"Maps to legacy xs, sm, or default sizes." The vocabulary to describe a
+compatibility alias exists, is used twice elsewhere in this component's own
+documentation, and is absent from its variants.

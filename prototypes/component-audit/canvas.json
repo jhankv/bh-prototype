@@ -390,7 +390,7 @@
               "src": "documents/forms.mdx",
               "width": 820,
               "height": 1000,
-              "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
+              "caption": "input, badge, select, avatar, button. Carries the only Compare figure \u2014 input-3."
             },
             {
               "id": "data",
