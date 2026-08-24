@@ -348,48 +348,58 @@
     },
     {
       "title": "Reports \u2014 one story each, small enough to copy",
-      "frames": [
+      "rows": [
         {
-          "id": "index",
-          "src": "documents/index.mdx",
-          "width": 820,
-          "height": 1000,
-          "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
+          "label": "How to read this",
+          "frames": [
+            {
+              "id": "index",
+              "src": "documents/index.mdx",
+              "width": 820,
+              "height": 1000,
+              "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
+            },
+            {
+              "id": "method",
+              "src": "documents/method.md",
+              "width": 820,
+              "height": 1000,
+              "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."
+            }
+          ]
         },
         {
-          "id": "keyboard",
-          "src": "documents/keyboard.mdx",
-          "width": 820,
-          "height": 1000,
-          "caption": "toolbar and button-group. Three findings and the one cause that explains them."
-        },
-        {
-          "id": "direction",
-          "src": "documents/direction.mdx",
-          "width": 820,
-          "height": 1000,
-          "caption": "RTL and bidi. Three of these are the same defect in three files."
-        },
-        {
-          "id": "forms",
-          "src": "documents/forms.mdx",
-          "width": 820,
-          "height": 1000,
-          "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
-        },
-        {
-          "id": "data",
-          "src": "documents/data.mdx",
-          "width": 820,
-          "height": 1000,
-          "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
-        },
-        {
-          "id": "method",
-          "src": "documents/method.md",
-          "width": 820,
-          "height": 1000,
-          "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."
+          "label": "Findings, by area",
+          "frames": [
+            {
+              "id": "keyboard",
+              "src": "documents/keyboard.mdx",
+              "width": 820,
+              "height": 1000,
+              "caption": "toolbar and button-group. Three findings and the one cause that explains them."
+            },
+            {
+              "id": "direction",
+              "src": "documents/direction.mdx",
+              "width": 820,
+              "height": 1000,
+              "caption": "RTL and bidi. Three of these are the same defect in three files."
+            },
+            {
+              "id": "forms",
+              "src": "documents/forms.mdx",
+              "width": 820,
+              "height": 1000,
+              "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
+            },
+            {
+              "id": "data",
+              "src": "documents/data.mdx",
+              "width": 820,
+              "height": 1000,
+              "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
+            }
+          ]
         }
       ]
     }
