@@ -6,7 +6,12 @@ import { findProject, loadCanvas } from '@/lib/projects'
 import { onFrameRelease, onFrameZoom } from '@/lib/frameMessages'
 import { Empty } from '@/app/Empty'
 import { CanvasFrame } from './CanvasFrame'
-import { layout, type PlacedSection } from './layout'
+import {
+  layout,
+  ROW_LABEL_OFFSET,
+  SECTION_TITLE_OFFSET,
+  type PlacedSection,
+} from './layout'
 import { useProgressiveMount } from './useProgressiveMount'
 import { useWheelGestures } from './useWheelGestures'
 import type { Canvas } from '@/lib/schema'
@@ -206,9 +211,13 @@ function SectionGroup({
 }) {
   return (
     <>
+      {/* Sized for the zoom you actually read a board at, not the zoom you
+          author it at. At 12px a title was 4px on screen once the canvas was
+          pulled back far enough to see more than one section — which is the
+          only moment a section title is for. */}
       <h2
-        className="absolute text-xs font-semibold tracking-wide text-shell-muted uppercase"
-        style={{ left: section.x, top: section.y - 44 }}
+        className="absolute text-4xl font-semibold tracking-wide text-shell-muted uppercase"
+        style={{ left: section.x, top: section.y - SECTION_TITLE_OFFSET }}
       >
         {section.title}
       </h2>
@@ -216,8 +225,8 @@ function SectionGroup({
         <Fragment key={row.y}>
           {row.label && (
             <h3
-              className="absolute text-xs text-shell-muted"
-              style={{ left: row.x, top: row.y - 22 }}
+              className="absolute text-xl text-shell-muted"
+              style={{ left: row.x, top: row.y - ROW_LABEL_OFFSET }}
             >
               {row.label}
             </h3>
