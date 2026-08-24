@@ -208,3 +208,51 @@ No change is proposed here, and the question is a real one rather than a
 rhetorical one. A current-page marker arguably *should* carry brand weight, and
 plenty of systems do exactly this. The observation is only that the two roles are
 locked to one value, and the lock is a default rather than a constraint.
+
+---
+
+### `page-header-3` · Its action buttons draw the border twice
+
+**File:** `expanded/pageHeader.css`, `expanded/PageHeader.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `bills`. `Set up bill payments` and `New bill` sit in the
+header; `Filter` and `Columns` sit in the toolbar below. All four are
+`variant="secondary"`. The header pair has a visibly heavier edge.
+
+`PageHeader` renders its own actions — `actions` takes descriptors, not
+children, so a consumer never sees the `Button` and cannot style it. `Action`
+renders `<Button variant="secondary" className="ds-page-header__action">`. The
+variant is right. The class is the problem.
+
+`Button`'s `secondary` draws its edge as an **inset** shadow, not a border:
+
+```css
+--shadow-button-secondary: inset 0 0 0 1px var(--bh-border-default), var(--shadow-button-surface);
+```
+
+`.ds-page-header__action` then adds a **real CSS border in the same token**, and
+re-applies the same shadow beside it:
+
+```css
+border: 1px solid var(--page-header-border-default);  /* → --bh-border-default */
+box-shadow: var(--shadow-button-secondary);           /* → the inset 1px, again */
+```
+
+An inset shadow paints from the padding edge inward, which begins immediately
+inside the border. Two 1px lines of one colour, touching: **2px of solid
+`--bh-border-default` where every other secondary button on the page has 1px.**
+Nothing in the block resets either.
+
+The size difference in the same screenshot is ours — the toolbar uses
+`size="sm"` and the header's actions are 36px. That is a composition choice and
+not part of this entry. The border is not: it is 2px against 1px at any size,
+because the two lines are additive.
+
+**Why it is more than 1px.** `.ds-page-header__action` does not adjust a button;
+it re-declares one. Background, padding, radius, font size, font weight, line
+height, height, colour and shadow are all restated against a parallel
+`--page-header-*` token set. Some of those resolve to the same value today —
+`--page-header-control-radius` is `--bh-control-default`, `--page-header-border-default`
+is `--bh-border-default`. That is what makes it hard to see: the copy currently
+agrees with the original almost everywhere, so only the one additive property
+shows. A change to `Button`'s secondary variant will not reach these buttons,
+and the next divergence will be as quiet as this one.
