@@ -15,11 +15,20 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "paths": { "@/*": ["./src/*"] },
+    /* `@` means two roots. Views and the shell mean `src/`; a sandbox component
+       means its own package root, because the Banhaten CLI writes `@/lib/utils`
+       into the files it installs. TS tries these in order, and there is no
+       collision today: nothing under `src/` shares a path with the sandbox. The
+       runtime resolution is separate — see the `scoped-at-alias` plugin. */
+    "paths": { "@/*": ["./src/*", "./sandboxes/banhaten/*"] },
 
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /* Linting.
+       `noUnusedLocals` and `noUnusedParameters` live in ESLint instead, which
+       already ignores `sandboxes/`. Typing `useDS()` pulls the sandbox's real
+       modules into this program, and those two rules would then report on vendor
+       code the Banhaten CLI owns and overwrites — an error nobody may fix. The
+       rules still run on `src/` and `prototypes/` through
+       @typescript-eslint/no-unused-vars, verified equivalent. */
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },

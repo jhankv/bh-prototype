@@ -3,6 +3,7 @@ import { ChevronDown, Columns3, ListFilter, MoreVertical, Search } from 'lucide-
 import { useDS } from '@/ds'
 import { useCopy } from '@/copy'
 import { BILLS, type Bill, type BillStatus } from './bills'
+import type { BadgeProps } from '../../../sandboxes/banhaten/components/ui/badge'
 
 /**
  * Xero's bills list, reproduced as faithfully as Banhaten allows.
@@ -80,7 +81,7 @@ const COPY = {
   total: { en: '8 items · 3,651.00 USD', ar: '٨ عناصر · ٣٬٦٥١٫٠٠ دولار' },
 } as const
 
-const STATUS_TONE: Record<BillStatus, string> = {
+const STATUS_TONE: Record<BillStatus, BadgeProps['color']> = {
   'awaiting-payment': 'green',
   draft: 'neutral',
   'awaiting-approval': 'blue',
@@ -169,7 +170,7 @@ export default function BillsList() {
           description={c.description}
           tabs={{
             ariaLabel: c.tabsLabel,
-            items: c.tabs,
+            items: [...c.tabs],
             activeIndex: tab,
             onActiveIndexChange: (next: number) => setTab(next),
           }}
@@ -182,7 +183,7 @@ export default function BillsList() {
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <div className="min-w-[280px] flex-1">
             <Input
-              size="sm"
+              density="compact"
               placeholder={c.search}
               aria-label={c.searchLabel}
               leadingIcon={<Search aria-hidden="true" />}

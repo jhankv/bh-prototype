@@ -71,7 +71,7 @@ export default function AppsOverview() {
         <div className="ms-auto flex items-center gap-3">
           <div className="w-[200px]">
             <Input
-              size="sm"
+              density="compact"
               placeholder={c.search}
               aria-label={c.search}
               leadingIcon={<Search aria-hidden="true" />}

@@ -161,13 +161,13 @@ export default function DocEditor() {
           <span className="min-w-0 truncate text-sm font-medium">{c.docTitle}</span>
 
           <div className="ms-auto flex items-center gap-2">
-            <Button variant="tertiary" size="sm">
+            <Button variant="ghost" density="compact">
               {c.share}
             </Button>
 
             <MenuRoot>
               <MenuTrigger asChild>
-                <Button variant="tertiary" size="sm">
+                <Button variant="ghost" density="compact">
                   {c.insert}
                   <ChevronDown aria-hidden="true" className="size-3.5" />
                 </Button>
@@ -211,7 +211,7 @@ export default function DocEditor() {
               <div className="flex items-center gap-1.5 rounded-[var(--bh-radius-lg-8)] border border-[var(--bh-border-default)] bg-[var(--bh-bg-default,white)] p-1.5 shadow-[var(--shadow-md)]">
                 <div className="w-[132px]">
                   <Select
-                    size="sm"
+                    density="compact"
                     aria-label={c.styleLabel}
                     selectValue={style}
                     value={styleLabel}
@@ -229,7 +229,7 @@ export default function DocEditor() {
                 <ToggleGroup
                   type="multiple"
                   mode="iconOnly"
-                  size="sm"
+                  density="compact"
                   aria-label={c.formatLabel}
                   value={marks}
                   onValueChange={(next: string | string[]) =>

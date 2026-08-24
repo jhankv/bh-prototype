@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDS } from '@/ds'
 import { useCopy } from '@/copy'
+import type { BadgeProps } from '../../../sandboxes/banhaten/components/ui/badge'
 
 /**
  * Remote's team expenses list, reproduced as faithfully as Banhaten allows.
@@ -73,7 +74,11 @@ export default function ExpensesList() {
   const [chips, setChips] = useState({ date: true, by: true })
 
   const statusLabel = { reimbursed: c.reimbursed, approved: c.approved, pending: c.pending }
-  const statusTone = { reimbursed: 'green', approved: 'green', pending: 'amber' }
+  const statusTone: Record<Expense['status'], BadgeProps['color']> = {
+    reimbursed: 'green',
+    approved: 'green',
+    pending: 'amber',
+  }
 
   // Remote's own rows. Seeded, because frames on one canvas exist to be compared.
   const rows: Expense[] = [
@@ -148,7 +153,7 @@ export default function ExpensesList() {
       header: c.colStatus,
       width: 150,
       renderCell: (row: Expense) => (
-        <Badge color={statusTone[row.status]} dot>
+        <Badge color={statusTone[row.status]} type="dot">
           {statusLabel[row.status]}
         </Badge>
       ),

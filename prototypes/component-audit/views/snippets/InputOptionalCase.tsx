@@ -6,8 +6,8 @@ import { useDS } from '@/ds'
  * A snippet, not a gallery. The finding is one word inside a parenthesis, and in
  * the full Inputs gallery it sits among twenty other fields where nobody will
  * ever spot it — which is exactly the objection that produced this file. Three
- * fields on one row, stacked against the patched version, and the difference
- * arrives without being pointed at.
+ * fields on one row, adjacent, so the difference arrives without being pointed
+ * at.
  *
  * The asymmetry is the whole point and it only exists when the two booleans are
  * adjacent: `isRequired` alone draws its asterisk, `isOptional` alone draws

@@ -1,7 +1,7 @@
 {
   "sections": [
     {
-      "title": "Mercury \u2014 notification settings",
+      "title": "Mercury — notification settings",
       "frames": [
         {
           "id": "mercury",
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "title": "Neon \u2014 table browser",
+      "title": "Neon — table browser",
       "frames": [
         {
           "id": "neon",
@@ -56,7 +56,7 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "Checkbox, Select, SegmentedControl, Table. Two filter rows that have to line up with each other.",
+          "caption": "Checkbox, Select, SegmentedControl, Table, Menu. The filter rows have to line up with each other; the row menus open, sort, duplicate and delete for real.",
           "reference": "https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17"
         },
         {
@@ -73,13 +73,13 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid.",
+          "caption": "The same browser in Arabic. Numeric columns and Latin identifiers inside an RTL grid, and a menu that has to mirror with it.",
           "reference": "https://mobbin.com/screens/926541e1-1d12-4677-8faf-54193a709b17"
         }
       ]
     },
     {
-      "title": "Coda \u2014 document editor",
+      "title": "Coda — document editor",
       "frames": [
         {
           "id": "coda",
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "title": "PandaDoc \u2014 bulk import",
+      "title": "PandaDoc — bulk import",
       "frames": [
         {
           "id": "import",
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "title": "Laravel Cloud \u2014 nothing created yet",
+      "title": "Laravel Cloud — nothing created yet",
       "frames": [
         {
           "id": "empty",
@@ -196,7 +196,7 @@
       ]
     },
     {
-      "title": "Variant galleries \u2014 every state of one component at once",
+      "title": "Variant galleries — every state of one component at once",
       "frames": [
         {
           "id": "buttons",
@@ -229,27 +229,11 @@
             "dir": "ltr"
           },
           "caption": "Every Input variant, size, state and affix. This frame produced input-2 and input-3."
-        },
-        {
-          "id": "inputs-proposed",
-          "src": "views/Inputs.tsx",
-          "sandbox": "banhaten-proposed",
-          "x": 1920,
-          "y": 4180,
-          "width": 900,
-          "height": 1180,
-          "appearance": {
-            "mode": "light",
-            "theme": "blue",
-            "radius": "default",
-            "dir": "ltr"
-          },
-          "caption": "Same file, our patched sandbox. Compare the isRequired and isOptional rows against the frame to its left."
         }
       ]
     },
     {
-      "title": "Xero \u2014 bills list",
+      "title": "Xero — bills list",
       "frames": [
         {
           "id": "bills",
@@ -288,7 +272,7 @@
       ]
     },
     {
-      "title": "Remote \u2014 team expenses",
+      "title": "Remote — team expenses",
       "frames": [
         {
           "id": "expenses",
@@ -327,7 +311,7 @@
       ]
     },
     {
-      "title": "Relume \u2014 keyboard shortcuts",
+      "title": "Relume — keyboard shortcuts",
       "frames": [
         {
           "id": "shortcuts",
@@ -366,13 +350,50 @@
       ]
     },
     {
-      "title": "Reports \u2014 one story each, small enough to copy",
+      "title": "Specimens — the cases no product screen produces",
+      "frames": [
+        {
+          "id": "specimens",
+          "src": "views/Specimens.tsx",
+          "sandbox": "banhaten",
+          "x": 0,
+          "y": 8300,
+          "width": 1440,
+          "height": 1300,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "ltr"
+          },
+          "caption": "Baseline. Every string here is Latin and stays Latin, so the RTL twin is the only variable."
+        },
+        {
+          "id": "specimens-rtl",
+          "src": "views/Specimens.tsx",
+          "sandbox": "banhaten",
+          "x": 1500,
+          "y": 8300,
+          "width": 1440,
+          "height": 1300,
+          "appearance": {
+            "mode": "light",
+            "theme": "blue",
+            "radius": "default",
+            "dir": "rtl"
+          },
+          "caption": "The same Latin strings inside an RTL document. table-2, breadcrumbs-1 and page-header-2 all show here."
+        }
+      ]
+    },
+    {
+      "title": "Reports — one story each, small enough to copy",
       "frames": [
         {
           "id": "index",
           "src": "documents/index.mdx",
           "x": 0,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Start here. How to read an entry, where each frame lives, verified good, and disproven hypotheses."
@@ -381,7 +402,7 @@
           "id": "keyboard",
           "src": "documents/keyboard.mdx",
           "x": 880,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "toolbar and button-group. Three findings and the one cause that explains them."
@@ -390,7 +411,7 @@
           "id": "direction",
           "src": "documents/direction.mdx",
           "x": 1760,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "RTL and bidi. Three of these are the same defect in three files."
@@ -399,16 +420,16 @@
           "id": "forms",
           "src": "documents/forms.mdx",
           "x": 2640,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
-          "caption": "input, badge, avatar. Carries the only Compare figure \u2014 input-3."
+          "caption": "input, badge, avatar. Carries the only Compare figure — input-3."
         },
         {
           "id": "data",
           "src": "documents/data.mdx",
           "x": 3520,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Table, PageHeader, pagination. All three need their screen rebuilt."
@@ -417,7 +438,7 @@
           "id": "method",
           "src": "documents/method.md",
           "x": 4400,
-          "y": 8300,
+          "y": 9700,
           "width": 820,
           "height": 1000,
           "caption": "Ours, not theirs. How we work, what we nearly got wrong, and what is still uncovered."
