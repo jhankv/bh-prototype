@@ -362,3 +362,46 @@ a finding. Button's own `density` prop is documented the same careful way —
 "Maps to legacy xs, sm, or default sizes." The vocabulary to describe a
 compatibility alias exists, is used twice elsewhere in this component's own
 documentation, and is absent from its variants.
+
+---
+
+### `input-4` · The focus ring is twice the floor and drops the border it replaces
+
+**File:** `input.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
+**Repro:** frame `inputs`, the `default` field. Click into it. Same in frame
+`neon`, the search field above the grid.
+
+This is not a contract violation, and it is recorded so nobody spends an hour
+deciding whether it is one. The ring is systematic, token-driven, and passes
+WCAG. It is a question of visual weight, and the choice is Banhaten's.
+
+The mechanism, measured rather than eyeballed. Three controls, one width token:
+
+| Control | Primitive | Blue band | Offset |
+| --- | --- | --- | --- |
+| `Button` | `--shadow-component-focus-ring` | 4px | flush |
+| `Input` | `--shadow-component-focus-stroke` | 4px | 1px |
+| `Select` | `--shadow-component-focus-stroke` | 4px | 1px |
+
+`--bh-focus-ring-width` is `4px` and `--bh-border-width-default` is `1px`, so
+`focus-stroke` paints a 1px ring in `--bh-bg-default` and then 4px of
+`--bh-border-focus` outside it. Buttons flush, fields offset, is a coherent rule:
+a field already has a border and the gap stops the two merging.
+
+Two things then compound. The 1px gap is `bg-default`, which on a white surface
+is white — so the gap is invisible and the ring reads as a solid band sitting on
+the field edge. And `input.tsx` sets `--shadow-input-focus-overlay: none` on
+focus, which removes the field's own 1px border for as long as it is focused.
+The edge does not gain a ring; it is replaced by one.
+
+WCAG 2.2 SC 2.4.13 asks for at least a 2px perimeter at 3:1. 4px is double that,
+so the floor is not the constraint here. For comparison, shadcn/ui's current
+input uses `focus-visible:ring-[3px]` with `ring-ring/50` and
+`focus-visible:border-ring` — a narrower band, at half opacity, with the border
+recoloured rather than removed. Both pass. Banhaten's is 33% wider, at twice the
+opacity, and replaces the border instead of keeping it.
+
+No fix is proposed, and none should be read into the comparison. The observation
+is only that three independent decisions — width, opacity, and dropping the
+border — all push the same direction at once, and the result reads heavier than
+the system likely intends.
