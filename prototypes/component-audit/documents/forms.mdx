@@ -1,27 +1,38 @@
-# Forms: `input`, `badge`, `avatar`
+# Forms: `input`, `badge`, `select`, `avatar`
 
-Flags that render nothing, vocabularies that disagree, and one question with no
-obvious answer.
+Flags that render nothing, and three colour vocabularies that describe one idea
+without agreeing on it.
 
 ---
 
 ### `input-1` · `shortcutKeys` is quietly ignored unless `kind="shortcut"`
 
 **File:** `input.tsx` · **Status:** Question
+**Repro:** frame `empty` shows the working path — `kind="shortcut"` together with
+`shortcutKeys`. Drop the `kind` and the keys vanish with no error. That is the
+whole finding, so the frame is the control rather than the defect.
 
 `shortcutKeys` lives on `InputModeRenderProps`, which is intersected into every
 kind variant. So `<Input shortcutKeys={['Mod','K']} />` typechecks, passes lint,
 and renders nothing. It cost us one debugging cycle.
 
-Making the shortcut props exclusive to `kind: "shortcut"` would turn a silent
-no-op into a compile error.
+The documentation is not at fault here. `banhaten docs input` states the coupling
+in the prop table — "For `kind="shortcut"`, renders one compact, platform-aware
+Shortcut chip" — and `USAGE.md` says to reach for `shortcutKeys` or `KbdShortcut`
+rather than hard-coding a glyph. Anyone who reads the docs gets this right.
+
+The finding is only that the type does not encode what the prose says. Making the
+shortcut props exclusive to `kind: "shortcut"` would turn a silent no-op into a
+compile error, and would carry the documentation into the editor.
 
 ---
 
 ### `input-2` · `isRequired` is decorative, and assistive technology hears nothing
 
-**File:** `input.tsx` · **Severity:** major · **Status:** FIXED in `banhaten-proposed`
-**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
+**File:** `input.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `inputs`, the label group. The asterisk beside a required label
+carries `aria-hidden="true"`; read the control's attributes and no `required` or
+`aria-required` is present unless the native prop was passed too.
 
 `isRequired` drew an asterisk carrying `aria-hidden="true"`, and the control set
 `required` from the native prop only. `isRequired` never reached the input.
@@ -29,7 +40,7 @@ no-op into a compile error.
 There is no figure for this one, and there cannot be. The fix is an attribute, so
 nothing on screen changes.
 
-| | Pristine | Proposed |
+| | Renders as | Should read |
 | --- | --- | --- |
 | `aria-required` | absent | `"true"` |
 | Announced | "Email, edit text" | "Email, edit text, required" |
@@ -50,8 +61,9 @@ every existing consumer. This states the fact without changing the mechanics.
 
 ### `input-3` · `isOptional` renders nothing unless `optionalText` is also passed
 
-**File:** `input.tsx` · **Severity:** minor · **Status:** FIXED in `banhaten-proposed`
-**Repro:** frames `inputs` vs `inputs-proposed`, the label and helper text group.
+**File:** `input.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `inputs`, the label group. `isOptional` alone renders no row at
+all, so the flag looks like it did nothing.
 
 The optional marker was gated on both the flag and the text, and `optionalText`
 had no default. So `<Input label="Company" isOptional />` rendered a label
@@ -61,38 +73,76 @@ The asymmetry is the tell. `isRequired` alone draws its asterisk; `isOptional`
 alone draws nothing. Either the flag means something by itself or it should not
 exist.
 
-<Compare src="views/snippets/InputOptionalCase.tsx" viewport={620} height={150} />
+<Specimen src="views/snippets/InputOptionalCase.tsx" viewport={620} height={150} />
 
-Middle field, top line. Pristine says `Company`, patched says `Company
-(optional)`. Same file, same props, one sandbox apart.
+Three fields, one row. The first carries `isRequired` and draws its asterisk. The
+second carries `isOptional` and draws nothing at all. The third adds
+`optionalText` and the row finally appears. Same component, same label.
 
-Fix: `optionalText ?? (isOptional ? "(optional)" : undefined)`.
+The render guard is `isOptional && hasRenderableContent(optionalText)`, and
+`selectedOptionalText` is `optionalText` with no fallback. So the flag alone
+cannot produce the row it names.
 
 One thing to decide: the default string is English. In an Arabic-first system it
 arguably belongs in the locale layer rather than the component.
 
 ---
 
-### `badge-1` · Two colour vocabularies for one idea
+### `badge-1` · Three colour vocabularies for one idea
 
 **Files:** `badge.tsx`, `expanded/Table.tsx` · **Status:** Question
+**Repro:** frame `specimens`, the two badge rows. The bottom table asks a `Table`
+badge cell for all ten `Badge` colours. All ten render — which is the finding,
+because five of them are a type error to write.
 
-`Badge` accepts `color`: `neutral`, `blue`, `green`, `amber`, `danger`,
-`purple`, `fuchsia`, `rose`, `sky`, `golden`. A badge cell inside `Table` accepts
-`tone`: `blue`, `fuchsia`, `amber`, `neutral`, `success`, `warning`, `danger`.
+Three lists describe the same idea and none of them matches another.
 
-`green` and `golden` are missing from the second, `success` and `warning` from
-the first. `expanded/Table.tsx` bridges them with a private `badgeColor()`
-mapping `success` to `green` and `warning` to `amber`.
+| | Count | Values |
+| --- | --- | --- |
+| Design tokens | 11 | `amber` `aqua` `blue` `fuchsia` `golden` `green` `lime` `purple` `red` `rose` `sky` |
+| `Badge` `color` | 10 | `neutral` `blue` `green` `amber` `danger` `purple` `fuchsia` `rose` `sky` `golden` |
+| `Table` badge cell `tone` | 7 | `blue` `fuchsia` `amber` `neutral` `success` `warning` `danger` |
 
-It renders correctly. The cost is that whoever learns one vocabulary guesses
-wrong in the other, and neither type says so.
+**`aqua` and `lime` exist as tokens and no component exposes them.** They are
+defined and themed and unreachable through any public API.
+
+**`red` is named `danger` in `Badge`.** The token behind it is
+`--bh-bg-accent-red-subtle`.
+
+**The `tone` type is narrower than the code behind it.** `badgeColor()` special
+cases `success` and `warning`, then forwards everything else untouched:
+
+```ts
+function badgeColor(tone: BadgeItem["tone"]) {
+  if (tone === "success") return "green" as const;
+  if (tone === "warning") return "amber" as const;
+  return tone ?? "neutral";
+}
+```
+
+So `tone: "purple"` renders a correct purple badge and fails to compile. Five
+hues behave this way. The type is the only thing stopping them, and it is
+stopping them by accident — the declared union simply lists fewer values than the
+function passes through.
+
+**Why the naming matters.** None of it is guessable, and a wrong guess does not
+fail — see `badge-2`. Asked to name the colours from memory, our own designer
+reached for `purple`, `pink`, `teal` and `yellow` after a week inside the system.
+One of the four exists. `pink` is `fuchsia` or `rose`; `teal` is `aqua` or `sky`;
+`yellow` is `amber` or `golden`.
+
+`Badge` also still accepts a legacy `variant` prop (`success`, `destructive`,
+`soft-warning`, and nine more). That is not part of this finding: the registry
+documents it as a compatibility shim, which is a reasonable thing to keep.
+
 
 ---
 
 ### `badge-2` · An invalid colour renders an unstyled badge instead of failing
 
 **File:** `badge.tsx` · **Severity:** minor
+**Repro:** frame `specimens`, the Badge colours row. The last badge is `red` and
+renders with a transparent background beside five that do not.
 
 Passing anything outside the union produces a badge with no background, no
 border and no padding. It renders as bare text that does not read as a badge at
@@ -101,26 +151,151 @@ all. `red` is the obvious guess for a failure state, and it is not in the union.
 TypeScript catches the mistake. A JS codebase, or a value arriving from data,
 does not, and a status column quietly loses its most important state.
 
-Suggested: a `defaultVariants.color` of `neutral`, plus a development warning
-naming the invalid value and the valid set.
 
 ---
 
-### `badge-3` · Five order statuses, four tones
+### `architecture-3` · An out-of-union value renders unstyled, in every component
 
-**Files:** `badge.tsx`, `expanded/Table.tsx` · **Status:** Question
+**Files:** `select.tsx`, `badge.tsx`, and every component built on `cva`
+**Severity:** major · **Status:** Confirmed
+**Repro:** frame `specimens`, the row of four triggers. The last one asks for
+`size="sm"` and comes back 24px tall against 32, 32 and 36.
 
-`partially refunded` has no tone of its own and falls back to `neutral`, the same
-tone as `refunded`. Two different states render identically.
+`badge-2` reported this on `Badge`. It is not a `Badge` quirk. It is how every
+component in the package behaves, and `Select` is where it does real damage.
 
-This is only a gap if the tone set is meant to be exhaustive, which is worth
-asking.
+| Asked for | Resolves to | Height |
+| --- | --- | --- |
+| `density="compact"` | `md` | 32px |
+| `size="md"` | `md` | 32px |
+| `size="lg"` | `lg` | 36px |
+| `size="sm"` | `sm` | **24px** |
+
+`Select` accepts `md`, `lg` and `comfortable`. `sm` is not among them, so `cva`
+matches no rule, applies no padding class, and the trigger collapses onto its own
+text. `defaultVariants` does not save it: those apply when a prop is `undefined`,
+and `"sm"` is defined.
+
+**Why `sm` in particular.** It is the most plausible wrong guess in the package,
+because it is right almost everywhere else:
+
+| Component | Does `sm` exist? |
+| --- | --- |
+| `Button` | Yes — `xs` `sm` `default` `lg` `xl` |
+| `Table` | Yes — `sm` `lg` |
+| `Badge` | Yes — `xs` `sm` `default` `lg` |
+| `Select` | **No** — `md` `lg` `comfortable` |
+| `Input` | **No** — `md` `lg` `comfortable` |
+
+Five components, one prop name, three incompatible unions. A row that mixes a
+button with a select is the common case, and the two do not share a vocabulary.
+
+**How it was found, which is the part worth reading.** Not by reading source. A
+designer opened the Neon frame and said the selects looked cramped, that the text
+was too close to the edge. The inspector reported `150×24`. `USAGE.md` documents
+the intended heights — compact 32, default 36, comfortable 40 — and 24 is none of
+them. Nothing had errored, nothing had warned, and the screen had been reviewed
+several times before anyone noticed.
+
+**Why it matters.** A defect that announces itself gets fixed on the day it is
+written. This one produces a control that is merely a little too short — the kind
+of thing a reviewer attributes to the design rather than to a bug. It survives
+review precisely because it looks like a choice.
+
+The registry knows the valid set: `banhaten docs select` prints it. Nothing at
+runtime or in the editor uses that knowledge when a value falls outside it.
+
+---
+
+### `select-1` · A label-less select announces its value and has no name
+
+**File:** `select.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `neon`. Every select there is label-less. Read the trigger's
+`aria-label`: it is `stock`, `gte`, `50`, `0` — the value, never the purpose.
+
+`Select` derives the trigger's accessible name from its own selection:
+
+```ts
+const triggerAccessibleLabel = shouldRenderLabel
+  ? undefined
+  : getAccessibleText(selectedValue) ?? getAccessibleText(selectedPlaceholder)
+```
+
+With a visible `label` the name comes from the label, which is correct. Without
+one — a toolbar, a filter row, anywhere a visible label would be noise — the name
+becomes the current value.
+
+**A value is not a name.** Someone tabbing Neon's filter row hears "stock,
+button", "gte, button", "15", "50, button". Four controls, four values, and
+nothing saying which is the field, which is the operator, which is the page size.
+Change the selection and the control's name changes with it.
+
+**The consumer cannot fix it, and that is the sharper half.** `aria-label` passed
+to `Select` does not reach the trigger. `{...props}` is spread on the outer
+`SelectRoot`, and the trigger takes `aria-label={triggerAccessibleLabel}`
+explicitly, so the value wins. Measured on this screen: the two
+`aria-label="Rows per page"` and `aria-label="Offset"` we passed landed on
+`<div data-slot="select-root">` — a plain div with no role, where no screen
+reader will ever read them.
+
+So the API offers exactly two states: a visible label, or no name at all. There
+is no third option, and a filter bar needs one.
+
+The calls in `views/TableStudio.tsx` still pass `aria-label`. They are left in
+deliberately: they are what a careful team writes, and they are what silently
+does nothing.
+
+---
+
+### `architecture-4` · The density contract is per-control and nothing carries it
+
+**Files:** `toolbar.tsx`, `segmented-control.tsx`, `button.tsx`, `input.tsx`,
+`select.tsx`, `button-group.tsx` · **Severity:** major · **Status:** Question
+**Repro:** frame `neon`, the toolbar. Every control there names its own density.
+Remove `density="compact"` from any one of them and it grows to 36 beside
+neighbours at 32.
+
+`USAGE.md` states the rule as a row-level one:
+
+> Use one semantic `density` across controls in the same row: `compact` is 32px,
+> `default` is 36px, and `comfortable` is 40px.
+
+Every control implements it. `Button`, `Input`, `Select`, `ButtonGroup`,
+`SegmentedControl`, `ToolbarButton`, `ToolbarSearch` and `ToolbarSelect` all take
+a `density` prop, and all of them resolve it to the documented heights. The
+vocabulary is complete and consistent, which is more than most systems manage.
+
+**What is missing is the row.** `Toolbar` accepts `density` for its own surface
+and does not pass it down: there is no context in `toolbar.tsx`, no provider
+anywhere in the package, and a `grep` for `createContext.*[Dd]ensity` across
+`components/ui` returns nothing. So a rule written about rows is expressed one
+control at a time, and every control that is not told falls back to `"default"`.
+
+**Why that is worse than it sounds.** The failure is 4px and silent. Nothing
+errors, nothing warns, and 36 beside 32 reads as slightly generous spacing rather
+than as a bug. Building this toolbar we passed `density="compact"` to eleven
+controls and missed three. The bar shipped with two heights in it, was reviewed
+several times, and was caught by a designer noticing that one group looked
+smaller than its neighbour — not by anyone reading the code.
+
+That is the same shape as `architecture-3`: the system knows the right answer and
+nothing applies it on your behalf.
+
+**What we cannot decide for you.** A `Toolbar` that passed its own `density` to
+its children would fix the toolbar case and leave the filter row, which is not a
+toolbar. A context provider would cover both and is a larger change with
+inheritance rules to settle. Either way it is API, and API is yours.
 
 ---
 
 ### `avatar-1` · Initials are not meaningful for Arabic names
 
-**File:** `avatar.tsx` · **Status:** Question
+**File:** `expanded/Table.tsx`, its local `Avatar` · **Status:** Question
+**Repro:** frame `specimens`, the Arabic names table.
+
+The derivation is not in `avatar.tsx`. `AvatarFallback` renders whatever children
+it is given; the initials are computed by a private `Avatar` inside
+`expanded/Table.tsx`, which is the only place this happens.
 
 The fallback takes the first letter of the first two words:
 

@@ -6,12 +6,12 @@ Three findings and one cause. The last entry explains the first three.
 
 ### `toolbar-1` · It promises keyboard navigation and has none
 
-**File:** `toolbar.tsx` · **Severity:** major · **Status:** open, one right answer
+**File:** `toolbar.tsx` · **Severity:** major · **Status:** Question
 **Repro:** frame `neon`, the row above the filters. Tab into it, then press `→`.
 
-`Toolbar` sets `role="toolbar"`. That role tells assistive technology two things:
-the bar is one tab stop, and arrow keys move between the controls inside it.
-Neither happens. The file has no keyboard handler.
+`Toolbar` defaults to `role="toolbar"`. That role tells assistive technology two
+things: the bar is one tab stop, and arrow keys move between the controls inside
+it. Neither happens. The file has no keyboard handler.
 
 | | |
 | --- | --- |
@@ -19,13 +19,28 @@ Neither happens. The file has no keyboard handler.
 | What the role promises | **1** |
 | Arrow key from the first control | focus does not move |
 
+**The registry does not promise this behaviour, and that is the point.** Read
+`banhaten docs toolbar`: it describes "the token-built implementation of the
+Figma `Filter Toolbar` component set", a "root layout surface" with `inline`,
+`split`, `stack` and `wrap` modes. Its Accessibility section says only that the
+component relies on `@radix-ui/react-slot` for base behaviour, and Slot supplies
+no keyboard handling at all. Every documented example is a filter bar.
+
+So `Toolbar` is documented as layout and ships as a widget. The ARIA role is the
+only thing making a promise, and nothing in the package backs it.
+
 **Why it matters.** A wrong role is worse than no role. Someone using a screen
 reader is told arrow keys will work, tries them, and nothing moves. They cannot
-tell whether the announcement was wrong or their own input was. With
-`role="group"` they would simply Tab, which is slower but never misleading.
+tell whether the announcement was wrong or their own input was.
 
-The component already claims this behaviour, so adding the roving tabindex does
-not change what `Toolbar` is. It makes it do what it says.
+**Two answers, and this is not ours to pick.** `role` is a prop with a default,
+so a consumer can already pass `role="group"` today. Either the default becomes
+`group`, matching what the component is documented to be, or the roving tabindex
+gets built, matching what the default currently claims. The second is more work
+and the first is a behaviour change for every existing consumer.
+
+This entry moved from "one right answer" to a question once the registry made
+clear the component was never meant to be a widget.
 
 Reference: [W3C ARIA Toolbar Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/),
 whose own worked example is a text formatting toolbar.
@@ -50,11 +65,20 @@ and another begun.
 ### `button-group-1` · The container is a tab stop as well as every button
 
 **File:** `button-group.tsx` · **Severity:** minor · **Status:** Question
-**Repro:** frame `coda`, the formatting bar. Tab through it.
+**Repro:** frames `coda` and `neon`. In `coda`, tab through the formatting bar.
+In `neon`, the two paging arrows in the toolbar are one `ButtonGroup` and hand
+out three tab stops between them: the container, then each arrow.
 
-`ButtonGroup` renders `role="group"` with `tabIndex={0}` on the wrapper and
-leaves every button inside focusable. Tab stops on an empty container that does
-nothing, then again on each button in it.
+`ButtonGroup` declares both defaults in its own signature:
+
+```tsx
+role = "group",
+tabIndex = 0,
+```
+
+and leaves every button inside focusable. `group` is a structural role, not a
+widget one: it groups things and takes no input. Putting it in the tab order
+stops focus on a container that does nothing, then again on each button in it.
 
 Measured on that bar: 11 tab stops, two of which are the containers themselves,
 labelled "Text formatting" and "Insert".

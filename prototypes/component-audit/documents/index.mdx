@@ -3,11 +3,15 @@
 Four short reports. Each one is a single story, and none of them needs the
 others.
 
+**Every entry is against Banhaten 0.4.0**, re-verified after updating from 0.3.0.
+The update rewrote twelve component files, including nearly every file named
+here. Nothing in this report was fixed by it.
+
 | Report | Covers |
 | --- | --- |
 | **Keyboard** | `toolbar`, `button-group`. Focus management, and why it is missing |
 | **Direction** | `kbd`, `tooltip`, `Table`, `Breadcrumbs`, `PageHeader`. RTL and bidi |
-| **Forms** | `input`, `badge`, `avatar`. Flags that do nothing, vocabularies that disagree |
+| **Forms** | `input`, `badge`, `select`, `avatar`. Flags that do nothing, values that fail silently, and a density rule nothing enforces |
 | **Data** | `Table`, `PageHeader`, `pagination`. Counts, labels, untranslated strings |
 
 ## How an entry is named
@@ -16,18 +20,33 @@ After its component, numbered in the order we found it. So `toolbar-1`,
 `badge-2`. The name carries the subject before you reach the text, and it
 survives a retitle, which matters because entries cite each other.
 
-Status is one of three:
+Status is one of two:
 
-**FIXED in `banhaten-proposed`.** A patch exists. Run `banhaten diff` to see it.
-
-**open.** A defect with one right answer, not yet patched.
+**Confirmed.** It reproduces on a named frame, and the cause is identified in the
+source.
 
 **Question.** More than one answer is reasonable, and the choice is yours.
 
-We patch only when the component already promises the behaviour and the code
-does not deliver it. Anything that would change behaviour for existing consumers,
-add API, or pick between different products is left as a Question. Taking those
-decisions quietly is how an audit loses its standing.
+## This report proposes nothing
+
+No entry here contains a patch, a diff, or a recommended API. That is deliberate.
+
+An audit that arrives with fixes attached asks you to review two things at once:
+whether the problem is real, and whether a stranger's solution is the one you
+want. The second question is easier to answer than the first, so it gets answered
+first, and a rejected fix takes a real finding down with it.
+
+So every entry stops at the same place: what happens, where to see it, and what
+in the source causes it. Choosing what to do is your work, and you have context
+we do not — roadmaps, consumers, and the reasons behind decisions that look
+arbitrary from outside.
+
+**"Promises" means the registry, not our reading of it.** Every entry was checked
+against `banhaten docs <component>` and the RTL rules each component publishes.
+Where a component declares a contract and breaks it, the entry says so. Where it
+declares nothing, the entry says that instead — `kbd-1` and `breadcrumbs-1` are
+the same bug mechanically, and only one of them contradicts something you wrote
+down.
 
 ## Where to see it
 
@@ -40,12 +59,32 @@ Every entry names a frame. That name is the label above the frame on the canvas.
 | `coda` | [Coda, document editor](https://mobbin.com/screens/d43c69b1-4c44-461a-8af9-4b9047d0ab0a) |
 | `import` | [PandaDoc, bulk import](https://mobbin.com/screens/6e7783c1-2ce2-4ba2-832d-bab89ec45f67) |
 | `empty` | [Laravel Cloud, nothing created yet](https://mobbin.com/screens/5a0b71b3-f06f-4b14-af43-b862c1550a8f) |
+| `bills` | [Xero, bills list](https://mobbin.com/screens/e2205dbe-6e99-4b94-b47c-0be070a76fe1) |
+| `expenses` | [Remote, team expenses](https://mobbin.com/screens/4cbe7498-0064-49a8-a80c-692431aaaae3) |
+| `shortcuts` | [Relume, keyboard shortcuts](https://mobbin.com/screens/d6b809da-7f84-4812-be03-d0b61decff90) |
 | `buttons`, `inputs` | Variant galleries. Every state of one component at once |
+| `specimens` | No product. The six cases below |
 
-Each reproduction has an `-rtl` twin in Arabic.
+Each reproduction has an `-rtl` twin, and every string in it is Arabic. That is
+deliberate, and it is not the same test as an RTL layout carrying English. An
+Arabic interface fails on things Latin never shows: the script has no uppercase,
+it needs more line height at the same size, and letter-spacing breaks its joins.
 
-Every screen reproduces a real product. Without that, any defect can be answered
-with "that layout is not real". Where a screen needed something Banhaten does not
+`specimens` is the other half. Its strings are Latin and stay Latin in both
+directions, which is the only way to see what an RTL container does to text
+running against it. Six findings have no other frame:
+
+| | Needs |
+| --- | --- |
+| `table-2`, `breadcrumbs-1`, `page-header-2` | Latin text in an RTL document |
+| `avatar-1` | Arabic names, which no reproduction carries |
+| `badge-1` | The same colour asked for through `Badge` and through `Table` |
+| `badge-2`, `architecture-3` | A value outside a component's union, which no screen passes on purpose |
+
+
+
+Every screen except `specimens` reproduces a real product. Without that, any
+defect can be answered with "that layout is not real". Where a screen needed something Banhaten does not
 ship, like navigation lists or prose or page tabs, that part is plain markup. A
 defect there would be ours, not yours.
 

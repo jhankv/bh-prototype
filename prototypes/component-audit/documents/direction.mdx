@@ -6,12 +6,23 @@ Six findings and one cause. Three of them are the same defect in three files.
 
 ### `kbd-1` · Modifier and key swap order in RTL
 
-**File:** `kbd.tsx` · **Severity:** major · **Status:** FIXED in `banhaten-proposed`
+**File:** `kbd.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frames `shortcuts` and `shortcuts-rtl`, the Edit column. In `shortcuts-rtl`
+the `C` of `⌘C` sits eight pixels left of the `⌘`.
 
 `<Kbd>⌘K</Kbd>` renders as `⌘K` in LTR and `K⌘` in RTL. `⌘` is bidi-neutral, so
 the Unicode algorithm reorders it to follow the paragraph direction.
 
-| | Pristine | Proposed |
+**The registry already states the contract this breaks.** `banhaten docs kbd`:
+
+> Kbd is direction-neutral. Use surrounding text direction for shortcut
+> descriptions.
+
+and its RTL rules declare `inheritsDirection: false`. Direction-neutral is
+exactly what `dir="ltr"` on the root would make it. The component declares it and
+does not do it, which is why this one is a defect rather than a preference.
+
+| | Renders as | Should read |
 | --- | --- | --- |
 | `⌘K` | `K⌘` | `⌘K` |
 | `⇧⌘P` | `P⌘⇧` | `⇧⌘P` |
@@ -25,13 +36,16 @@ shortcuts in ASCII, and surfaces only on Apple modifiers.
 the world, including an Arabic one, because the physical keys do not mirror. A
 reader seeing `K⌘` is being told to press them in the wrong order.
 
-Fix: `dir="ltr"` on the `Kbd` root.
+The root `<kbd>` element sets no `dir` attribute, so it inherits the document
+direction that the registry says it should not.
 
 ---
 
 ### `kbd-2` · The defect is narrower than `kbd-1` first claimed
 
 **File:** `kbd.tsx` · **Status:** narrowing, not a defect
+**Repro:** frame `empty-rtl`, the search field. `⌘` renders left of `K`, and the
+wrapper carries `dir="ltr"` — the control case, not the defect.
 
 `Input kind="shortcut"` renders through `KbdShortcut`. Measured in RTL: `⌘` at
 x=1036.7, `K` at x=1064.7. Correct order, because pristine `kbd.tsx` already sets
@@ -47,7 +61,7 @@ This narrows the report rather than widening it.
 
 ### `kbd-3` · The same reordering reaches a tooltip, where the fix does not
 
-**Files:** `tooltip.tsx`, `kbd.tsx` · **Severity:** major · **Status:** open
+**Files:** `tooltip.tsx`, `kbd.tsx` · **Severity:** major · **Status:** Confirmed
 **Repro:** frames `coda` and `coda-rtl`, the tooltip held open under the bold button.
 
 In `coda` the shortcut reads `⌘B`. In `coda-rtl` it reads `B⌘`.
@@ -56,19 +70,27 @@ In `coda` the shortcut reads `⌘B`. In `coda-rtl` it reads `B⌘`.
 `<span>` rather than `Kbd`. So the `dir="ltr"` that fixes `kbd-1` never reaches
 it. Same mechanism, different component, and the fix does not travel.
 
+`banhaten docs tooltip` declares `inheritsDirection: true` and, under
+`textDirection`, that "labels and support text use `dir="auto"` for Arabic and
+English copy". The shortcut slot is the one piece of tooltip text that gets
+neither treatment.
+
 ---
 
 ### `table-2` · A name truncates from its start when its script opposes the document
 
 **File:** `expanded/Table.tsx`, the `avatarText` cell · **Severity:** major
-**Status:** FIXED in `banhaten-proposed`
+**Status:** Confirmed
+**Repro:** frame `specimens-rtl`, the Customer column, against `specimens` beside
+it. No product screen here uses an `avatarText` cell, so this is the only frame
+that shows it.
 
 The name and caption carried no `dir`, so both inherited the document direction.
 `text-overflow: ellipsis` clips at the visual end of the line. When a string runs
 opposite to the document, its logical start sits at the visual end, so the
 ellipsis ate the beginning of the name.
 
-| | Pristine | Proposed |
+| | Renders as | Should read |
 | --- | --- | --- |
 | Name | `… de la Vega y Santibáñez` | `Maximiliano Alessandro …` |
 | Email | `…e-procurement.example.com` | `maximiliano.alessandro.ferna…` |
@@ -78,18 +100,26 @@ identifying part of a name is its beginning. An operator running an English
 catalogue in an Arabic interface sees every long name arrive already useless. The
 cell still looks tidy, so nobody reports it.
 
-Fix: `dir="auto"` on both, giving each string its own base direction.
+Neither the name nor the caption sets a `dir` attribute, so each inherits a base
+direction that its own script contradicts.
 
 ---
 
 ### `breadcrumbs-1` · A crumb truncates from its start, the same way
 
 **Files:** `expanded/Breadcrumbs.tsx`, `expanded/PageHeader.tsx`
-**Severity:** major · **Status:** FIXED in `banhaten-proposed`
+**Severity:** major · **Status:** Confirmed
+**Repro:** frame `specimens-rtl`, the crumb above the title. It clips mid-word
+with no ellipsis at all.
 
 Same mechanism as `table-2`. `ds-breadcrumbs__label` carried no `dir`.
 
-| | Pristine | Proposed |
+Unlike `kbd-1`, no contract is being broken here. `banhaten docs breadcrumbs`
+says the component "has no special RTL contract beyond inherited document
+direction and logical spacing", which is an accurate description of what it does.
+The gap is in the contract, not against it — see `architecture-2`.
+
+| | Renders as | Should read |
 | --- | --- | --- |
 | Standalone | `… de la Vega y Santibáñez` | `Maximiliano Alessandro …` |
 | Inside `PageHeader` | `lez de la Vega y Santibáñez` | `Maximiliano Alessandro Fer…` |
@@ -97,15 +127,17 @@ Same mechanism as `table-2`. `ds-breadcrumbs__label` carried no `dir`.
 Inside `PageHeader` it was worse. The label clipped mid-word with no ellipsis at
 all, so nothing signalled that text was missing.
 
-Fix: `dir="auto"` on the label span. `PageHeader` delegates its breadcrumbs to
-this component, so one change covered both.
+`ds-breadcrumbs__label` sets no `dir` attribute. `PageHeader` delegates its
+breadcrumbs to this component, so both surfaces inherit the same gap from one
+place.
 
 ---
 
 ### `page-header-2` · Title and description reorder punctuation
 
 **File:** `expanded/PageHeader.tsx` · **Severity:** major
-**Status:** FIXED in `banhaten-proposed`
+**Status:** Confirmed
+**Repro:** frame `specimens-rtl`, the description under the title.
 
 The description rendered with its final period at the front:
 
@@ -116,13 +148,18 @@ The description rendered with its final period at the front:
 The `<p>` carried no `dir`, so it inherited `rtl` while its content was Latin. A
 trailing `.` is bidi-neutral and gets reordered to the paragraph direction.
 
-Fix: `dir="auto"` on both the title and the description.
+`banhaten docs page-header` declares no RTL contract either, in the same words as
+`breadcrumbs`. Same reading: a gap, not a violation.
+
+Neither the title nor the description sets a `dir` attribute.
 
 ---
 
 ### `architecture-2` · The `expanded/` family did not inherit the convention
 
 **Files:** everything under `expanded/` · **Status:** Question
+**Repro:** none, and none is possible. This is a count across files, not
+something a screen renders. Grep `expanded/` for `dir="auto"`.
 
 `table-2`, `breadcrumbs-1` and `page-header-2` look like three defects. They are
 one, and this is the entry worth acting on.
@@ -141,6 +178,23 @@ and `PageHeader`, was authored without it.
 
 Those same four files are also the only four of twenty-four with no `data-slot`
 attributes.
+
+**The registry says the same thing, and that is the strongest evidence here.**
+Run `banhaten docs` across the package and read the RTL Rules block:
+
+| Component | Declared text direction |
+| --- | --- |
+| `badge` | "Uses `dir="auto"` by default for short Arabic and English labels" |
+| `input` | "Uses text-start and `dir="auto"` so Arabic and English labels, values, add-ons, tags, and helper text align naturally" |
+| `tooltip` | "Labels and support text use `dir="auto"` for Arabic and English copy" |
+| `breadcrumbs` | "No special RTL contract beyond inherited document direction" |
+| `page-header` | "No special RTL contract beyond inherited document direction" |
+
+The core components declare a bidi contract. The `expanded/` ones declare the
+absence of one, in identical boilerplate. So this is not something that slipped
+past review in the code — it is recorded, deliberately, in the published
+metadata. The convention did not reach these files and the registry documents
+that it did not.
 
 That reframes the report. The problem is not bidi awareness. It is that your own
 convention did not reach these four files, and `expanded/` looks like a

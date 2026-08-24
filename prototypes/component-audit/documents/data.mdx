@@ -1,42 +1,49 @@
 # Data surfaces: `Table`, `PageHeader`, `pagination`
 
-Three findings about text a data surface prints. A count nobody measured, labels
+Four findings about text a data surface prints. A count nobody measured, labels
 that get cut, and strings that exist but cannot be reached.
-
-*The patches are in `banhaten-proposed`. Run `banhaten diff` to see them.*
 
 ---
 
 ### `table-1` · The footer prints a row count nobody measured
 
 **Files:** `expanded/Table.tsx`, `pagination.tsx` · **Severity:** major
-**Status:** FIXED in `banhaten-proposed`
+**Status:** Confirmed
+**Repro:** frame `expenses`, the footer. Three rows are configured and the
+caption reads `Showing 1 to 10 of 20 results`, directly under the table's own
+caption reading `Showing 1 to 3 of 3 rows`.
 
-With `pagination={{ pageSize: 8, totalRows: 12, showCaption: true }}` the footer
-rendered two summaries that disagreed:
+With `pagination={{ pageSize: 3, totalRows: 3, showCaption: true }}` the footer
+renders two summaries that disagree, three pixels apart:
 
 | Slot | Rendered |
 | --- | --- |
-| `toolbar-text` | `Showing 1 to 8 of 12 rows`, correct |
+| `toolbar-text` | `Showing 1 to 3 of 3 rows`, correct |
 | `pagination-caption` | `Showing 1 to 10 of 20 results`, invented |
 
-`Pagination` has two text slots, `caption` and `summary`. `DataTable` passed
-`summary` and never `caption`, so `caption ?? messages.caption` fell through to
-the default string.
+`Pagination` has two text slots, `caption` and `summary`. `DataTable` passes
+`summary` and never `caption`, so `caption ?? messages.caption` falls through to
+the default.
 
-**Why it matters.** That default is a well-formed sentence containing two
-plausible numbers, so it does not read as a placeholder. A table whose job is to
-say how much data exists reported a quantity that was never measured, and it
-looked correct enough to ship.
+That default is a demo string, hardcoded in `pagination.tsx`:
 
-```diff
-  showCaption={paginationConfig.showCaption ?? false}
-+ caption={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
-  summary={labels.resultsSummary({ from: visibleFrom, to: visibleTo, total: totalRows })}
+```ts
+const defaultPaginationMessages: PaginationMessages = {
+  caption: "Showing 1 to 10 of 20 results",
+  ...
 ```
 
+It counts nothing and never did. The Arabic set carries the same sentence
+translated, so a localised table prints an equally invented count in Arabic.
+
+**Why it matters.** A placeholder that looks like a placeholder gets caught. This
+one is a well-formed sentence containing two plausible numbers, sitting in the
+slot whose entire job is to report a quantity. It looked correct enough to ship,
+and it is currently on screen under a caption reporting a different number.
+
+
 Worth discussing: whether a default message should ever contain numbers. An empty
-string fails visibly. This failed quietly.
+string fails visibly. This one failed quietly.
 
 ---
 
@@ -72,7 +79,7 @@ existing code that leans on empty columns as spacers.
 ### `page-header-1` · It clips its own tab labels, with no way to opt out
 
 **Files:** `expanded/PageHeader.tsx`, `tabs.tsx`, `tabs.css` · **Severity:** major
-**Status:** open, needs a design decision rather than a patch
+**Status:** Confirmed, needs a design decision rather than a patch
 **Repro:** frame `bills`, the six tabs under the title.
 
 Every tab gets the same width no matter what it says. On Xero's six tabs, in a
@@ -121,28 +128,46 @@ chose, but choosing the replacement is yours.
 
 ---
 
-### `pagination-1` · Arabic strings exist and nothing can reach them
+### `pagination-1` · `DataTable` has nowhere to pass the Arabic messages
 
 **Files:** `pagination.tsx`, `expanded/Table.tsx` · **Severity:** major
-**Status:** open
+**Status:** Confirmed
+**Repro:** frame `expenses-rtl`. Every string on that screen is Arabic except the
+footer caption, which stays in English.
 
-With a console fully translated and `dir="rtl"`, every string was Arabic except
-the two in the table footer, which read `Showing 1 to 8 of 12 rows`.
+With a console fully translated and `dir="rtl"`, every string is Arabic except
+the two in the table footer.
 
-This is a wiring problem, not a missing feature. `pagination.tsx` exports a
-complete Arabic message set as `arabicPaginationMessages`. `DataTable` never
-references it, with zero occurrences in the file. `Pagination` resolves its
-strings as `{ ...defaultPaginationMessages, ...messageOverrides }` and nothing
-consults `dir`. So `DataTable` passes `dir` down, the layout mirrors, and the
-words stay English.
+**The first version of this entry was wrong about the cause, and the registry is
+what corrected it.** `banhaten docs pagination` is explicit:
 
-**Why it matters.** The work is done and the wiring is missing, which is the
-failure mode most likely to survive review. A reader greps for Arabic support,
-finds it, and concludes the component is covered. A team shipping an Arabic
-console discovers by looking at the screen that they must hand-write every label,
-including the caption `table-1` shows is wrong anyway.
+> `messages`: **Direction does not select language.** English defaults are
+> stable; pass messages for Arabic, Hebrew, Persian, Urdu, or another locale.
 
-Two candidate fixes, and they are not equivalent. Selecting messages from `dir`
-inside `Pagination` makes RTL correct by default. Forwarding a `messages` prop
-through `DataTable` makes it possible. The first is a behaviour change and
-belongs to you.
+That is a deliberate and correct decision. Direction and language are different
+axes, and an Arabic-direction interface may well be Hebrew or Persian. So
+`Pagination` staying English under `dir="rtl"` is the documented behaviour, not a
+defect, and "select messages from `dir`" is a fix that would work against the
+stated design.
+
+The defect is one step up. `Pagination` accepts `messages`. `DataTable` gives you
+nowhere to pass them:
+
+```ts
+export type DataTablePagination = {
+  ariaLabel?: string; defaultPage?: number; manual?: boolean;
+  onPageChange?: (page: number) => void; page?: number; pageSize?: number;
+  pages?: PaginationPage[]; showCaption?: boolean; totalRows?: number;
+  type?: PaginationProps["type"]; variant?: PaginationProps["variant"];
+};
+```
+
+No `messages`. `DataTable` has its own `labels` object covering the summary,
+search placeholder and empty states, and it does translate — but it stops at the
+footer caption, which comes from `Pagination`'s catalogue instead.
+
+**Why it matters.** The package does the hard part and omits the seam.
+`arabicPaginationMessages` is exported, complete, and unreachable from the
+component most teams will actually use. A reader greps for Arabic support, finds
+it, and concludes the component is covered.
+
