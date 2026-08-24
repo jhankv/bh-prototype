@@ -90,7 +90,7 @@ const menuItemIconVariants = cva(
     variants: {
       position: {
         leading:
-          "h-[var(--bh-menu-leading-icon-size)] ps-[var(--bh-menu-icon-padding)] [&_svg]:size-[var(--bh-menu-leading-icon-size)]",
+          "h-[var(--bh-menu-leading-icon-slot-size)] ps-[var(--bh-menu-icon-padding)] [&_svg]:size-[var(--bh-menu-leading-icon-size)]",
         trailing:
           "size-[var(--bh-menu-trailing-icon-size)] text-[var(--bh-content-muted)] [&_svg]:size-[var(--bh-menu-trailing-icon-size)]",
       },

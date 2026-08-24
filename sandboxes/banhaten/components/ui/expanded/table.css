@@ -349,6 +349,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--bh-space-md-8);
+  max-width: 100%;
 }
 
 .ds-table-avatar-text > span:last-child {
@@ -509,14 +510,16 @@
 
 .ds-table-icon-button svg,
 .ds-table-icon-label svg {
-  width: var(--bh-space-4xl-20);
-  height: var(--bh-space-4xl-20);
+  width: var(--bh-icon-size-default);
+  height: var(--bh-icon-size-default);
 }
 
 .ds-table-icon-label > span:first-child {
   flex: 0 0 auto;
   display: inline-grid;
   place-items: center;
+  width: var(--bh-icon-slot-size-default);
+  height: var(--bh-icon-slot-size-default);
 }
 
 .ds-table-icon-label > span:last-child {

@@ -9,7 +9,7 @@ const kbdVariants = cva(
   [
     "inline-flex min-w-[var(--bh-space-5xl-24)] items-center justify-center whitespace-nowrap rounded-[var(--bh-radius-md-6)]",
     "border border-[var(--bh-border-default)] bg-[var(--bh-interactive-soft-default)] text-[var(--bh-content-subtle)]",
-    "font-[var(--bh-font-family)] text-[length:var(--bh-text-body-xs-medium-font-size)] font-[var(--bh-text-body-xs-medium-font-weight)]",
+    "[font-family:var(--bh-font-family)] text-[length:var(--bh-text-body-xs-medium-font-size)] font-[var(--bh-text-body-xs-medium-font-weight)]",
     "leading-[var(--bh-text-body-xs-medium-line-height)] tracking-[var(--bh-text-body-xs-medium-letter-spacing)] shadow-[var(--shadow-button-soft)]",
     "data-[disabled=true]:border-[var(--bh-border-disabled)] data-[disabled=true]:bg-[var(--bh-interactive-soft-disabled)] data-[disabled=true]:text-[var(--bh-content-disabled)] data-[disabled=true]:shadow-none",
   ],
@@ -25,6 +25,14 @@ const kbdVariants = cva(
     },
   }
 )
+
+const shortcutVariants = cva([
+  "inline-flex h-[var(--bh-space-4xl-20)] min-w-[var(--bh-space-4xl-20)] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--bh-radius-sm-4)] px-[var(--bh-space-xs-4)]",
+  "border border-[var(--bh-border-default)] bg-[var(--bh-interactive-soft-default)] text-[var(--bh-content-subtle)]",
+  "[font-family:var(--bh-font-family)] text-[length:var(--bh-text-body-2xs-medium-font-size)] font-[var(--bh-text-body-2xs-medium-font-weight)]",
+  "leading-[var(--bh-text-body-2xs-medium-line-height)] tracking-[var(--bh-text-body-2xs-medium-letter-spacing)]",
+  "data-[disabled=true]:border-[var(--bh-border-disabled)] data-[disabled=true]:bg-[var(--bh-interactive-soft-disabled)] data-[disabled=true]:text-[var(--bh-content-disabled)]",
+])
 
 type KbdProps = React.ComponentProps<"kbd"> &
   VariantProps<typeof kbdVariants> & {
@@ -48,6 +56,55 @@ const Kbd = React.forwardRef<HTMLElement, KbdProps>(function Kbd(
 
 type ShortcutPlatform = "auto" | "mac" | "windows" | "linux"
 
+type ShortcutProps = Omit<React.ComponentProps<"kbd">, "children"> & {
+  children?: React.ReactNode
+  disabled?: boolean
+  keys?: readonly string[]
+  platform?: ShortcutPlatform
+}
+
+const Shortcut = React.forwardRef<HTMLElement, ShortcutProps>(function Shortcut(
+  {
+    "aria-label": ariaLabel,
+    children,
+    className,
+    disabled = false,
+    keys = [],
+    platform = "auto",
+    ...props
+  },
+  ref
+) {
+  const resolvedPlatform = useShortcutPlatform(platform)
+  const resolvedKeys = keys.map((key) =>
+    resolveShortcutKey(key, resolvedPlatform)
+  )
+  const content =
+    children ?? formatShortcutKeys(resolvedKeys, resolvedPlatform)
+  const accessibleLabel =
+    ariaLabel ??
+    (resolvedKeys.length > 0
+      ? resolvedKeys.map(readableShortcutKey).join(" plus ")
+      : typeof children === "string"
+        ? readableShortcutText(children)
+        : undefined)
+
+  return (
+    <kbd
+      aria-label={accessibleLabel}
+      className={cn(shortcutVariants(), className)}
+      data-disabled={disabled ? "true" : undefined}
+      data-platform={resolvedPlatform}
+      data-slot="shortcut"
+      dir="ltr"
+      ref={ref}
+      {...props}
+    >
+      {content}
+    </kbd>
+  )
+})
+
 type KbdShortcutProps = Omit<React.ComponentProps<"span">, "children"> & {
   disabled?: boolean
   keys: readonly string[]
@@ -68,18 +125,7 @@ const KbdShortcut = React.forwardRef<HTMLSpanElement, KbdShortcutProps>(
     },
     ref
   ) {
-    const [resolvedPlatform, setResolvedPlatform] = React.useState<
-      Exclude<ShortcutPlatform, "auto">
-    >(platform === "auto" ? "mac" : platform)
-
-    React.useEffect(() => {
-      if (platform !== "auto") {
-        setResolvedPlatform(platform)
-        return
-      }
-
-      setResolvedPlatform(detectShortcutPlatform())
-    }, [platform])
+    const resolvedPlatform = useShortcutPlatform(platform)
 
     const resolvedKeys = keys.map((key) =>
       resolveShortcutKey(key, resolvedPlatform)
@@ -117,6 +163,25 @@ const KbdShortcut = React.forwardRef<HTMLSpanElement, KbdShortcutProps>(
   }
 )
 
+function useShortcutPlatform(
+  platform: ShortcutPlatform
+): Exclude<ShortcutPlatform, "auto"> {
+  const [resolvedPlatform, setResolvedPlatform] = React.useState<
+    Exclude<ShortcutPlatform, "auto">
+  >(platform === "auto" ? "mac" : platform)
+
+  React.useEffect(() => {
+    if (platform !== "auto") {
+      setResolvedPlatform(platform)
+      return
+    }
+
+    setResolvedPlatform(detectShortcutPlatform())
+  }, [platform])
+
+  return resolvedPlatform
+}
+
 function detectShortcutPlatform(): Exclude<ShortcutPlatform, "auto"> {
   if (typeof navigator === "undefined") return "mac"
   const platform = navigator.platform.toLowerCase()
@@ -147,5 +212,34 @@ function readableShortcutKey(key: string) {
   return key
 }
 
-export { Kbd, KbdShortcut, kbdVariants }
-export type { KbdProps, KbdShortcutProps, ShortcutPlatform }
+function formatShortcutKeys(
+  keys: readonly string[],
+  platform: Exclude<ShortcutPlatform, "auto">
+) {
+  if (platform === "mac" && keys.slice(0, -1).every(isMacShortcutSymbol)) {
+    return keys.join("")
+  }
+
+  return keys.join(" ")
+}
+
+function isMacShortcutSymbol(key: string) {
+  return ["⌘", "⌥", "⇧", "⌃"].includes(key)
+}
+
+function readableShortcutText(value: string) {
+  return value
+    .replaceAll("⌘", "Command ")
+    .replaceAll("⌥", "Option ")
+    .replaceAll("⇧", "Shift ")
+    .replaceAll("⌃", "Control ")
+    .trim()
+}
+
+export { Kbd, KbdShortcut, Shortcut, kbdVariants, shortcutVariants }
+export type {
+  KbdProps,
+  KbdShortcutProps,
+  ShortcutPlatform,
+  ShortcutProps,
+}

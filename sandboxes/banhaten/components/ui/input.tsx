@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Kbd, KbdShortcut } from "@/components/ui/kbd"
+import { Shortcut } from "@/components/ui/kbd"
 import {
   getInputDefaultValue,
   getInputHelperText,
@@ -419,7 +419,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
             <span
               data-slot="input-content"
-              className={cn(inputContent({ size: resolvedSize }))}
+              className={cn(
+                inputContent({ size: resolvedSize }),
+                kind === "shortcut" &&
+                  resolvedSize === "lg" &&
+                  "px-[var(--bh-input-md-padding-x)]"
+              )}
             >
               {shouldShowLeadingIcon ? (
                 <InputLeadingIcon disabled={isDisabled} icon={leadingIcon} />
@@ -470,9 +475,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
               {kind === "shortcut" ? (
                 hasRenderableContent(shortcut) ? (
-                  <Kbd disabled={isDisabled}>{shortcut}</Kbd>
+                  <Shortcut disabled={isDisabled}>{shortcut}</Shortcut>
                 ) : (
-                  <KbdShortcut disabled={isDisabled} keys={shortcutKeys} />
+                  <Shortcut disabled={isDisabled} keys={shortcutKeys} />
                 )
               ) : null}
             </span>
@@ -618,7 +623,9 @@ function InputLeadingIcon({
       aria-hidden="true"
       data-slot="input-leading-icon"
       className={cn(
-        "flex size-[var(--bh-input-icon-size)] shrink-0 items-center justify-center text-[var(--bh-content-muted)]",
+        "flex size-[var(--bh-input-icon-slot-size)] shrink-0 items-center justify-center text-[var(--bh-content-muted)]",
+        "[&>img]:size-[var(--bh-input-icon-size)] [&>img]:shrink-0 [&>img]:object-contain",
+        "[&>svg]:size-[var(--bh-input-icon-size)] [&>svg]:shrink-0",
         disabled && "text-[var(--bh-content-disabled)]"
       )}
     >

@@ -73,8 +73,8 @@
 }
 
 .ds-breadcrumbs__icon {
-  width: var(--bh-space-4xl-20);
-  height: var(--bh-space-4xl-20);
+  width: var(--bh-icon-slot-size-default);
+  height: var(--bh-icon-slot-size-default);
   flex: 0 0 auto;
   display: inline-grid;
   place-items: center;
@@ -86,8 +86,8 @@
 }
 
 .ds-breadcrumbs__icon svg {
-  width: var(--bh-space-4xl-20);
-  height: var(--bh-space-4xl-20);
+  width: var(--bh-icon-size-default);
+  height: var(--bh-icon-size-default);
   display: block;
 }
 

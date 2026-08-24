@@ -16,20 +16,20 @@ import { cn } from "@/lib/utils"
 
 const avatarSizeVariants = {
   "2xs":
-    "[--bh-avatar-size:var(--bh-avatar-size-2xs)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-2xs)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-2xs)]",
-  xs: "[--bh-avatar-size:var(--bh-avatar-size-xs)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xs)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xs)]",
-  sm: "[--bh-avatar-size:var(--bh-avatar-size-sm)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-sm)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-sm)]",
-  md: "[--bh-avatar-size:var(--bh-avatar-size-md)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-md)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-md)]",
-  lg: "[--bh-avatar-size:var(--bh-avatar-size-lg)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-lg)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-lg)]",
+    "[--bh-avatar-size:var(--bh-avatar-size-2xs)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-2xs)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-2xs)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
+  xs: "[--bh-avatar-size:var(--bh-avatar-size-xs)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xs)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xs)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
+  sm: "[--bh-avatar-size:var(--bh-avatar-size-sm)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-sm)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-sm)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
+  md: "[--bh-avatar-size:var(--bh-avatar-size-md)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-md)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-md)] [--bh-avatar-icon-slot-size:var(--bh-icon-slot-size-default)]",
+  lg: "[--bh-avatar-size:var(--bh-avatar-size-lg)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-lg)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-lg)] [--bh-avatar-icon-slot-size:var(--bh-icon-slot-size-default)]",
   default:
-    "[--bh-avatar-size:var(--bh-avatar-size-xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xl)]",
-  xl: "[--bh-avatar-size:var(--bh-avatar-size-xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xl)]",
+    "[--bh-avatar-size:var(--bh-avatar-size-xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xl)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
+  xl: "[--bh-avatar-size:var(--bh-avatar-size-xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-xl)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
   "2xl":
-    "[--bh-avatar-size:var(--bh-avatar-size-2xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-2xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-2xl)]",
+    "[--bh-avatar-size:var(--bh-avatar-size-2xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-2xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-2xl)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
   "3xl":
-    "[--bh-avatar-size:var(--bh-avatar-size-3xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-3xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-3xl)]",
+    "[--bh-avatar-size:var(--bh-avatar-size-3xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-3xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-3xl)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
   "4xl":
-    "[--bh-avatar-size:var(--bh-avatar-size-4xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-4xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-4xl)]",
+    "[--bh-avatar-size:var(--bh-avatar-size-4xl)] [--bh-avatar-fallback-size:var(--bh-avatar-fallback-font-size-4xl)] [--bh-avatar-icon-size:var(--bh-avatar-icon-size-4xl)] [--bh-avatar-icon-slot-size:var(--bh-avatar-icon-size)]",
 } as const
 
 const avatarVariants = cva(
@@ -212,13 +212,17 @@ function AvatarIcon({
       className={cn(avatarIconVariants({ size, className }))}
       {...props}
     >
-      {children ?? (
-        <UserIcon
-          aria-hidden="true"
-          className="size-[var(--bh-avatar-icon-size)]"
-          strokeWidth="var(--bh-icon-stroke-210)"
-        />
-      )}
+      <span
+        data-slot="avatar-icon-slot"
+        className="flex size-[var(--bh-avatar-icon-slot-size,var(--bh-avatar-icon-size))] shrink-0 items-center justify-center [&_svg]:size-[var(--bh-avatar-icon-size)]"
+      >
+        {children ?? (
+          <UserIcon
+            aria-hidden="true"
+            strokeWidth="var(--bh-icon-stroke-210)"
+          />
+        )}
+      </span>
     </span>
   )
 }

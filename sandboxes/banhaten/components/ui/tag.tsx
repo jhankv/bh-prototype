@@ -367,7 +367,7 @@ function TagIcon({
     <span
       data-slot="tag-icon"
       className={cn(
-        "flex size-[var(--bh-space-4xl-20)] shrink-0 items-center justify-center text-current [&_svg]:size-[var(--bh-space-4xl-20)] [&_svg]:shrink-0",
+        "flex size-[var(--bh-icon-slot-size-default)] shrink-0 items-center justify-center text-current [&_svg]:size-[var(--bh-icon-size-default)] [&_svg]:shrink-0",
         className
       )}
       {...props}

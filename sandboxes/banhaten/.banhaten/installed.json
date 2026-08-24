@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "registryVersion": "0.3.0",
+  "registryVersion": "0.4.0",
   "installPlan": {
     "aliasRoots": {
       "@": "."
@@ -17,7 +17,7 @@
       "files": [
         {
           "target": "components/ui/avatar.tsx",
-          "sha256": "ae4699f5261f1621883ffbf01b3e453d99ce8ed09f535c9a7ab0f8809d2edec0"
+          "sha256": "99afe33c7537854a7a8be9b3c4caa57f9bca70c11234302e08111e950d0b846a"
         },
         {
           "target": "components/ui/assets/avatars/avatar-01.jpg",
@@ -37,7 +37,7 @@
       "files": [
         {
           "target": "components/ui/expanded/breadcrumbs.css",
-          "sha256": "1c537100e44eccdd851e41093a9f7c1ad957c94fbc99dd3ee5e52fd67d815b89"
+          "sha256": "478317753ff7f4c61c5b871951e6a887287a41114910aa750008e204977b1629"
         },
         {
           "target": "components/ui/expanded/Breadcrumbs.tsx",
@@ -49,7 +49,7 @@
       "files": [
         {
           "target": "components/ui/button.tsx",
-          "sha256": "e8908a89e2546b94f257790244e03f502e877adb78360509bca22638edb0b1d4"
+          "sha256": "2f69830a69669e98a4cad8f67fa7f7920ce42bfe274c168144bd5cbe8478d75c"
         }
       ]
     },
@@ -57,7 +57,7 @@
       "files": [
         {
           "target": "components/ui/button-group.tsx",
-          "sha256": "eb872f097a5cfe8db867edb498789536eb840fe169eacccfbb41d26aab7ac89f"
+          "sha256": "7dcf61001dd8f257e22d0f8d49b7e5591e9bb6af65833f7744357f33f2006f4c"
         }
       ]
     },
@@ -89,7 +89,7 @@
         },
         {
           "target": "components/ui/input.tsx",
-          "sha256": "cb2d11b24743fff4f885a2af81f612b0704f8afebb2e48bcc80bc50791fc85e0"
+          "sha256": "19d9fd9f6073444eca7e4c91f49a68f2a9a6a93e8bea15c30a9e70db199e492b"
         }
       ]
     },
@@ -97,7 +97,7 @@
       "files": [
         {
           "target": "components/ui/kbd.tsx",
-          "sha256": "6282bfdd009f713712f73b0658b830fd4982393c0339ec49535479f916c06509"
+          "sha256": "5cde46b00f65dcaae30676269fcba76268fa68ce90a8f66277dbd1c684661bbe"
         }
       ]
     },
@@ -105,7 +105,7 @@
       "files": [
         {
           "target": "components/ui/menu.tsx",
-          "sha256": "de122c6e8b6312e0ca02b2b03f9e5bea1e49bcc3392866aa6969b6e3932d4a4c"
+          "sha256": "3958274b241e23312d4901e485b8d308ddef044a0581abe16bb379ddd401d937"
         }
       ]
     },
@@ -129,7 +129,7 @@
         },
         {
           "target": "components/ui/pagination.tsx",
-          "sha256": "522f0de2ff742cb3fb3bc7d558f9407418bc3b63fc8cdecafb0a3c5b0b105dcd"
+          "sha256": "bd75a7235eb42db78b509d9e20980737b3f9400185862d0cb5eb6d69828bb2cc"
         }
       ]
     },
@@ -157,7 +157,7 @@
         },
         {
           "target": "components/ui/select.tsx",
-          "sha256": "554e54859f1607f0be990b0c42008106ca469053aebe80ac1ffae29431d9ef94"
+          "sha256": "751fe7ea8c746e59bbe8423ad8ef26ce5cfc9bd960a51be8d136c9695ba03c2f"
         }
       ]
     },
@@ -173,7 +173,7 @@
       "files": [
         {
           "target": "components/ui/expanded/table.css",
-          "sha256": "6284a859e27854b77237889bc71ba19bd7a9f1153aa983b6cee3e25a3f1c237a"
+          "sha256": "07b75770ee64ffa45ca6e14a754491d467c89e403b40ec8562f635e1863d4ddb"
         },
         {
           "target": "components/ui/expanded/Table.tsx",
@@ -201,7 +201,7 @@
       "files": [
         {
           "target": "components/ui/tag.tsx",
-          "sha256": "2c22f9b8b901e982a578b471691bc502f9cbe52d3d2947f20e9d994ebfa44232"
+          "sha256": "10c9348353dcc357a6c9812efedc3e1f6c284905c0df9c776fbe279441bd268f"
         }
       ]
     },
@@ -217,7 +217,7 @@
       "files": [
         {
           "target": "components/ui/toolbar.tsx",
-          "sha256": "5fa931b4cb7457427fde8ee5b1ceef3ae6e12e4819fa19107b593e71404e1adf"
+          "sha256": "3c7a1c09abf1f420cf52a1d86187adb612dbdcf11b0bd9a879d490b490248098"
         }
       ]
     },
@@ -233,7 +233,7 @@
   "managedFiles": {
     ".banhaten/USAGE.md": {
       "owner": "base",
-      "sha256": "bfbbde16b022083c94037a85beb02bb6b15a203260dd141f86aa7692479c021f"
+      "sha256": "77923b09f13ef454a2e4cd4f9ad4f955c2e80840b60b87533695e5776abb8bed"
     },
     "components/ui/assets/avatars/avatar-01.jpg": {
       "owner": "avatar",
@@ -241,7 +241,7 @@
     },
     "components/ui/avatar.tsx": {
       "owner": "avatar",
-      "sha256": "ae4699f5261f1621883ffbf01b3e453d99ce8ed09f535c9a7ab0f8809d2edec0"
+      "sha256": "99afe33c7537854a7a8be9b3c4caa57f9bca70c11234302e08111e950d0b846a"
     },
     "components/ui/badge.tsx": {
       "owner": "badge",
@@ -249,11 +249,11 @@
     },
     "components/ui/button-group.tsx": {
       "owner": "button-group",
-      "sha256": "eb872f097a5cfe8db867edb498789536eb840fe169eacccfbb41d26aab7ac89f"
+      "sha256": "7dcf61001dd8f257e22d0f8d49b7e5591e9bb6af65833f7744357f33f2006f4c"
     },
     "components/ui/button.tsx": {
       "owner": "button",
-      "sha256": "e8908a89e2546b94f257790244e03f502e877adb78360509bca22638edb0b1d4"
+      "sha256": "2f69830a69669e98a4cad8f67fa7f7920ce42bfe274c168144bd5cbe8478d75c"
     },
     "components/ui/checkbox.tsx": {
       "owner": "checkbox",
@@ -261,7 +261,7 @@
     },
     "components/ui/expanded/breadcrumbs.css": {
       "owner": "breadcrumbs",
-      "sha256": "1c537100e44eccdd851e41093a9f7c1ad957c94fbc99dd3ee5e52fd67d815b89"
+      "sha256": "478317753ff7f4c61c5b871951e6a887287a41114910aa750008e204977b1629"
     },
     "components/ui/expanded/Breadcrumbs.tsx": {
       "owner": "breadcrumbs",
@@ -285,7 +285,7 @@
     },
     "components/ui/expanded/table.css": {
       "owner": "table",
-      "sha256": "6284a859e27854b77237889bc71ba19bd7a9f1153aa983b6cee3e25a3f1c237a"
+      "sha256": "07b75770ee64ffa45ca6e14a754491d467c89e403b40ec8562f635e1863d4ddb"
     },
     "components/ui/expanded/Table.tsx": {
       "owner": "table",
@@ -297,15 +297,15 @@
     },
     "components/ui/input.tsx": {
       "owner": "input",
-      "sha256": "cb2d11b24743fff4f885a2af81f612b0704f8afebb2e48bcc80bc50791fc85e0"
+      "sha256": "19d9fd9f6073444eca7e4c91f49a68f2a9a6a93e8bea15c30a9e70db199e492b"
     },
     "components/ui/kbd.tsx": {
       "owner": "kbd",
-      "sha256": "6282bfdd009f713712f73b0658b830fd4982393c0339ec49535479f916c06509"
+      "sha256": "5cde46b00f65dcaae30676269fcba76268fa68ce90a8f66277dbd1c684661bbe"
     },
     "components/ui/menu.tsx": {
       "owner": "menu",
-      "sha256": "de122c6e8b6312e0ca02b2b03f9e5bea1e49bcc3392866aa6969b6e3932d4a4c"
+      "sha256": "3958274b241e23312d4901e485b8d308ddef044a0581abe16bb379ddd401d937"
     },
     "components/ui/pagination.css": {
       "owner": "pagination",
@@ -313,7 +313,7 @@
     },
     "components/ui/pagination.tsx": {
       "owner": "pagination",
-      "sha256": "522f0de2ff742cb3fb3bc7d558f9407418bc3b63fc8cdecafb0a3c5b0b105dcd"
+      "sha256": "bd75a7235eb42db78b509d9e20980737b3f9400185862d0cb5eb6d69828bb2cc"
     },
     "components/ui/progress.tsx": {
       "owner": "progress",
@@ -329,7 +329,7 @@
     },
     "components/ui/select.tsx": {
       "owner": "select",
-      "sha256": "554e54859f1607f0be990b0c42008106ca469053aebe80ac1ffae29431d9ef94"
+      "sha256": "751fe7ea8c746e59bbe8423ad8ef26ce5cfc9bd960a51be8d136c9695ba03c2f"
     },
     "components/ui/spinner.tsx": {
       "owner": "spinner",
@@ -349,7 +349,7 @@
     },
     "components/ui/tag.tsx": {
       "owner": "tag",
-      "sha256": "2c22f9b8b901e982a578b471691bc502f9cbe52d3d2947f20e9d994ebfa44232"
+      "sha256": "10c9348353dcc357a6c9812efedc3e1f6c284905c0df9c776fbe279441bd268f"
     },
     "components/ui/toggle.tsx": {
       "owner": "toggle",
@@ -357,7 +357,7 @@
     },
     "components/ui/toolbar.tsx": {
       "owner": "toolbar",
-      "sha256": "5fa931b4cb7457427fde8ee5b1ceef3ae6e12e4819fa19107b593e71404e1adf"
+      "sha256": "3c7a1c09abf1f420cf52a1d86187adb612dbdcf11b0bd9a879d490b490248098"
     },
     "components/ui/tooltip.tsx": {
       "owner": "tooltip",
@@ -374,6 +374,6 @@
   },
   "tokenCss": {
     "target": "globals.css",
-    "sha256": "ec522bfb42b0d227d01158f040ff93e243ceb4a78c5f90cba061b00fe30fb7cb"
+    "sha256": "7a96edaf34778121c41abec67642ed53969b0c95f7c8fc3ae2915defe5878fbf"
   }
 }

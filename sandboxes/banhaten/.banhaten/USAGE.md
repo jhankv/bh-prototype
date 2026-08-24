@@ -15,7 +15,7 @@ This project uses the Banhaten design system. Treat the installed component API 
 - Do not align Banhaten controls with raw height, padding, radius, or font-size utilities. Width and responsive layout utilities are allowed.
 - Use `DatePicker` or `DateRangePicker` for dates. Do not simulate calendar fields with `Input` or native date inputs.
 - Pass explicit `leadingIcon` and `trailingIcon` nodes. Use `showAtSign` or `showInfo` only for those exact semantic affordances. The legacy `hasLeadingIcon` and `hasInformationIcon` flags are deprecated.
-- Use `shortcutKeys={["Mod", "K"]}` or `KbdShortcut` for shortcuts. Never hard-code a single Command glyph for every platform.
+- Use `shortcutKeys={["Mod", "K"]}` on search inputs, `Shortcut` for one compact combined hint, or `KbdShortcut` when each physical key needs its own keycap. Never hard-code a single Command glyph for every platform.
 - Use `SegmentedControl` for small mutually exclusive view, density, period, or numeric choices. Do not rebuild joined numeric buttons locally.
 - Use functional `Select` for option menus. `ToolbarSelect` is only a trigger-shaped toolbar primitive.
 - Preserve inherited `dir`; use logical spacing and alignment utilities for RTL-safe composition.

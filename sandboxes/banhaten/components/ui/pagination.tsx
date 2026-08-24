@@ -111,7 +111,7 @@ const paginationControlVariants = cva(
     "outline-none transition-[background-color,border-color,color,box-shadow]",
     "focus-visible:shadow-[var(--shadow-pagination-focus)]",
     "disabled:pointer-events-none disabled:text-[var(--bh-content-disabled)]",
-    "[&_svg]:pointer-events-none [&_svg]:size-[var(--bh-pagination-icon-size)] [&_svg]:shrink-0",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0",
     "rtl:[&_svg[data-rtl-flip='true']]:-scale-x-100",
   ],
   {
@@ -507,13 +507,18 @@ function PaginationArrowIcon({ type }: { type: "previous" | "next" }) {
   const Icon = type === "previous" ? ChevronLeftIcon : ChevronRightIcon
 
   return (
-    <Icon
-      aria-hidden="true"
-      data-rtl-flip="true"
+    <span
       data-slot="pagination-icon"
-      focusable="false"
-      strokeWidth="var(--bh-icon-stroke-225)"
-    />
+      className="inline-flex size-[var(--bh-pagination-icon-slot-size)] shrink-0 items-center justify-center"
+    >
+      <Icon
+        aria-hidden="true"
+        className="size-[var(--bh-pagination-icon-size)]"
+        data-rtl-flip="true"
+        focusable="false"
+        strokeWidth="var(--bh-icon-stroke-225)"
+      />
+    </span>
   )
 }
 

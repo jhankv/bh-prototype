@@ -783,7 +783,7 @@ const SelectMenuItem = React.forwardRef<HTMLButtonElement, SelectMenuItemProps>(
         {selectedMedia ? (
           <span
             data-slot="select-menu-item-media"
-            className="flex shrink-0 items-center ps-[var(--bh-select-media-inset)] text-[var(--bh-content-subtle)] group-data-[disabled=true]/select-menu-item:text-[var(--bh-content-disabled)] group-data-[disabled=true]/select-menu-item:opacity-[var(--bh-opacity-60)] [&_svg:not([class*='size-'])]:size-[var(--bh-select-icon-slot-size)]"
+            className="flex shrink-0 items-center ps-[var(--bh-select-media-inset)] text-[var(--bh-content-subtle)] group-data-[disabled=true]/select-menu-item:text-[var(--bh-content-disabled)] group-data-[disabled=true]/select-menu-item:opacity-[var(--bh-opacity-60)] [&_svg:not([class*='size-'])]:size-[var(--bh-icon-size-default)]"
           >
             {selectedMedia}
           </span>
