@@ -1,9 +1,11 @@
 # Forms: `input`, `badge`, `select`, `avatar`
 
-Flags that render nothing, and three colour vocabularies that describe one idea
-without agreeing on it.
+Flags that render nothing, values that fail silently, and contracts
+narrower than the code behind them.
 
 ---
+
+## Input
 
 ### `input-1` · `shortcutKeys` is quietly ignored unless `kind="shortcut"`
 
@@ -24,8 +26,6 @@ rather than hard-coding a glyph. Anyone who reads the docs gets this right.
 The finding is only that the type does not encode what the prose says. Making the
 shortcut props exclusive to `kind: "shortcut"` would turn a silent no-op into a
 compile error, and would carry the documentation into the editor.
-
----
 
 ### `input-2` · `isRequired` is decorative, and assistive technology hears nothing
 
@@ -57,8 +57,6 @@ We used `aria-required` rather than the native `required` on purpose. The native
 attribute switches on browser form validation and would change behaviour for
 every existing consumer. This states the fact without changing the mechanics.
 
----
-
 ### `input-3` · `isOptional` renders nothing unless `optionalText` is also passed
 
 **File:** `input.tsx` · **Severity:** minor · **Status:** Confirmed
@@ -86,7 +84,50 @@ cannot produce the row it names.
 One thing to decide: the default string is English. In an Arabic-first system it
 arguably belongs in the locale layer rather than the component.
 
+### `input-4` · The focus ring is twice the floor and drops the border it replaces
+
+**File:** `input.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
+**Repro:** frame `inputs`, the `default` field. Click into it. Same in frame
+`neon`, the search field above the grid.
+
+This is not a contract violation, and it is recorded so nobody spends an hour
+deciding whether it is one. The ring is systematic, token-driven, and passes
+WCAG. It is a question of visual weight, and the choice is Banhaten's.
+
+The mechanism, measured rather than eyeballed. Three controls, one width token:
+
+| Control | Primitive | Blue band | Offset |
+| --- | --- | --- | --- |
+| `Button` | `--shadow-component-focus-ring` | 4px | flush |
+| `Input` | `--shadow-component-focus-stroke` | 4px | 1px |
+| `Select` | `--shadow-component-focus-stroke` | 4px | 1px |
+
+`--bh-focus-ring-width` is `4px` and `--bh-border-width-default` is `1px`, so
+`focus-stroke` paints a 1px ring in `--bh-bg-default` and then 4px of
+`--bh-border-focus` outside it. Buttons flush, fields offset, is a coherent rule:
+a field already has a border and the gap stops the two merging.
+
+Two things then compound. The 1px gap is `bg-default`, which on a white surface
+is white — so the gap is invisible and the ring reads as a solid band sitting on
+the field edge. And `input.tsx` sets `--shadow-input-focus-overlay: none` on
+focus, which removes the field's own 1px border for as long as it is focused.
+The edge does not gain a ring; it is replaced by one.
+
+WCAG 2.2 SC 2.4.13 asks for at least a 2px perimeter at 3:1. 4px is double that,
+so the floor is not the constraint here. For comparison, shadcn/ui's current
+input uses `focus-visible:ring-[3px]` with `ring-ring/50` and
+`focus-visible:border-ring` — a narrower band, at half opacity, with the border
+recoloured rather than removed. Both pass. Banhaten's is 33% wider, at twice the
+opacity, and replaces the border instead of keeping it.
+
+No fix is proposed, and none should be read into the comparison. The observation
+is only that three independent decisions — width, opacity, and dropping the
+border — all push the same direction at once, and the result reads heavier than
+the system likely intends.
+
 ---
+
+## Badge
 
 ### `badge-1` · Three colour vocabularies for one idea
 
@@ -135,9 +176,6 @@ One of the four exists. `pink` is `fuchsia` or `rose`; `teal` is `aqua` or `sky`
 `soft-warning`, and nine more). That is not part of this finding: the registry
 documents it as a compatibility shim, which is a reasonable thing to keep.
 
-
----
-
 ### `badge-2` · An invalid colour renders an unstyled badge instead of failing
 
 **File:** `badge.tsx` · **Severity:** minor
@@ -151,8 +189,132 @@ all. `red` is the obvious guess for a failure state, and it is not in the union.
 TypeScript catches the mistake. A JS codebase, or a value arriving from data,
 does not, and a status column quietly loses its most important state.
 
+---
+
+## Select
+
+### `select-1` · A label-less select announces its value and has no name
+
+**File:** `select.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `neon`. Every select there is label-less. Read the trigger's
+`aria-label`: it is `stock`, `gte`, `50`, `0` — the value, never the purpose.
+
+`Select` derives the trigger's accessible name from its own selection:
+
+```ts
+const triggerAccessibleLabel = shouldRenderLabel
+  ? undefined
+  : getAccessibleText(selectedValue) ?? getAccessibleText(selectedPlaceholder)
+```
+
+With a visible `label` the name comes from the label, which is correct. Without
+one — a toolbar, a filter row, anywhere a visible label would be noise — the name
+becomes the current value.
+
+**A value is not a name.** Someone tabbing Neon's filter row hears "stock,
+button", "gte, button", "15", "50, button". Four controls, four values, and
+nothing saying which is the field, which is the operator, which is the page size.
+Change the selection and the control's name changes with it.
+
+**The consumer cannot fix it, and that is the sharper half.** `aria-label` passed
+to `Select` does not reach the trigger. `{...props}` is spread on the outer
+`SelectRoot`, and the trigger takes `aria-label={triggerAccessibleLabel}`
+explicitly, so the value wins. Measured on this screen: the two
+`aria-label="Rows per page"` and `aria-label="Offset"` we passed landed on
+`<div data-slot="select-root">` — a plain div with no role, where no screen
+reader will ever read them.
+
+So the API offers exactly two states: a visible label, or no name at all. There
+is no third option, and a filter bar needs one.
+
+The calls in `views/TableStudio.tsx` still pass `aria-label`. They are left in
+deliberately: they are what a careful team writes, and they are what silently
+does nothing.
 
 ---
+
+## Avatar
+
+### `avatar-1` · Initials are not meaningful for Arabic names
+
+**File:** `expanded/Table.tsx`, its local `Avatar` · **Status:** Question
+**Repro:** frame `specimens`, the Arabic names table.
+
+The derivation is not in `avatar.tsx`. `AvatarFallback` renders whatever children
+it is given; the initials are computed by a private `Avatar` inside
+`expanded/Table.tsx`, which is the only place this happens.
+
+The fallback takes the first letter of the first two words:
+
+| Name | Initials |
+| --- | --- |
+| عاشور عوضية | عع |
+| سفيان تومي | ست |
+| عبد الرحمن بن محمد بن عبد الله آل سعود الشمري | عا |
+
+Arabic script is cursive, so isolated letters lifted out of a word render in
+forms a reader does not associate with the name. Initials are also not an Arabic
+naming convention. `عع` carries no signal, and `ست` reads as an unrelated word.
+
+Arabic given names are heavily concentrated (عبد, محمد, أحمد), so first-letter
+initials collide constantly. Three different customers in one dataset all showed
+`عا`.
+
+We did not file this as a defect because there may be no good answer. Worth
+discussing: fall back to a generated colour or icon when the name is non-Latin,
+or drop initials entirely.
+
+---
+
+## Button
+
+### `button-1` · Five of fourteen variants are not in the published contract
+
+**File:** `button.tsx` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `buttons`, the variant grid. `danger` and `destructive` sit two
+apart and are the same red; so do `soft-danger` and `soft-destructive`.
+
+`banhaten docs button` publishes nine variants:
+
+> `default`, `secondary`, `soft`, `outline`, `ghost`, `ghost-primary`, `danger`,
+> `soft-danger`, `white`
+
+`buttonVariants` defines fourteen. The five it does not publish fall into two
+groups, and they are not the same problem.
+
+**Two are undeclared aliases.** `destructive` and `soft-destructive` are
+byte-identical to `danger` and `soft-danger` — 359 and 474 characters, compared
+literally, not by eye. Same tokens, same hover, same focus shadow, same disabled
+state. Nothing in 103 lines of documentation mentions either name, and the only
+occurrence of the word "destructive" is prose describing the use case:
+"navigation actions, and destructive confirmations."
+
+**Three are simply unpublished.** `success`, `warning` and `link` are distinct
+from everything else and appear nowhere in the contract, so a consumer reading
+the docs cannot discover that they exist.
+
+Both groups reach the consumer the same way. `VariantProps<typeof
+buttonVariants>` derives from the implementation, so all fourteen typecheck and
+all fourteen autocomplete. The docs say nine. Whichever a team reads first is
+the API it gets, and two teams can ship two names for one button with nothing
+marking which is canonical — or a deprecation path if the alias is later removed.
+
+What makes this a defect rather than a preference is that **Banhaten already has
+a convention for exactly this, and Button does not follow it.** `banhaten docs
+badge` declares its own aliases:
+
+> `legacyVariants`: The previous variant prop is still accepted as a
+> compatibility shim.
+
+That declaration is why `badge`'s identical situation is recorded above as *not*
+a finding. Button's own `density` prop is documented the same careful way —
+"Maps to legacy xs, sm, or default sizes." The vocabulary to describe a
+compatibility alias exists, is used twice elsewhere in this component's own
+documentation, and is absent from its variants.
+
+---
+
+## Across components
 
 ### `architecture-3` · An out-of-union value renders unstyled, in every component
 
@@ -205,48 +367,6 @@ review precisely because it looks like a choice.
 The registry knows the valid set: `banhaten docs select` prints it. Nothing at
 runtime or in the editor uses that knowledge when a value falls outside it.
 
----
-
-### `select-1` · A label-less select announces its value and has no name
-
-**File:** `select.tsx` · **Severity:** major · **Status:** Confirmed
-**Repro:** frame `neon`. Every select there is label-less. Read the trigger's
-`aria-label`: it is `stock`, `gte`, `50`, `0` — the value, never the purpose.
-
-`Select` derives the trigger's accessible name from its own selection:
-
-```ts
-const triggerAccessibleLabel = shouldRenderLabel
-  ? undefined
-  : getAccessibleText(selectedValue) ?? getAccessibleText(selectedPlaceholder)
-```
-
-With a visible `label` the name comes from the label, which is correct. Without
-one — a toolbar, a filter row, anywhere a visible label would be noise — the name
-becomes the current value.
-
-**A value is not a name.** Someone tabbing Neon's filter row hears "stock,
-button", "gte, button", "15", "50, button". Four controls, four values, and
-nothing saying which is the field, which is the operator, which is the page size.
-Change the selection and the control's name changes with it.
-
-**The consumer cannot fix it, and that is the sharper half.** `aria-label` passed
-to `Select` does not reach the trigger. `{...props}` is spread on the outer
-`SelectRoot`, and the trigger takes `aria-label={triggerAccessibleLabel}`
-explicitly, so the value wins. Measured on this screen: the two
-`aria-label="Rows per page"` and `aria-label="Offset"` we passed landed on
-`<div data-slot="select-root">` — a plain div with no role, where no screen
-reader will ever read them.
-
-So the API offers exactly two states: a visible label, or no name at all. There
-is no third option, and a filter bar needs one.
-
-The calls in `views/TableStudio.tsx` still pass `aria-label`. They are left in
-deliberately: they are what a careful team writes, and they are what silently
-does nothing.
-
----
-
 ### `architecture-4` · The density contract is per-control and nothing carries it
 
 **Files:** `toolbar.tsx`, `segmented-control.tsx`, `button.tsx`, `input.tsx`,
@@ -285,123 +405,3 @@ nothing applies it on your behalf.
 its children would fix the toolbar case and leave the filter row, which is not a
 toolbar. A context provider would cover both and is a larger change with
 inheritance rules to settle. Either way it is API, and API is yours.
-
----
-
-### `avatar-1` · Initials are not meaningful for Arabic names
-
-**File:** `expanded/Table.tsx`, its local `Avatar` · **Status:** Question
-**Repro:** frame `specimens`, the Arabic names table.
-
-The derivation is not in `avatar.tsx`. `AvatarFallback` renders whatever children
-it is given; the initials are computed by a private `Avatar` inside
-`expanded/Table.tsx`, which is the only place this happens.
-
-The fallback takes the first letter of the first two words:
-
-| Name | Initials |
-| --- | --- |
-| عاشور عوضية | عع |
-| سفيان تومي | ست |
-| عبد الرحمن بن محمد بن عبد الله آل سعود الشمري | عا |
-
-Arabic script is cursive, so isolated letters lifted out of a word render in
-forms a reader does not associate with the name. Initials are also not an Arabic
-naming convention. `عع` carries no signal, and `ست` reads as an unrelated word.
-
-Arabic given names are heavily concentrated (عبد, محمد, أحمد), so first-letter
-initials collide constantly. Three different customers in one dataset all showed
-`عا`.
-
-We did not file this as a defect because there may be no good answer. Worth
-discussing: fall back to a generated colour or icon when the name is non-Latin,
-or drop initials entirely.
-
----
-
-### `button-1` · Five of fourteen variants are not in the published contract
-
-**File:** `button.tsx` · **Severity:** major · **Status:** Confirmed
-**Repro:** frame `buttons`, the variant grid. `danger` and `destructive` sit two
-apart and are the same red; so do `soft-danger` and `soft-destructive`.
-
-`banhaten docs button` publishes nine variants:
-
-> `default`, `secondary`, `soft`, `outline`, `ghost`, `ghost-primary`, `danger`,
-> `soft-danger`, `white`
-
-`buttonVariants` defines fourteen. The five it does not publish fall into two
-groups, and they are not the same problem.
-
-**Two are undeclared aliases.** `destructive` and `soft-destructive` are
-byte-identical to `danger` and `soft-danger` — 359 and 474 characters, compared
-literally, not by eye. Same tokens, same hover, same focus shadow, same disabled
-state. Nothing in 103 lines of documentation mentions either name, and the only
-occurrence of the word "destructive" is prose describing the use case:
-"navigation actions, and destructive confirmations."
-
-**Three are simply unpublished.** `success`, `warning` and `link` are distinct
-from everything else and appear nowhere in the contract, so a consumer reading
-the docs cannot discover that they exist.
-
-Both groups reach the consumer the same way. `VariantProps<typeof
-buttonVariants>` derives from the implementation, so all fourteen typecheck and
-all fourteen autocomplete. The docs say nine. Whichever a team reads first is
-the API it gets, and two teams can ship two names for one button with nothing
-marking which is canonical — or a deprecation path if the alias is later removed.
-
-What makes this a defect rather than a preference is that **Banhaten already has
-a convention for exactly this, and Button does not follow it.** `banhaten docs
-badge` declares its own aliases:
-
-> `legacyVariants`: The previous variant prop is still accepted as a
-> compatibility shim.
-
-That declaration is why `badge`'s identical situation is recorded above as *not*
-a finding. Button's own `density` prop is documented the same careful way —
-"Maps to legacy xs, sm, or default sizes." The vocabulary to describe a
-compatibility alias exists, is used twice elsewhere in this component's own
-documentation, and is absent from its variants.
-
----
-
-### `input-4` · The focus ring is twice the floor and drops the border it replaces
-
-**File:** `input.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
-**Repro:** frame `inputs`, the `default` field. Click into it. Same in frame
-`neon`, the search field above the grid.
-
-This is not a contract violation, and it is recorded so nobody spends an hour
-deciding whether it is one. The ring is systematic, token-driven, and passes
-WCAG. It is a question of visual weight, and the choice is Banhaten's.
-
-The mechanism, measured rather than eyeballed. Three controls, one width token:
-
-| Control | Primitive | Blue band | Offset |
-| --- | --- | --- | --- |
-| `Button` | `--shadow-component-focus-ring` | 4px | flush |
-| `Input` | `--shadow-component-focus-stroke` | 4px | 1px |
-| `Select` | `--shadow-component-focus-stroke` | 4px | 1px |
-
-`--bh-focus-ring-width` is `4px` and `--bh-border-width-default` is `1px`, so
-`focus-stroke` paints a 1px ring in `--bh-bg-default` and then 4px of
-`--bh-border-focus` outside it. Buttons flush, fields offset, is a coherent rule:
-a field already has a border and the gap stops the two merging.
-
-Two things then compound. The 1px gap is `bg-default`, which on a white surface
-is white — so the gap is invisible and the ring reads as a solid band sitting on
-the field edge. And `input.tsx` sets `--shadow-input-focus-overlay: none` on
-focus, which removes the field's own 1px border for as long as it is focused.
-The edge does not gain a ring; it is replaced by one.
-
-WCAG 2.2 SC 2.4.13 asks for at least a 2px perimeter at 3:1. 4px is double that,
-so the floor is not the constraint here. For comparison, shadcn/ui's current
-input uses `focus-visible:ring-[3px]` with `ring-ring/50` and
-`focus-visible:border-ring` — a narrower band, at half opacity, with the border
-recoloured rather than removed. Both pass. Banhaten's is 33% wider, at twice the
-opacity, and replaces the border instead of keeping it.
-
-No fix is proposed, and none should be read into the comparison. The observation
-is only that three independent decisions — width, opacity, and dropping the
-border — all push the same direction at once, and the result reads heavier than
-the system likely intends.

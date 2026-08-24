@@ -1,8 +1,10 @@
 # Keyboard: `toolbar`, `button-group`
 
-Three findings and one cause. The last entry explains the first three.
+Three symptoms and the cause underneath them. The last entry is the cause.
 
 ---
+
+## Toolbar
 
 ### `toolbar-1` · It promises keyboard navigation and has none
 
@@ -45,8 +47,6 @@ clear the component was never meant to be a widget.
 Reference: [W3C ARIA Toolbar Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/),
 whose own worked example is a text formatting toolbar.
 
----
-
 ### `toolbar-2` · There is no separator
 
 **File:** `toolbar.tsx` · **Severity:** minor · **Status:** Question, new API
@@ -61,6 +61,8 @@ assistive technology, where a real separator announces that one group has ended
 and another begun.
 
 ---
+
+## Button group
 
 ### `button-group-1` · The container is a tab stop as well as every button
 
@@ -89,6 +91,8 @@ which chose `aria-required` over the native attribute. A fix that quietly change
 behaviour for existing consumers is a decision, not a correction.
 
 ---
+
+## Across components
 
 ### `architecture-1` · The two hand-built components are the two with gaps
 

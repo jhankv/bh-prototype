@@ -1,9 +1,13 @@
 # Data surfaces: `Table`, `PageHeader`, `pagination`
 
-Four findings about text a data surface prints. A count nobody measured, labels
-that get cut, and strings that exist but cannot be reached.
+What a data surface prints, and what it looks like printing it. A count
+nobody measured, labels that get cut, strings that exist but cannot be
+reached — and two places where the surface disagrees with the system it is
+built from.
 
 ---
+
+## Table
 
 ### `table-1` · The footer prints a row count nobody measured
 
@@ -45,8 +49,6 @@ and it is currently on screen under a caption reporting a different number.
 Worth discussing: whether a default message should ever contain numbers. An empty
 string fails visibly. This one failed quietly.
 
----
-
 ### `table-3` · A column with no `renderCell` prints nothing
 
 **File:** `expanded/Table.tsx` · **Severity:** minor · **Status:** Question
@@ -75,6 +77,8 @@ the type makes the mistake impossible. The second is stricter and would break
 existing code that leans on empty columns as spacers.
 
 ---
+
+## PageHeader
 
 ### `page-header-1` · It clips its own tab labels, with no way to opt out
 
@@ -126,91 +130,6 @@ honestly, let the list scroll instead of clip, or expose `fullWidth`. They
 produce different products. Clipping the first letter is the one outcome nobody
 chose, but choosing the replacement is yours.
 
----
-
-### `pagination-1` · `DataTable` has nowhere to pass the Arabic messages
-
-**Files:** `pagination.tsx`, `expanded/Table.tsx` · **Severity:** major
-**Status:** Confirmed
-**Repro:** frame `expenses-rtl`. Every string on that screen is Arabic except the
-footer caption, which stays in English.
-
-With a console fully translated and `dir="rtl"`, every string is Arabic except
-the two in the table footer.
-
-**The first version of this entry was wrong about the cause, and the registry is
-what corrected it.** `banhaten docs pagination` is explicit:
-
-> `messages`: **Direction does not select language.** English defaults are
-> stable; pass messages for Arabic, Hebrew, Persian, Urdu, or another locale.
-
-That is a deliberate and correct decision. Direction and language are different
-axes, and an Arabic-direction interface may well be Hebrew or Persian. So
-`Pagination` staying English under `dir="rtl"` is the documented behaviour, not a
-defect, and "select messages from `dir`" is a fix that would work against the
-stated design.
-
-The defect is one step up. `Pagination` accepts `messages`. `DataTable` gives you
-nowhere to pass them:
-
-```ts
-export type DataTablePagination = {
-  ariaLabel?: string; defaultPage?: number; manual?: boolean;
-  onPageChange?: (page: number) => void; page?: number; pageSize?: number;
-  pages?: PaginationPage[]; showCaption?: boolean; totalRows?: number;
-  type?: PaginationProps["type"]; variant?: PaginationProps["variant"];
-};
-```
-
-No `messages`. `DataTable` has its own `labels` object covering the summary,
-search placeholder and empty states, and it does translate — but it stops at the
-footer caption, which comes from `Pagination`'s catalogue instead.
-
-**Why it matters.** The package does the hard part and omits the seam.
-`arabicPaginationMessages` is exported, complete, and unreachable from the
-component most teams will actually use. A reader greps for Arabic support, finds
-it, and concludes the component is covered.
-
-
----
-
-### `pagination-2` · The active page is the same fill as the primary action
-
-**File:** `pagination.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
-**Repro:** frame `expenses`. `Add expenses` sits at the top right and the active
-page `1` at the bottom right, both in one viewport, both the same solid brand
-fill.
-
-This is not a slip, and it is not a coincidence of palette. The alias is direct:
-
-```css
---bh-pagination-active-bg: var(--bh-interactive-brand-default);
-```
-
-That is the token `Button`'s `default` variant paints with. It is declared twice
-in `globals.css`, once for each mode, and both point at the same place. No theme
-overrides it. So in every theme and both modes, the current page and the page's
-primary call to action are guaranteed to be the identical fill — by
-construction, not by accident.
-
-Both are also the only two saturated elements on the screen. The status badges
-are soft-toned, the table chrome is neutral, and the pagination's own previous
-and next controls are `soft`. Two solid brand rectangles at opposite corners,
-and only one of them is asking for anything.
-
-What makes this worth raising rather than shrugging at: **the seam already
-exists and is already published.** `--bh-pagination-active-bg` appears by name in
-`banhaten docs pagination`'s token contract, so the active fill can be
-retargeted on its own without touching the brand token or the component API.
-Nothing needs to be built for this to be adjustable — it already is.
-
-No change is proposed here, and the question is a real one rather than a
-rhetorical one. A current-page marker arguably *should* carry brand weight, and
-plenty of systems do exactly this. The observation is only that the two roles are
-locked to one value, and the lock is a default rather than a constraint.
-
----
-
 ### `page-header-3` · Its action buttons draw the border twice
 
 **File:** `expanded/pageHeader.css`, `expanded/PageHeader.tsx` · **Severity:** major · **Status:** Confirmed
@@ -256,3 +175,85 @@ is `--bh-border-default`. That is what makes it hard to see: the copy currently
 agrees with the original almost everywhere, so only the one additive property
 shows. A change to `Button`'s secondary variant will not reach these buttons,
 and the next divergence will be as quiet as this one.
+
+---
+
+## Pagination
+
+### `pagination-1` · `DataTable` has nowhere to pass the Arabic messages
+
+**Files:** `pagination.tsx`, `expanded/Table.tsx` · **Severity:** major
+**Status:** Confirmed
+**Repro:** frame `expenses-rtl`. Every string on that screen is Arabic except the
+footer caption, which stays in English.
+
+With a console fully translated and `dir="rtl"`, every string is Arabic except
+the two in the table footer.
+
+**The first version of this entry was wrong about the cause, and the registry is
+what corrected it.** `banhaten docs pagination` is explicit:
+
+> `messages`: **Direction does not select language.** English defaults are
+> stable; pass messages for Arabic, Hebrew, Persian, Urdu, or another locale.
+
+That is a deliberate and correct decision. Direction and language are different
+axes, and an Arabic-direction interface may well be Hebrew or Persian. So
+`Pagination` staying English under `dir="rtl"` is the documented behaviour, not a
+defect, and "select messages from `dir`" is a fix that would work against the
+stated design.
+
+The defect is one step up. `Pagination` accepts `messages`. `DataTable` gives you
+nowhere to pass them:
+
+```ts
+export type DataTablePagination = {
+  ariaLabel?: string; defaultPage?: number; manual?: boolean;
+  onPageChange?: (page: number) => void; page?: number; pageSize?: number;
+  pages?: PaginationPage[]; showCaption?: boolean; totalRows?: number;
+  type?: PaginationProps["type"]; variant?: PaginationProps["variant"];
+};
+```
+
+No `messages`. `DataTable` has its own `labels` object covering the summary,
+search placeholder and empty states, and it does translate — but it stops at the
+footer caption, which comes from `Pagination`'s catalogue instead.
+
+**Why it matters.** The package does the hard part and omits the seam.
+`arabicPaginationMessages` is exported, complete, and unreachable from the
+component most teams will actually use. A reader greps for Arabic support, finds
+it, and concludes the component is covered.
+
+### `pagination-2` · The active page is the same fill as the primary action
+
+**File:** `pagination.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
+**Repro:** frame `expenses`. `Add expenses` sits at the top right and the active
+page `1` at the bottom right, both in one viewport, both the same solid brand
+fill.
+
+This is not a slip, and it is not a coincidence of palette. The alias is direct:
+
+```css
+--bh-pagination-active-bg: var(--bh-interactive-brand-default);
+```
+
+That is the token `Button`'s `default` variant paints with. It is declared twice
+in `globals.css`, once for each mode, and both point at the same place. No theme
+overrides it. So in every theme and both modes, the current page and the page's
+primary call to action are guaranteed to be the identical fill — by
+construction, not by accident.
+
+Both are also the only two saturated elements on the screen. The status badges
+are soft-toned, the table chrome is neutral, and the pagination's own previous
+and next controls are `soft`. Two solid brand rectangles at opposite corners,
+and only one of them is asking for anything.
+
+What makes this worth raising rather than shrugging at: **the seam already
+exists and is already published.** `--bh-pagination-active-bg` appears by name in
+`banhaten docs pagination`'s token contract, so the active fill can be
+retargeted on its own without touching the brand token or the component API.
+Nothing needs to be built for this to be adjustable — it already is.
+
+No change is proposed here, and the question is a real one rather than a
+rhetorical one. A current-page marker arguably *should* carry brand weight, and
+plenty of systems do exactly this. The observation is only that the two roles are
+locked to one value, and the lock is a default rather than a constraint.

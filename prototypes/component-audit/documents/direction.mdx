@@ -1,8 +1,10 @@
 # Direction: RTL and bidi
 
-Six findings and one cause. Three of them are the same defect in three files.
+Three of these are the same defect in three files. The last entry is why.
 
 ---
+
+## Kbd
 
 ### `kbd-1` · Modifier and key swap order in RTL
 
@@ -39,8 +41,6 @@ reader seeing `K⌘` is being told to press them in the wrong order.
 The root `<kbd>` element sets no `dir` attribute, so it inherits the document
 direction that the registry says it should not.
 
----
-
 ### `kbd-2` · The defect is narrower than `kbd-1` first claimed
 
 **File:** `kbd.tsx` · **Status:** narrowing, not a defect
@@ -56,8 +56,6 @@ children of the `<kbd>` element itself. Anyone reaching for `KbdShortcut` or
 `Input kind="shortcut"` was already safe.
 
 This narrows the report rather than widening it.
-
----
 
 ### `kbd-3` · The same reordering reaches a tooltip, where the fix does not
 
@@ -76,6 +74,8 @@ English copy". The shortcut slot is the one piece of tooltip text that gets
 neither treatment.
 
 ---
+
+## Table
 
 ### `table-2` · A name truncates from its start when its script opposes the document
 
@@ -105,6 +105,8 @@ direction that its own script contradicts.
 
 ---
 
+## Breadcrumbs
+
 ### `breadcrumbs-1` · A crumb truncates from its start, the same way
 
 **Files:** `expanded/Breadcrumbs.tsx`, `expanded/PageHeader.tsx`
@@ -133,6 +135,8 @@ place.
 
 ---
 
+## PageHeader
+
 ### `page-header-2` · Title and description reorder punctuation
 
 **File:** `expanded/PageHeader.tsx` · **Severity:** major
@@ -154,6 +158,8 @@ trailing `.` is bidi-neutral and gets reordered to the paragraph direction.
 Neither the title nor the description sets a `dir` attribute.
 
 ---
+
+## Across components
 
 ### `architecture-2` · The `expanded/` family did not inherit the convention
 
