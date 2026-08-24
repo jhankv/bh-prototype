@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Compare } from './Compare'
+import { Compare, Specimen } from './Compare'
 
 /**
  * The component scope every MDX document gets for free.
@@ -12,5 +12,5 @@ import { Compare } from './Compare'
  * comparison it exists to make.
  */
 export function useMDXComponents(components: Record<string, ComponentType>) {
-  return { Compare, ...components }
+  return { Compare, Specimen, ...components }
 }

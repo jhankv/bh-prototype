@@ -62,10 +62,20 @@ export type CompareProps = {
   theme?: string
   radius?: string
   /** Override the column headings when "Pristine / Proposed" is not the point. */
-  labels?: [string, string]
+  labels?: string[]
+  /**
+   * Which sandboxes to render, in order. Defaults to both.
+   *
+   * An audit that proposes nothing has no second sandbox to compare against, and
+   * a two-up figure whose halves are identical is worse than no figure: it reads
+   * as evidence of sameness when it is really evidence of nothing. Passing one
+   * sandbox turns the same machinery into a plain specimen — see `Specimen`.
+   */
+  sandboxes?: readonly string[]
 }
 
 const SANDBOXES = ['banhaten', 'banhaten-proposed'] as const
+const DEFAULT_LABELS = ['Pristine', 'Proposed']
 
 function frameSrc(
   project: string,
@@ -88,10 +98,11 @@ export function Compare(props: CompareProps) {
   const {
     viewport = 720,
     height = 160,
-    labels = ['Pristine', 'Proposed'],
     bleed = 'auto',
     layout = 'rows',
+    sandboxes = SANDBOXES,
   } = props
+  const labels = props.labels ?? (sandboxes.length === 1 ? [''] : DEFAULT_LABELS)
   // Compare only ever renders inside a frame, so the project is in the URL.
   const project = new URLSearchParams(window.location.search).get('project') ?? ''
 
@@ -119,7 +130,8 @@ export function Compare(props: CompareProps) {
   }, [])
 
   // What the figure would need to show every side at its own scale.
-  const needed = layout === 'rows' ? viewport : viewport * 2 + GAP
+  const needed =
+    layout === 'rows' ? viewport : viewport * sandboxes.length + GAP * (sandboxes.length - 1)
   const ceiling = Math.max(prose, windowWidth - GUTTER)
 
   const figureWidth =
@@ -132,7 +144,10 @@ export function Compare(props: CompareProps) {
     // for a reader to mistake for part of the component.
     : Math.min(needed, ceiling)
 
-  const columnWidth = layout === 'rows' ? figureWidth : (figureWidth - GAP) / 2
+  const columnWidth =
+    layout === 'rows'
+      ? figureWidth
+      : (figureWidth - GAP * (sandboxes.length - 1)) / sandboxes.length
   // Never scale up: a snippet enlarged past its own viewport would show spacing
   // and hairlines that nobody's browser will ever render.
   const scale = prose === 0 ? 0 : Math.min(1, columnWidth / viewport)
@@ -146,14 +161,15 @@ export function Compare(props: CompareProps) {
           // Centres a block wider than its container without a transform, which
           // would otherwise become the containing block for anything fixed inside.
           marginInlineStart: figureWidth ? (prose - figureWidth) / 2 : undefined,
-          gridTemplateColumns: layout === 'rows' ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+          gridTemplateColumns:
+            layout === 'rows' ? '1fr' : `repeat(${sandboxes.length}, minmax(0, 1fr))`,
         }}
       >
-      {SANDBOXES.map((sandbox, index) => (
+      {sandboxes.map((sandbox, index) => (
         <div key={sandbox} className="min-w-0">
           <div className="mb-1 flex items-baseline justify-between gap-2">
             <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
-              {labels[index]}
+              {labels[index] ?? ''}
             </span>
             <span className="truncate font-mono text-[10px] text-neutral-400">{sandbox}</span>
           </div>
@@ -166,7 +182,7 @@ export function Compare(props: CompareProps) {
             style={{ width: viewport * scale, height: height * scale }}
           >
             <iframe
-              title={`${labels[index]} — ${props.src}`}
+              title={`${labels[index] || sandbox} — ${props.src}`}
               src={frameSrc(project, props, sandbox)}
               width={viewport}
               height={height}
@@ -184,4 +200,16 @@ export function Compare(props: CompareProps) {
       </figure>
     </div>
   )
+}
+
+/**
+ * One snippet, one design system, inline in the prose that makes the claim.
+ *
+ * The audit reports defects and proposes nothing, so most figures have only one
+ * thing to show. This is `Compare` with the second sandbox removed rather than a
+ * separate implementation: the scaling, the bleed measurement and the nested
+ * iframe all exist for the same reasons here.
+ */
+export function Specimen(props: Omit<CompareProps, 'sandboxes'>) {
+  return <Compare {...props} sandboxes={['banhaten']} />
 }
