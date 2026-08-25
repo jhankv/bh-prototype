@@ -373,41 +373,7 @@ function Controls({
       <button type="button" onClick={fit} className={button} aria-label="Fit to content">
         <Maximize2 className="size-4" aria-hidden />
       </button>
-
-      <ShortcutHint />
     </div>
-  )
-}
-
-/**
- * Figma's gestures are muscle memory for designers but invisible to everyone
- * else, and this canvas has no other affordance for them. A shortcut nobody can
- * see does not exist.
- */
-function ShortcutHint() {
-  const zoomKey = navigator.userAgent.includes('Mac') ? '⌘' : 'Ctrl'
-
-  return (
-    <p className="ms-2 me-1 flex items-center gap-1.5 text-[11px] whitespace-nowrap text-shell-muted">
-      <span className="opacity-60">Scroll to pan</span>
-      <span className="mx-0.5 opacity-30">·</span>
-      <Key>{zoomKey}</Key>
-      <span className="opacity-60">+ scroll to zoom</span>
-      <span className="mx-0.5 opacity-30">·</span>
-      <Key>Space</Key>
-      <span className="opacity-60">+ drag</span>
-    </p>
-  )
-}
-
-function Key({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd
-      dir="ltr"
-      className="rounded border border-shell-line bg-shell-bg px-1.5 py-0.5 font-mono text-[10px] text-shell-ink"
-    >
-      {children}
-    </kbd>
   )
 }
 
