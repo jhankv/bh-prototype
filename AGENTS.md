@@ -145,8 +145,12 @@ different language, so they are two prototypes and you want both on the canvas
 at once. Give the RTL version its own frame beside the LTR one, pointing at the
 same view file.
 
-`canvas.json` still declares the appearance a frame *opens* in. For mode, pick
-whichever shows the prototype at its most ordinary; the reviewer will toggle.
+`canvas.json` still declares the appearance a frame *opens* in. For mode and
+theme, pick whichever shows the prototype at its most ordinary; the reviewer
+sweeps the other thirteen from the toolbar, on the frame they are already
+reading. Do not multiply frames to cover appearance — `checkbox-1`, a tick
+invisible in `gray` dark, was found that way on a frame that opens in `blue`
+light.
 
 ### RTL means Arabic. Not English laid out backwards.
 

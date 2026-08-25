@@ -277,18 +277,27 @@ All three reproduced their findings on first run, and Xero's version of
 `page-header-1` is worse than the reading it replaces: two labels print on top of
 each other rather than losing a letter.
 
-**Component coverage is not appearance coverage, and the second one is close to
-zero.** Every one of the twenty-two view frames on the canvas opens in `blue` and
-`light`. Seven themes and two modes make fourteen combinations; thirteen of them
-have never been on the board. Thirty-three findings were written from one of
-fourteen.
+**Component coverage is not appearance coverage, and the two are reached by
+different instruments.** Every one of the twenty-two view frames opens in `blue`
+and `light`, and that is the authored baseline, not the extent of what gets
+looked at. Seven themes and two modes make fourteen combinations, and the frame
+toolbar reaches all of them on any frame without touching `canvas.json`.
 
-That is not a hypothetical gap. `checkbox-1` — a tick that is invisible in the
-`gray` dark theme at 1.04:1, and under the contrast floor in `orange` dark too —
-was found by switching the frame toolbar by hand, because no frame would have
-shown it. The eleven `-rtl` frames exist precisely because direction was
-understood to need its own frames rather than a mental substitution. Mode and
-theme were never given the same treatment.
+So appearance is swept by hand during the visual pass rather than multiplied into
+frames. `checkbox-1` is what that produces: a tick invisible in `gray` dark at
+1.04:1, and under the contrast floor in `orange` dark as well, found by switching
+one frame's toolbar. Fourteen appearances across twenty-two frames would be 308
+frames to make the same finding reachable by scrolling.
+
+Direction is the exception, and deliberately. The eleven `-rtl` frames exist
+because RTL is not a repaint — it is different copy, different mock data, and a
+mirrored layout, and a frame in Arabic beside the same frame in English is a
+comparison. A theme swap is the same screen in another colour, and the toolbar
+already gives it to you on the frame you are already reading.
+
+What stays true, and is worth stating plainly: the findings recorded here were
+observed in a single appearance unless the entry says otherwise. Every entry's
+**Repro** names the appearance it needs.
 
 ## The package documents itself and we audited without reading it
 
