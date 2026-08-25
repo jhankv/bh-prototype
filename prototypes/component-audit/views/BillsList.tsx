@@ -187,21 +187,28 @@ export default function BillsList() {
               placeholder={c.search}
               aria-label={c.searchLabel}
               leadingIcon={<Search aria-hidden="true" />}
-              hasLeadingIcon
             />
           </div>
-          <Button variant="secondary" size="sm">
+          {/* `density`, not `size`. Button's `sm` is 36px and Input's `compact`
+              is 32 — the size words are per-component and do not line up across
+              them. See `architecture-4`. */}
+          <Button variant="secondary" density="compact">
             <ListFilter aria-hidden="true" className="size-3.5" />
             {c.filter}
             <ChevronDown aria-hidden="true" className="size-3.5" />
           </Button>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" density="compact">
             <Columns3 aria-hidden="true" className="size-3.5" />
             {c.columns}
           </Button>
-          <button type="button" aria-label={c.moreActions} className="px-1">
-            <MoreVertical aria-hidden="true" className="size-4" />
-          </button>
+          <Button
+            variant="secondary"
+            density="compact"
+            size="icon"
+            aria-label={c.moreActions}
+          >
+            <MoreVertical aria-hidden="true" />
+          </Button>
         </div>
 
         {/* Xero's dismissible filter chips. This is what `Tag` is for, and the
@@ -209,6 +216,7 @@ export default function BillsList() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {chips.date && (
             <Tag
+              showCloseButton
               closeLabel={c.removeFilter}
               onClose={() => setChips((s) => ({ ...s, date: false }))}
             >
@@ -217,6 +225,7 @@ export default function BillsList() {
           )}
           {chips.types && (
             <Tag
+              showCloseButton
               closeLabel={c.removeFilter}
               onClose={() => setChips((s) => ({ ...s, types: false }))}
             >

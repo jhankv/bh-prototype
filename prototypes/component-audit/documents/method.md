@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Six near-misses so far, each caught before it reached a report.
+Seven near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,21 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**A `Tag` that would not close.** Reported from the visual pass as a question
+rather than a defect — "does this component have a close option? if not, suggest
+adding one." It has one. `showCloseButton` is published in the contract with a
+default of `false`, and we passed `onClose` and `closeLabel` and never the flag
+that renders the button. The suggestion we were one step away from sending was to
+add a feature the component already ships.
+
+The same row carried a second one. Its buttons were `size="sm"` beside an
+`Input` at `density="compact"`, which is 36px against 32. Not a Banhaten defect —
+`architecture-4` already records that size words are per-component and do not
+line up, and this is that entry happening to us. `Button` at `density="compact"`
+resolves to `xs` at 32px and matches. The trap is that `sm` on a Button is
+**taller** than `md` on an Input, so the vocabulary reads like a scale and is not
+one.
 
 **A focus ring cut off on every side.** Reported from the visual pass on frame
 `expenses`: click the search field and the ring comes back clipped. It looked
