@@ -254,7 +254,7 @@ function Controls({
   content: { width: number; height: number }
   activeFrameId: string | null
 }) {
-  const { zoomIn, zoomOut, centerView, zoomToElement } = useControls()
+  const { zoomIn, zoomOut, setTransform, zoomToElement } = useControls()
 
   useWheelGestures(MIN_SCALE, MAX_SCALE)
 
@@ -314,17 +314,39 @@ function Controls({
 
   /**
    * Fit is not decorative. A canvas is thousands of pixels wide, so opening one
-   * without fitting drops you into empty space with no idea where the frames are.
+   * without fitting drops you into empty space with no idea where the frames
+   * are.
+   *
+   * It fits the WIDTH, and it used to fit both axes. The board is a column of
+   * sections — 3580 wide against 13916 tall — so the smaller of the two ratios
+   * was always the vertical one, and the canvas opened at 7.6%: a 14px label
+   * rendered at 1.07 pixels, which is why every frame read as a blank white
+   * rectangle. That was not a deploy problem. Dev and preview produced the same
+   * `matrix(0.0765321, …)` to the decimal.
+   *
+   * Fitting everything also gets worse as the audit grows, which is the wrong
+   * direction for a tool whose whole job is to accumulate screens. Width does
+   * not: the board is two 1420 frames plus a gap, so one comparison row fills
+   * the viewport and you read the board by scrolling, which is how it is
+   * actually read.
    */
   const fit = useCallback(() => {
     const wrapper = document.querySelector('.react-transform-wrapper')
     if (!wrapper) return
 
     const { width, height } = wrapper.getBoundingClientRect()
-    const scale = Math.min(width / content.width, height / content.height, 1) * 0.94
+    const scale = Math.max(Math.min(width / content.width, 1) * 0.94, MIN_SCALE)
 
-    centerView(Math.max(scale, MIN_SCALE), 0)
-  }, [centerView, content.height, content.width])
+    const scaledWidth = content.width * scale
+    const scaledHeight = content.height * scale
+
+    // Centre horizontally, and anchor to the top unless the whole board happens
+    // to fit — a short canvas floating against the top edge looks like a bug.
+    const x = (width - scaledWidth) / 2
+    const y = scaledHeight <= height ? (height - scaledHeight) / 2 : height * 0.03
+
+    setTransform(x, y, scale, 0)
+  }, [setTransform, content.height, content.width])
 
   /**
    * Fit on open, after layout has settled enough to measure the wrapper — and
@@ -332,7 +354,7 @@ function Controls({
    *
    * Depending on `fit` alone means "on every render", which is not obvious and
    * cost real time to find: `useControls()` builds a fresh object of fresh
-   * functions on every call, so `centerView`, and therefore `fit`, has a new
+   * functions on every call, so `setTransform`, and therefore `fit`, has a new
    * identity each time. Every re-render re-fitted the canvas and threw away the
    * zoom the user had chosen — and selecting a frame is a re-render.
    *
@@ -348,12 +370,30 @@ function Controls({
   useEffect(() => {
     if (fitted.current) return
 
-    const frame = requestAnimationFrame(() => {
+    /**
+     * A timeout races the animation frame, for the same reason
+     * `useProgressiveMount` carries one: rAF does not fire while the tab is
+     * hidden, so a canvas opened in a background tab never fitted and sat at
+     * scale 1 until it was looked at. Whichever fires first fits and cancels
+     * the other.
+     */
+    let frame = 0
+    let timer = 0
+
+    function run() {
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
       fitted.current = true
       fit()
-    })
+    }
 
-    return () => cancelAnimationFrame(frame)
+    frame = requestAnimationFrame(run)
+    timer = window.setTimeout(run, 64)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
+    }
   }, [fit])
 
   const button =
@@ -370,7 +410,7 @@ function Controls({
       <button type="button" onClick={() => zoomIn()} className={button} aria-label="Zoom in">
         <Plus className="size-4" aria-hidden />
       </button>
-      <button type="button" onClick={fit} className={button} aria-label="Fit to content">
+      <button type="button" onClick={fit} className={button} aria-label="Fit width">
         <Maximize2 className="size-4" aria-hidden />
       </button>
     </div>

@@ -226,14 +226,33 @@ causes were measured and **both were wrong** — the eager component registry
 (shrunk 485 kB → 14 kB, no effect) and the design system's CSS and webfonts (a
 canvas with no design system at all still cost ~1 s per frame).
 
-The cost is the iframe itself. `IntersectionObserver` — the mitigation originally
-planned — would not have helped, because the canvas fits to content on open and
-every frame is already in view. `src/canvas/useProgressiveMount.ts` mounts one
-frame per animation frame instead: first paint 12.2 s → 3.8 s.
+`IntersectionObserver` — the mitigation originally planned — would not have
+helped, because every frame is in view once the canvas fits.
+`src/canvas/useProgressiveMount.ts` mounts one frame per animation frame
+instead: first paint 12.2 s → 3.8 s.
 
-Roughly one second per frame is the ceiling. Measure against `pnpm preview`;
-`performance.memory` is process-wide across same-origin frames and attributes
-nothing.
+**"The cost is the iframe itself" was half right, and the half that was wrong
+stood for months.** That first pass measured *bytes* — the registry shrank
+485 kB to 14 kB with no effect — and concluded the remaining second per frame
+was inherent. What it never counted was *requests*. Splitting the registry per
+component produced **73 chunks with a median size of 1 kB**, and `loadSandbox`
+awaits every one of them before a frame renders. Seventy-three round trips
+carrying nothing, per document, in a canvas of twenty-six documents that share
+no module graph. `vite.config.ts` now collapses them: one frame went from 96
+requests to 41.
+
+So some of the per-frame second is inherent to booting a document, and some was
+ours. Count requests before concluding a cost is a law of physics.
+
+**Anything that paces work with `requestAnimationFrame` needs a timeout floor.**
+rAF does not fire at all while the tab is hidden, and both the mount chain and
+the fit-on-open depended on it alone. Measured in a background tab: 46 seconds,
+zero frames mounted, `rafTicksIn600ms: 0` — and the canvas sitting at scale 1
+because the fit never ran either. Both now race a timeout, so a canvas left
+loading in another tab is loaded when you come back to it.
+
+Measure against `pnpm preview`; `performance.memory` is process-wide across
+same-origin frames and attributes nothing.
 
 ## Recording findings
 
