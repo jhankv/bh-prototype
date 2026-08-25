@@ -257,3 +257,58 @@ No change is proposed here, and the question is a real one rather than a
 rhetorical one. A current-page marker arguably *should* carry brand weight, and
 plenty of systems do exactly this. The observation is only that the two roles are
 locked to one value, and the lock is a default rather than a constraint.
+
+---
+
+### `page-header-4` · It defeats the guard `Breadcrumbs` wrote against empty icons
+
+**Files:** `expanded/pageHeader.css`, `expanded/breadcrumbs.css` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `bills`, the `Purchases` crumb above the title. The breadcrumb is
+passed `{ label, href }` and no icon. A 20×20 empty box sits before the label.
+
+`Breadcrumbs` renders its icon slot unconditionally — `Breadcrumbs.tsx:82` emits
+the `<span>` whether or not `item.icon` exists — and then guards it in CSS:
+
+```css
+.ds-breadcrumbs__icon:empty { display: none; }   /* breadcrumbs.css:84 */
+```
+
+That guard is correct and it works. Outside a `PageHeader`, an icon-less crumb
+collapses to nothing.
+
+`PageHeader` re-styles the same slot:
+
+```css
+.ds-page-header__breadcrumbs .ds-breadcrumbs__icon {   /* pageHeader.css:95 */
+  width: var(--page-header-space-4xl);
+  height: var(--page-header-space-4xl);
+  display: inline-grid;
+}
+```
+
+Both selectors weigh **(0, 2, 0)** — one class plus one pseudo-class against two
+classes. A tie is broken by source order, `pageHeader.css` loads last, and
+`display: inline-grid` beats `display: none`. The guard is not overridden by
+something stronger; it loses a coin toss.
+
+Measured in the DOM rather than inferred. The span reports `childNodes.length: 0`
+and `matches(':empty') === true` — it really is empty — while computing a 20×20
+box. Removing the one class and restoring it flips the outcome both ways:
+
+| `.ds-page-header__breadcrumbs` on the `<nav>` | `display` | width |
+| --- | --- | --- |
+| present | `flex` | 20px |
+| removed | `none` | 0px |
+| restored | `flex` | 20px |
+
+**Why it matters.** Every icon-less crumb inside a page header carries dead space
+that the same component does not carry anywhere else, so the defect appears and
+disappears with the container rather than with the markup. And the cost is not
+the 20px: `Breadcrumbs` wrote a defence against exactly this state, and a sibling
+component silently disabled it. Any future guard it writes at one class of
+specificity is subject to the same coin toss.
+
+This is `page-header-3` again with a different victim. There the parallel
+`--page-header-*` declarations re-drew `Button`'s border; here they re-draw
+`Breadcrumbs`' icon slot. One component reaching into two others, both times by
+restating rules rather than composing.
