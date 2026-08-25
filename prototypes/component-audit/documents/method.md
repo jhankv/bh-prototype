@@ -222,6 +222,36 @@ max-w-full`: fixed, and only ever shrinking. That is `input-5`, filed as a
 question, because the fixed width is real and deliberate and the contract simply
 never mentions it.
 
+**A formatting toolbar that was asked to justify itself.** The question from the
+visual pass was the right one to ask about any composition here: are the
+components in Coda's floating bar *for* this, or were they bent into it — and if
+they were bent, delete the screen rather than keep a convincing fake.
+
+They are for it, and the contracts say so rather than us. `button-group`'s
+one-line description is "Connected Button Group **and Toggle Group** primitives …
+and accessible pressed states", and the published example for `ToggleGroup` is a
+text-alignment bar. `type="multiple"` and `mode="iconOnly"` are both in the
+variant table. The actions beside them are a `ButtonGroup` because `aria-pressed`
+on "Comment" would state that commenting is currently on.
+
+`Toolbar` stays out, and the package says why in its own catalogue line: "Figma
+**Filter** Toolbar primitive with eight filter/action styles, search fields …
+chips, selected-count badges". `banhaten search` for a rich-text or editor
+toolbar returns nothing at all, so the floating surface under the bar is the one
+invented thing, and it is a container rather than a control.
+
+What the review did find was ours, and it is the third time the same trap has
+caught us: `ButtonGroup size="sm"` at 36px beside `ToggleGroup
+density="compact"` at 32. Two vocabularies for one idea, in one bar, four pixels
+apart. All nine controls now measure 32.
+
+The same pass found eight `size-4` classes on icons inside those groups that had
+never applied — the groups set icon size through `[&_svg]`, a descendant selector
+that outranks a utility class on the element itself. They measured 18px the whole
+time. That is the opposite of the `Menu` case, where the component had no rule
+and Lucide's default won: here the component wins and the class is merely a lie
+in the source.
+
 A convincing false finding is the worst thing this playground can produce.
 
 ## `tsc` catches prop misuse now, and used not to

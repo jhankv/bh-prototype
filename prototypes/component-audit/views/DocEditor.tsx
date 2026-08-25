@@ -44,7 +44,15 @@ import { useCopy } from '@/copy'
  *   reader about whether it is currently on.
  * - **The style picker** opens a list and commits a value, which is `Select`.
  * - Both groups take `mode="iconOnly"`, which is the variant these components
- *   have for exactly this shape.
+ *   have for exactly this shape, and both are sized with `density`. That is not
+ *   a preference: `ButtonGroup size="sm"` is 36px while `ToggleGroup
+ *   density="compact"` is 32, so mixing the two vocabularies inside one bar put
+ *   the action group 4px taller than everything beside it. `density` is the
+ *   only word that means the same thing in both — see `architecture-4`.
+ *
+ * The icons inside both groups carry no size class. The groups set one through
+ * `[&_svg]`, which is a descendant selector and outranks a utility on the
+ * element, so a `size-4` written here never applied and only claimed to.
  *
  * The floating surface — the rounded panel with a shadow that the bar sits on —
  * is plain markup, because Banhaten ships no floating-toolbar surface and
@@ -169,7 +177,7 @@ export default function DocEditor() {
               <MenuTrigger asChild>
                 <Button variant="ghost" density="compact">
                   {c.insert}
-                  <ChevronDown aria-hidden="true" className="size-3.5" />
+                  <ChevronDown aria-hidden="true" data-icon="inline-end" />
                 </Button>
               </MenuTrigger>
               <MenuContent align="end">
@@ -237,16 +245,16 @@ export default function DocEditor() {
                   }
                 >
                   <MarkButton value="bold" label={c.bold} shortcut={SHORTCUTS.bold} defaultOpen>
-                    <Bold aria-hidden="true" className="size-4" />
+                    <Bold aria-hidden="true" />
                   </MarkButton>
                   <MarkButton value="italic" label={c.italic} shortcut={SHORTCUTS.italic}>
-                    <Italic aria-hidden="true" className="size-4" />
+                    <Italic aria-hidden="true" />
                   </MarkButton>
                   <MarkButton value="underline" label={c.underline} shortcut={SHORTCUTS.underline}>
-                    <Underline aria-hidden="true" className="size-4" />
+                    <Underline aria-hidden="true" />
                   </MarkButton>
                   <MarkButton value="strike" label={c.strike} shortcut={SHORTCUTS.strike}>
-                    <Strikethrough aria-hidden="true" className="size-4" />
+                    <Strikethrough aria-hidden="true" />
                   </MarkButton>
                 </ToggleGroup>
 
@@ -254,18 +262,18 @@ export default function DocEditor() {
 
                 {/* Actions, not states. A toggle group here would tell a screen
                     reader that "Comment" is currently on. */}
-                <ButtonGroup mode="iconOnly" size="sm" aria-label={c.actionsLabel}>
+                <ButtonGroup mode="iconOnly" density="compact" aria-label={c.actionsLabel}>
                   <ActionButton label={c.link} shortcut={SHORTCUTS.link}>
-                    <Link2 aria-hidden="true" className="size-4" />
+                    <Link2 aria-hidden="true" />
                   </ActionButton>
                   <ActionButton label={c.comment}>
-                    <MessageSquare aria-hidden="true" className="size-4" />
+                    <MessageSquare aria-hidden="true" />
                   </ActionButton>
                   <ActionButton label={c.image}>
-                    <Image aria-hidden="true" className="size-4" />
+                    <Image aria-hidden="true" />
                   </ActionButton>
                   <ActionButton label={c.ai}>
-                    <Sparkles aria-hidden="true" className="size-4" />
+                    <Sparkles aria-hidden="true" />
                   </ActionButton>
                 </ButtonGroup>
               </div>
