@@ -114,6 +114,7 @@ export default function BillsList() {
     MenuItemSwitch,
     MenuItemText,
     MenuLabel,
+    MenuPortal,
     MenuRoot,
     MenuSeparator,
     MenuTrigger,
@@ -252,7 +253,8 @@ export default function BillsList() {
                 <ChevronDown aria-hidden="true" className="size-3.5" />
               </Button>
             </MenuTrigger>
-            <MenuContent width="menu" align="start">
+            <MenuPortal>
+          <MenuContent width="menu" align="start">
               <MenuLabel>{c.filterByStatus}</MenuLabel>
               {STATUS_ORDER.map((status) => (
                 <MenuItem
@@ -275,6 +277,7 @@ export default function BillsList() {
                 <MenuItemText>{c.clearStatuses}</MenuItemText>
               </MenuItem>
             </MenuContent>
+          </MenuPortal>
           </MenuRoot>
           <Button variant="secondary" density="compact">
             <Columns3 aria-hidden="true" className="size-3.5" />

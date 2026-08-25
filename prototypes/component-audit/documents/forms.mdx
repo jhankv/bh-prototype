@@ -355,6 +355,51 @@ There is a working path, so this is minor: leave the parameter unannotated and
 contextual typing resolves it. It costs a reader the time it takes to discover
 that the fix is to delete something.
 
+### `menu-2` · The documented composition paints the menu under the table
+
+**Files:** `menu.tsx`, `expanded/table.css` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `bills`. Open `Filter`. The menu appears, and the table below it
+paints over the lower half.
+
+`MenuContent` renders `DropdownMenuPrimitive.Content` directly. Radix's `Content`
+is inline unless a `Portal` wraps it, and `MenuContent` does not wrap one.
+`MenuPortal` is exported, so the escape hatch exists — but the example in
+`banhaten docs menu` does not use it:
+
+```tsx
+<MenuRoot>
+  <MenuTrigger>Open menu</MenuTrigger>
+  <MenuContent width="menu">      // no MenuPortal
+    <MenuItem>Profile</MenuItem>
+  </MenuContent>
+</MenuRoot>
+```
+
+Left inline, the menu is subject to every stacking context around it. One of
+them is shipped by the same package. `.ds-table-wrap` — the scroll wrapper
+`Table` renders around its grid — sets `contain: paint`, and paint containment
+makes an element paint atomically, as though it had `z-index: 0`.
+
+Measured with the menu open:
+
+| | `position` | `z-index` | `contain` |
+| --- | --- | --- | --- |
+| Radix popper wrapper | `fixed` | **`auto`** | `none` |
+| `.ds-table-wrap` | `static` | `auto` | **`paint`** |
+
+Neither carries a real z-index, so paint order falls to document order, and the
+table comes after the toolbar. The menu loses to a sibling it has no relationship
+with.
+
+Wrapping in `MenuPortal` fixes it, and that was verified rather than assumed: the
+popper wrapper becomes a direct child of `<body>`, and `elementFromPoint` at the
+menu's lower edge returns a node inside the menu instead of the table.
+
+**Why it is more than a composition note.** Both halves ship in this package,
+and the failing arrangement is the documented one. A team follows the example,
+puts a menu near a table — which is where menus go — and gets a broken one, with
+nothing to suggest the fix is a component they were never shown.
+
 ## Across components
 
 ### `architecture-3` · An out-of-union value renders unstyled, in every component

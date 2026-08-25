@@ -180,6 +180,7 @@ export default function TableStudio() {
     Input,
     MenuContent,
     MenuItem,
+    MenuPortal,
     MenuRoot,
     MenuSeparator,
     MenuTrigger,
@@ -258,21 +259,23 @@ export default function TableStudio() {
               <MoreHorizontal aria-hidden="true" />
             </Button>
           </MenuTrigger>
-          <MenuContent width="menu" align="end">
-            <MenuItem onSelect={() => undefined}>
-              <Eye aria-hidden="true" data-icon="inline-start" />
-              {c.viewRow}
-            </MenuItem>
-            <MenuItem onSelect={() => duplicateRow(row.id)}>
-              <Copy aria-hidden="true" data-icon="inline-start" />
-              {c.duplicateRow}
-            </MenuItem>
-            <MenuSeparator />
-            <MenuItem onSelect={() => removeRow(row.id)}>
-              <Trash2 aria-hidden="true" data-icon="inline-start" />
-              {c.deleteRow}
-            </MenuItem>
-          </MenuContent>
+          <MenuPortal>
+            <MenuContent width="menu" align="end">
+              <MenuItem onSelect={() => undefined}>
+                <Eye aria-hidden="true" data-icon="inline-start" />
+                {c.viewRow}
+              </MenuItem>
+              <MenuItem onSelect={() => duplicateRow(row.id)}>
+                <Copy aria-hidden="true" data-icon="inline-start" />
+                {c.duplicateRow}
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem onSelect={() => removeRow(row.id)}>
+                <Trash2 aria-hidden="true" data-icon="inline-start" />
+                {c.deleteRow}
+              </MenuItem>
+            </MenuContent>
+          </MenuPortal>
         </MenuRoot>
       ),
     },
@@ -510,11 +513,13 @@ export default function TableStudio() {
                       <MoreHorizontal aria-hidden="true" />
                     </Button>
                   </MenuTrigger>
-                  <MenuContent width="menu" align="end">
-                    <MenuItem onSelect={() => undefined}>{c.exportCsv}</MenuItem>
-                    <MenuSeparator />
-                    <MenuItem onSelect={() => setRows(PRODUCTS)}>{c.resetRows}</MenuItem>
-                  </MenuContent>
+                  <MenuPortal>
+                    <MenuContent width="menu" align="end">
+                      <MenuItem onSelect={() => undefined}>{c.exportCsv}</MenuItem>
+                      <MenuSeparator />
+                      <MenuItem onSelect={() => setRows(PRODUCTS)}>{c.resetRows}</MenuItem>
+                    </MenuContent>
+                  </MenuPortal>
                 </MenuRoot>
               </ToolbarSection>
             </Toolbar>
