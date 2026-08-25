@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ChevronDown, Columns3, ListFilter, MoreVertical, Search } from 'lucide-react'
 import { useDS } from '@/ds'
 import { useCopy } from '@/copy'
@@ -65,6 +65,13 @@ const COPY = {
   chipDate: { en: 'Any date · May 01 – May 31, 2026', ar: 'أي تاريخ · ١ – ٣١ مايو ٢٠٢٦' },
   chipTypes: { en: 'Document types · Bills, Credit Notes', ar: 'أنواع المستندات · فواتير وإشعارات دائنة' },
   removeFilter: { en: 'Remove filter', ar: 'إزالة عامل التصفية' },
+  filterByStatus: { en: 'Filter by status', ar: 'تصفية حسب الحالة' },
+  clearStatuses: { en: 'Clear status filters', ar: 'مسح عوامل تصفية الحالة' },
+  noMatchTitle: { en: 'No bills match these filters', ar: 'لا توجد فواتير تطابق عوامل التصفية' },
+  noMatchBody: {
+    en: 'Nothing in this list has the status you picked. Clear the filter to see every bill again.',
+    ar: 'لا يوجد شيء في هذه القائمة بالحالة التي اخترتها. امسح عامل التصفية لعرض كل الفواتير.',
+  },
 
   colFrom: { en: 'From', ar: 'من' },
   colStatus: { en: 'Status', ar: 'الحالة' },
@@ -81,6 +88,14 @@ const COPY = {
   total: { en: '8 items · 3,651.00 USD', ar: '٨ عناصر · ٣٬٦٥١٫٠٠ دولار' },
 } as const
 
+/** Filter order, and the order the menu lists them in. */
+const STATUS_ORDER: BillStatus[] = [
+  'draft',
+  'awaiting-approval',
+  'awaiting-payment',
+  'paid',
+]
+
 const STATUS_TONE: Record<BillStatus, BadgeProps['color']> = {
   'awaiting-payment': 'green',
   draft: 'neutral',
@@ -89,11 +104,42 @@ const STATUS_TONE: Record<BillStatus, BadgeProps['color']> = {
 }
 
 export default function BillsList() {
-  const { Badge, Button, Input, PageHeader, Table, Tag } = useDS()
+  const {
+    Badge,
+    Button,
+    EmptyState,
+    Input,
+    MenuContent,
+    MenuItem,
+    MenuItemSwitch,
+    MenuItemText,
+    MenuLabel,
+    MenuRoot,
+    MenuSeparator,
+    MenuTrigger,
+    PageHeader,
+    Table,
+    Tag,
+  } = useDS()
   const c = useCopy(COPY)
 
   const [tab, setTab] = useState(0)
   const [chips, setChips] = useState({ date: true, types: true })
+  const [statuses, setStatuses] = useState<BillStatus[]>([])
+
+  // An empty selection means "no status filter", not "no rows".
+  const rows = useMemo(
+    () => (statuses.length === 0 ? BILLS : BILLS.filter((bill) => statuses.includes(bill.status))),
+    [statuses],
+  )
+
+  function toggleStatus(status: BillStatus) {
+    setStatuses((current) =>
+      current.includes(status)
+        ? current.filter((each) => each !== status)
+        : [...current, status],
+    )
+  }
 
   const statusLabel: Record<BillStatus, string> = {
     'awaiting-payment': c.statusAwaitingPayment,
@@ -192,11 +238,44 @@ export default function BillsList() {
           {/* `density`, not `size`. Button's `sm` is 36px and Input's `compact`
               is 32 — the size words are per-component and do not line up across
               them. See `architecture-4`. */}
-          <Button variant="secondary" density="compact">
-            <ListFilter aria-hidden="true" className="size-3.5" />
-            {c.filter}
-            <ChevronDown aria-hidden="true" className="size-3.5" />
-          </Button>
+          {/* Multi-select, so every row stops `onSelect` from closing the menu.
+              `MenuItemSwitch` looks decorative — it is a `<span aria-hidden>` —
+              but `MenuItem` detects it and switches to Radix's `CheckboxItem`,
+              so the ROW carries `role="menuitemcheckbox"` and `aria-checked`.
+              Verified in the DOM, not assumed. */}
+          <MenuRoot>
+            <MenuTrigger asChild>
+              <Button variant="secondary" density="compact">
+                <ListFilter aria-hidden="true" className="size-3.5" />
+                {c.filter}
+                {statuses.length > 0 && <Badge color="blue">{statuses.length}</Badge>}
+                <ChevronDown aria-hidden="true" className="size-3.5" />
+              </Button>
+            </MenuTrigger>
+            <MenuContent width="menu" align="start">
+              <MenuLabel>{c.filterByStatus}</MenuLabel>
+              {STATUS_ORDER.map((status) => (
+                <MenuItem
+                  key={status}
+                  // Left unannotated deliberately. `MenuItemProps` intersects a
+                  // div's DOM `onSelect` with Radix's, so annotating it the way
+                  // Radix documents — `(event: Event)` — does not compile. See
+                  // `menu-1`.
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    toggleStatus(status)
+                  }}
+                >
+                  <MenuItemText>{statusLabel[status]}</MenuItemText>
+                  <MenuItemSwitch active={statuses.includes(status)} />
+                </MenuItem>
+              ))}
+              <MenuSeparator />
+              <MenuItem disabled={statuses.length === 0} onSelect={() => setStatuses([])}>
+                <MenuItemText>{c.clearStatuses}</MenuItemText>
+              </MenuItem>
+            </MenuContent>
+          </MenuRoot>
           <Button variant="secondary" density="compact">
             <Columns3 aria-hidden="true" className="size-3.5" />
             {c.columns}
@@ -232,10 +311,31 @@ export default function BillsList() {
               {c.chipTypes}
             </Tag>
           )}
+          {statuses.map((status) => (
+            <Tag
+              key={status}
+              showCloseButton
+              closeLabel={c.removeFilter}
+              onClose={() => toggleStatus(status)}
+            >
+              {statusLabel[status]}
+            </Tag>
+          ))}
         </div>
 
+        {/* Filtering to nothing is a state the screen has to have an answer
+            for, and `EmptyState` is the component for it — a different case
+            from `AppsOverview`, where nothing was ever created. */}
         <div className="mt-4">
-          <Table columns={columns} rows={BILLS} size="sm" />
+          {rows.length === 0 ? (
+            <EmptyState
+              title={c.noMatchTitle}
+              description={c.noMatchBody}
+              actions={[{ label: c.clearStatuses, onAction: () => setStatuses([]) }]}
+            />
+          ) : (
+            <Table columns={columns} rows={rows} size="sm" />
+          )}
         </div>
 
         <p className="mt-3 text-end text-sm text-[var(--bh-content-subtle)]">{c.total}</p>

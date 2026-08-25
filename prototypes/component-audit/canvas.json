@@ -223,7 +223,7 @@
             "radius": "default",
             "dir": "ltr"
           },
-          "caption": "PageHeader, Breadcrumbs, Tabs, Tag, Table. Six tabs from three characters to nineteen, which is where page-header-1 shows.",
+          "caption": "PageHeader, Breadcrumbs, Tabs, Tag, Table. Six tabs from three characters to nineteen, which is where page-header-1 shows. The Filter button is a real multi-select menu; filtering to nothing shows EmptyState.",
           "reference": "https://mobbin.com/screens/e2205dbe-6e99-4b94-b47c-0be070a76fe1"
         },
         {
@@ -238,7 +238,7 @@
             "radius": "default",
             "dir": "rtl"
           },
-          "caption": "The same list in Arabic. Read the breadcrumb and the description for breadcrumbs-1 and page-header-2.",
+          "caption": "The same list in Arabic. Read the breadcrumb and the description for breadcrumbs-1 and page-header-2. The Filter button is a real multi-select menu; filtering to nothing shows EmptyState.",
           "reference": "https://mobbin.com/screens/e2205dbe-6e99-4b94-b47c-0be070a76fe1"
         }
       ]
@@ -390,7 +390,7 @@
               "src": "documents/forms.mdx",
               "width": 820,
               "height": 1000,
-              "caption": "input, badge, select, avatar, button. Carries the only Compare figure \u2014 input-3."
+              "caption": "input, badge, select, avatar, button, menu. Carries the only Compare figure \u2014 input-3."
             },
             {
               "id": "data",

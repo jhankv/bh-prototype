@@ -314,6 +314,47 @@ documentation, and is absent from its variants.
 
 ---
 
+## Menu
+
+### `menu-1` · `onSelect` cannot be annotated the way Radix documents it
+
+**File:** `menu.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `bills`, the `Filter` button. Its rows call `onSelect` and
+`preventDefault()` so a multi-select menu stays open. Annotate the parameter and
+the build stops.
+
+`MenuItemProps` intersects two sources that both define `onSelect`:
+
+```ts
+type MenuItemProps = React.ComponentProps<"div"> &      // the DOM select event
+  VariantProps<typeof menuItemVariants> &
+  MenuItemPrimitiveProps                                // Pick<Radix.Item, "onSelect" | …>
+```
+
+`<div>` has an `onSelect` — the text-selection event, `ReactEventHandler`. Radix
+reuses the name for something unrelated: a native `Event` describing the item
+being chosen. Intersected, the prop resolves to
+
+```
+ReactEventHandler<HTMLDivElement> & ((event: Event) => void)
+```
+
+and a handler has to satisfy both. Radix's own signature does not:
+
+| Written as | Result |
+| --- | --- |
+| `onSelect={(event) => …}` | compiles |
+| `onSelect={(event: Event) => …}` | **TS2322** |
+
+Both forms were compiled to check, rather than reasoned about. The second is what
+Radix's documentation shows, and it is the one a reader arrives with; the error
+it produces names `SyntheticEvent` and `cancelBubble`, neither of which appears
+anywhere in the code being written.
+
+There is a working path, so this is minor: leave the parameter unannotated and
+contextual typing resolves it. It costs a reader the time it takes to discover
+that the fix is to delete something.
+
 ## Across components
 
 ### `architecture-3` · An out-of-union value renders unstyled, in every component

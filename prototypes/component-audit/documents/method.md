@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Eight near-misses so far, each caught before it reached a report.
+Nine near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,23 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**A menu that looked inaccessible and was not.** Wiring the bills filter, the
+export list showed no `MenuCheckboxItem` — Radix ships one, Banhaten does not
+re-export it — and `MenuItemSwitch` turned out to be a `<span aria-hidden="true">`.
+The finding wrote itself: a multi-select filter with no checked state for
+assistive technology.
+
+It was wrong. `menu.tsx:304` reads `switchState === undefined ? "menuitem" :
+"menuitemcheckbox"`. `MenuItem` inspects its own children, finds the switch, and
+renders Radix's `CheckboxItem`. The DOM confirms it: `role="menuitemcheckbox"`,
+`aria-checked`, `data-state`. The switch is `aria-hidden` precisely because the
+row carries the state — which is correct, not a gap.
+
+Two habits caught it, and only the second would have. Reading further than the
+export list found the branch; querying the live DOM proved it. The first query
+even hid the answer, because it asked for `[role="menuitem"]` and the rows are
+`menuitemcheckbox` — a search shaped by the conclusion it expected.
 
 **A placeholder sitting low, which was our stylesheet.** Reported as "the
 placeholder is not vertically centred, and I do not know whether it is density or
