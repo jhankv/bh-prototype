@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
 import { Check, Copy, Crosshair, Pause, Play, Trash2, X } from 'lucide-react'
 import { loadIndex, resolve, type ComponentHit } from './componentIndex'
 import { componentChain, isComponentRoot } from './fiber'
@@ -292,6 +292,7 @@ function tint(isComponent: boolean) {
 function Highlight({ target }: { target: Target }) {
   const { rect, hit, isComponent, element } = target
   const colour = tint(isComponent)
+  const label_ = useRef<HTMLDivElement>(null)
 
   // Above the box when there is room, below it when the target is near the top.
   const below = rect.top < 34
@@ -300,6 +301,16 @@ function Highlight({ target }: { target: Target }) {
     ? `${hit.component} · ${hit.file} · ${hit.token}`
     : (chain.at(-1) ?? 'layout')
 
+  // Unlike the note field, this box has no fixed width — it truncates at
+  // max-w-[520px] but a short label renders far narrower — so the right edge
+  // can only be clamped after the browser has laid the text out.
+  useLayoutEffect(() => {
+    const node = label_.current
+    if (!node) return
+    const left = Math.min(Math.max(4, rect.left), window.innerWidth - node.offsetWidth - 4)
+    node.style.left = `${left}px`
+  })
+
   return (
     <>
       <div
@@ -307,6 +318,7 @@ function Highlight({ target }: { target: Target }) {
         style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
       />
       <div
+        ref={label_}
         className={`absolute max-w-[520px] truncate rounded px-1.5 py-0.5 font-mono text-[11px] leading-4 text-white shadow-sm ${colour.fill}`}
         style={{
           left: Math.max(4, rect.left),
@@ -371,10 +383,15 @@ function Field({
   const { rect, hit, isComponent } = draft.target
   const colour = tint(isComponent)
 
+  // Fixed w-72 (288px): clamp against the right edge too, or a target near it
+  // pushes the box off-screen — there is nowhere left to type the note.
+  const width = 288
+  const left = Math.min(Math.max(4, rect.left), window.innerWidth - width - 4)
+
   return (
     <div
       className="pointer-events-auto absolute w-72 rounded-lg border border-neutral-700 bg-neutral-900 p-2 shadow-xl"
-      style={{ left: Math.max(4, rect.left), top: rect.bottom + 8 }}
+      style={{ left, top: rect.bottom + 8 }}
     >
       <div className="mb-1.5 flex items-center gap-1.5">
         <span className={`size-2 rounded-full ${colour.fill}`} />
