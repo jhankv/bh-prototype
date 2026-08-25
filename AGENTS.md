@@ -328,13 +328,15 @@ Two rules from `.banhaten/USAGE.md` that this repo has broken more than once:
 #### What `banhaten docs` will not tell you
 
 It documents one component at a time, so it cannot warn you about the traps that
-only exist between components. These cost this audit four findings:
+only exist between components. These cost this audit five findings:
 
 | Trap | What happens |
 | --- | --- |
 | `size="sm"` | Real on `Button`, `Table` and `Badge`. Absent from `Select` and `Input`, where it silently applies no padding and the control collapses onto its text. |
 | `density` | Every control accepts it. Nothing propagates it — no context, no cascade, not even from `Toolbar` to its own children. Miss one control and it renders 36 beside its neighbours at 32. |
 | Any out-of-union value | `cva` matches no rule and applies no class. `defaultVariants` does not rescue it: those apply when a prop is `undefined`, not when it is wrong. `variant="tertiary"`, `color="red"` and `size="sm"` all render something that looks deliberate. |
+| Icon sizing | Two components, two mechanisms, and the wrong one is silent. `Button` sizes an icon by the `data-icon="inline-start"` attribute; `Menu` sizes it by wrapping in `MenuItemIcon`. `data-icon` inside a menu matches nothing, so the icon falls back to the icon library's own default — 24px against the 18px the menu intends. Neither `tsc` nor `cva` sees an attribute that matches no rule. |
+| A hardcoded `size-` class on an svg | Opts the icon out of the component's sizing AND its optical offset: `Button`'s centring rule is guarded by `:not([class*='size-'])`. Let the component size its own icons. |
 | `dot`, `hasLeadingIcon` | Not props. `type="dot"` is, and `hasLeadingIcon` is deprecated in favour of passing `leadingIcon` alone. |
 
 **`tsc` catches all of it, and only since `src/ds/types.ts` existed.** `useDS()`

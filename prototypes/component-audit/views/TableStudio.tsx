@@ -180,6 +180,7 @@ export default function TableStudio() {
     Input,
     MenuContent,
     MenuItem,
+    MenuItemIcon,
     MenuPortal,
     MenuRoot,
     MenuSeparator,
@@ -262,16 +263,22 @@ export default function TableStudio() {
           <MenuPortal>
             <MenuContent width="menu" align="end">
               <MenuItem onSelect={() => undefined}>
-                <Eye aria-hidden="true" data-icon="inline-start" />
+                <MenuItemIcon>
+                  <Eye aria-hidden="true" />
+                </MenuItemIcon>
                 {c.viewRow}
               </MenuItem>
               <MenuItem onSelect={() => duplicateRow(row.id)}>
-                <Copy aria-hidden="true" data-icon="inline-start" />
+                <MenuItemIcon>
+                  <Copy aria-hidden="true" />
+                </MenuItemIcon>
                 {c.duplicateRow}
               </MenuItem>
               <MenuSeparator />
               <MenuItem onSelect={() => removeRow(row.id)}>
-                <Trash2 aria-hidden="true" data-icon="inline-start" />
+                <MenuItemIcon>
+                  <Trash2 aria-hidden="true" />
+                </MenuItemIcon>
                 {c.deleteRow}
               </MenuItem>
             </MenuContent>

@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Ten near-misses so far, each caught before it reached a report.
+Eleven near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,28 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**Menu icons a third too large, and the attribute that did nothing.** Asked
+whether the row menu's icon sizes were ours or the component's default. Ours, and
+the answer was 24px against the 18px the menu intends.
+
+`Button` sizes an icon through `data-icon="inline-start"`. `Menu` does not read
+that attribute at all — it sizes icons by wrapping them in `MenuItemIcon`, whose
+variant carries `[&_svg]:size-[var(--bh-menu-leading-icon-size)]`. We had written
+Button's convention inside a menu, so nothing matched and the icon rendered at
+Lucide's own default.
+
+Nothing catches this. The attribute is valid HTML, `tsc` sees a legal prop on an
+svg, and `cva` never sees it at all. It is the same failure mode as an
+out-of-union variant — a value that looks deliberate and matches no rule — except
+that here the two conventions belong to two different components, which is
+precisely what `banhaten docs` cannot warn about.
+
+The fix nearly broke two buttons. A regex over the whole file wrapped every
+`data-icon` in `MenuItemIcon`, including the ones inside real `Button`s where the
+attribute is correct. Caught by reading the diff. Scoped the second attempt to
+the inside of a `MenuItem` and checked both kinds afterwards: menu icons 18px and
+wrapped, button icons 18px and still carrying `data-icon`.
 
 **A button whose icon padding looked wrong twice, for two different reasons.**
 Reported on the bills toolbar: the space before the icon reads tighter than the
