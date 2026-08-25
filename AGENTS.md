@@ -358,6 +358,21 @@ finding needs rereading.
 
 ## Writing findings
 
+**A `Repro` line has to survive leaving this repository.** It opens with a frame
+name, and the reader on the other side is an agent in a checkout of the design
+system, where `expenses` and `neon` name nothing. The frame is provenance — it is
+how the claim can be challenged. Everything after it has to stand alone: the
+configuration, the appearance, and the interaction, said in the component's own
+vocabulary.
+
+The test is one question. *Could someone reproduce this with only the component
+source and this paragraph?* `table-3` passes because it prints the column literal
+that fails. A line that stops at "frame `bills`, the third column looks wrong"
+does not, and the frame name is what hides it — it reads like a complete
+instruction while carrying no instruction at all.
+
+
+
 Findings live in `prototypes/component-audit/documents/`, split into four
 reports by subject — `keyboard`, `direction`, `forms`, `data` — with `index.mdx`
 explaining how to read them. Put an entry in the report its subject belongs to;

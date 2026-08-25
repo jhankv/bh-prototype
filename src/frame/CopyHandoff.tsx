@@ -11,6 +11,14 @@ import { useState } from 'react'
  * That last part carries weight. This is an audit: it reports defects and
  * proposes no fixes, so an agent that arrives expecting diffs will either invent
  * them or conclude the report is incomplete. The preamble says so up front.
+ *
+ * It also has to translate. Every entry's `Repro` line opens with a frame name,
+ * and a frame is a local handle — `expenses` and `neon` mean nothing in a
+ * checkout of the design system. Saying only "every entry names the frame it was
+ * seen on", as this preamble once did, reads as an instruction to go and find
+ * one. So the preamble states what a frame name is for (provenance, not a
+ * destination), and pins the appearance every observation was made under, since
+ * that is a condition the reader would otherwise have no way to know.
  */
 
 const installed = import.meta.glob<{ registryVersion?: string }>(
@@ -44,7 +52,16 @@ How to read it:
   e.g. \`components/ui/kbd.tsx\`.
 - \`Status: Question\` — more than one answer is reasonable. Do not pick one
   silently; surface it.
-- Every entry carries a **Repro** line naming the frame it was seen on.
+- Every entry carries a **Repro** line, and it opens with a frame name —
+  \`expenses\`, \`neon\`, \`bills\`. **Those are our screens, not yours.** They are
+  provenance, so the claim can be checked and challenged, not somewhere you can
+  go. The part you need is what follows the name: the configuration, the
+  appearance and the interaction that produce the defect, stated in the
+  component's own vocabulary.
+- Unless an entry says otherwise, everything here was observed in **light mode,
+  the \`blue\` theme, \`default\` radius, and \`dir="ltr"\`**. A frame name ending
+  in \`-rtl\` is the same screen at \`dir="rtl"\` with Arabic copy — a different
+  test, not the same one mirrored.
 - **Verified good** and **Investigated and rejected** are context only. Do not
   change code for them.
 
