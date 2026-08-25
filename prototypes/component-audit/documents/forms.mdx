@@ -1,4 +1,4 @@
-# Forms: `input`, `badge`, `checkbox`, `select`, `avatar`, `button`, `menu`
+# Forms: `input`, `badge`, `checkbox`, `progress`, `select`, `avatar`, `button`, `menu`
 
 Flags that render nothing, values that fail silently, and contracts
 narrower than the code behind them.
@@ -230,7 +230,7 @@ does not, and a status column quietly loses its most important state.
 
 ### `checkbox-1` · A white tick on a white box, in two of the seven themes
 
-**File:** `checkbox.tsx`, `select.tsx`, `globals.css` · **Severity:** major · **Status:** Open
+**File:** `checkbox.tsx`, `select.tsx`, `globals.css` · **Severity:** major · **Status:** Confirmed
 **Repro:** frame `neon`. Set the toolbar to dark mode and the `gray` theme, then
 tick a row. The box fills near-white and the tick vanishes into it.
 
@@ -290,6 +290,67 @@ blamed wholesale. `badge.tsx` pairs `--bh-content-on-color` with
 `--bh-interactive-danger-default` — fixed hues that do not move with the theme,
 where a constant white is a correct constant. `Checkbox` is the only component
 that puts it over a surface that does move.
+
+---
+
+## Progress
+
+### `progress-1` · The dark block reads the light value, and the dark one is never read
+
+**File:** `globals.css` · **Severity:** major · **Status:** Confirmed
+**Repro:** frame `import`. Set the toolbar to dark mode and the `gray` theme. The
+fill is darker than the track it sits in, so a bar at 51% and a bar at 13% look
+the same.
+
+Measured against the track it is drawn on, composited over the page rather than
+taken at face value, because the track is `rgba(255,255,255,0.11)` and reading
+its channels raw would flatter it:
+
+| | Fill vs track |
+| --- | --- |
+| `gray` light | 14.55 |
+| `gray` dark | **1.19** |
+
+Every theme in the file authors two indicator values, and they are authored
+correctly:
+
+```css
+/* globals.css, inside [data-theme="gray"] */
+372  --bh-colors-brand-indicator:      var(--bh-gray-950);
+373  --bh-colors-brand-indicator-dark: var(--bh-gray-dark-950);
+```
+
+The dark block then maps the semantic token like this:
+
+```css
+/* globals.css, inside .dark */
+2345 --bh-interactive-indicator-default: var(--bh-colors-brand-indicator);
+```
+
+It reads the light value. Fifteen lines above it, in the same block, the checkbox
+reads `var(--bh-colors-brand-checkbox-bg-default-dark)`, which is the shape the
+rest of that block uses.
+
+The scope of that is measurable rather than a guess. The file defines
+**twenty-two** custom properties whose names end in `-dark`. Twenty-one are
+referenced by a `var()` somewhere. One is not, anywhere in the file:
+`--bh-colors-brand-indicator-dark`. Seven themes each author a value for it and
+nothing consumes any of them.
+
+`gray` is where it is worst, because `gray`'s two indicator values are at
+opposite ends of the scale — `#1A1A1A` against `#FCFCFC` — and taking the wrong
+one inverts the bar completely. The other themes shift by a step rather than
+flipping, so most stay legible; `purple` dark is the second to fall under the 3:1
+floor of SC 1.4.11, at 2.74.
+
+The same token also feeds `--bh-select-check-color` (`globals.css:2445`) and the
+slider's track and tick mixes (`:1010`, `:1019`), so anything drawn from
+`--bh-interactive-indicator-default` in dark is showing the light value.
+
+This entry proposes nothing, in keeping with the rest of the report. The unused
+token is named because it is the evidence — a value authored for a mode and never
+read is what identifies this as a wiring slip rather than a colour choice — not
+because the report is telling you which line to edit.
 
 ---
 
