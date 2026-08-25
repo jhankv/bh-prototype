@@ -226,10 +226,20 @@ causes were measured and **both were wrong** — the eager component registry
 (shrunk 485 kB → 14 kB, no effect) and the design system's CSS and webfonts (a
 canvas with no design system at all still cost ~1 s per frame).
 
-`IntersectionObserver` — the mitigation originally planned — would not have
-helped, because every frame is in view once the canvas fits.
-`src/canvas/useProgressiveMount.ts` mounts one frame per animation frame
-instead: first paint 12.2 s → 3.8 s.
+`src/canvas/useProgressiveMount.ts` mounts one frame per animation frame rather
+than all of them in one commit: first paint 12.2 s → 3.8 s.
+
+It also mounts only what is near the viewport, which was **rejected once and the
+reason expired.** The canvas used to fit the whole board, so every frame was in
+view and observing them saved nothing. It fits the width now, so two or three
+rows are in view: a twenty-six frame canvas opens with eight mounted, and
+panning mounts the rest. That is the difference between 15 seconds and 5.
+
+The check is `getBoundingClientRect` on the pacer's own tick, **not**
+`IntersectionObserver`. The observer is the right tool and shares rAF's defect:
+measured in a hidden tab, zero callbacks for a target 89px from the top of a
+1752×1214 viewport. Layout is computed on demand; intersection is computed when
+the page renders, and a hidden page does not.
 
 **"The cost is the iframe itself" was half right, and the half that was wrong
 stood for months.** That first pass measured *bytes* — the registry shrank
@@ -244,9 +254,10 @@ requests to 41.
 So some of the per-frame second is inherent to booting a document, and some was
 ours. Count requests before concluding a cost is a law of physics.
 
-**Anything that paces work with `requestAnimationFrame` needs a timeout floor.**
-rAF does not fire at all while the tab is hidden, and both the mount chain and
-the fit-on-open depended on it alone. Measured in a background tab: 46 seconds,
+**Anything that paces work with `requestAnimationFrame` needs a timeout floor,
+and the same goes for `IntersectionObserver`.** Neither fires at all while the
+tab is hidden, and both the mount chain and the fit-on-open depended on rAF
+alone. Measured in a background tab: 46 seconds,
 zero frames mounted, `rafTicksIn600ms: 0` — and the canvas sitting at scale 1
 because the fit never ran either. Both now race a timeout, so a canvas left
 loading in another tab is loaded when you come back to it.

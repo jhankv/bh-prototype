@@ -59,7 +59,7 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
       ),
     [board],
   )
-  const mountedCount = useProgressiveMount(order.length)
+  const isFrameMounted = useProgressiveMount(order)
 
   // Exactly one frame takes pointer events at a time. Held here rather than in
   // each frame so Escape can release it and two frames can never both be live.
@@ -175,7 +175,7 @@ function CanvasViewport({ slug, canvas }: { slug: string; canvas: Canvas }) {
                 section={section}
                 activeFrameId={activeFrameId}
                 onActivate={setActiveFrameId}
-                isMounted={(id) => order.indexOf(id) < mountedCount}
+                isMounted={isFrameMounted}
               />
             ))}
           </div>
