@@ -198,6 +198,30 @@ label, and the computed style confirmed it: `position: absolute`, 1×1,
 `overflow: hidden`. `textContent` reads visually-hidden text. The eye would never
 have reported this, and the DOM did.
 
+**A header where nothing lined up, and three of the four reasons were ours.**
+Reported from the visual pass on frame `mercury`: "review this header layout".
+Measured at the frame's own 1420px, the row carried four control heights — 36 for
+the field, 40 for the button, 32 for the icon buttons, 24 for the avatar — and
+the search that the code plainly meant to centre sat 258px left of the header's
+centre line.
+
+Only the first of those is worth reporting, and not as a defect. The centring was
+ours: `mx-auto` on a flex item absorbs the space left over **after** the other
+items are placed, so it centred the field against the region beside the actions
+rather than against the header. The heights were ours too, and they are
+`architecture-4` happening again — `Input` at its default is 36 and `Button` at
+its default is 40, and `Button` only reaches 36 through `density`, never through
+`size`. The icon buttons were hand-rolled markup at `size-8` in a file whose own
+rule says plain markup is only for what Banhaten does not ship; it ships an
+`icon-*` size scale.
+
+The fourth was the interesting one. Our wrapper said `w-full max-w-[560px]` and
+the field rendered at 320, leaving 240px of the wrapper empty — which is what
+pushed the search so far off centre. `Input` is `w-[var(--bh-input-width)]
+max-w-full`: fixed, and only ever shrinking. That is `input-5`, filed as a
+question, because the fixed width is real and deliberate and the contract simply
+never mentions it.
+
 A convincing false finding is the worst thing this playground can produce.
 
 ## `tsc` catches prop misuse now, and used not to

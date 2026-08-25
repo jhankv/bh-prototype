@@ -172,9 +172,21 @@ export default function NotificationSettings() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 px-6 py-3">
-          <div className="mx-auto w-full max-w-[560px]">
+        {/*
+         * Three columns rather than a flex row with `mx-auto`: an auto margin on
+         * a flex item absorbs the space left over *after* the other items, so it
+         * centred the field against the region beside the actions instead of
+         * against the header. Equal `1fr` tracks put the field on the header's
+         * own centre line.
+         */}
+        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-6 py-3">
+          <span aria-hidden="true" />
+
+          {/* `Input` is 320px wide on its own and only ever shrinks, so the
+              container cannot widen it — the width has to reach the component. */}
+          <div className="w-[560px] max-w-full">
             <Input
+              className="w-full"
               placeholder={c.search}
               aria-label={c.searchLabel}
               leadingIcon={<Search aria-hidden="true" />}
@@ -184,30 +196,34 @@ export default function NotificationSettings() {
             />
           </div>
 
-          <MenuRoot>
-            <MenuTrigger asChild>
-              <Button variant="secondary">
-                {c.moveMoney}
-                <ChevronDown aria-hidden="true" className="size-4" />
-              </Button>
-            </MenuTrigger>
-            <MenuContent align="end">
-              <MenuItem>{c.sendPayment}</MenuItem>
-              <MenuItem>{c.requestFunds}</MenuItem>
-              <MenuItem>{c.transferBetween}</MenuItem>
-            </MenuContent>
-          </MenuRoot>
+          {/* One density for the whole row: `Input` at its default is 36px, and
+              `Button` reaches 36 through `density`, not through `size`. */}
+          <div className="flex items-center justify-end gap-3">
+            <MenuRoot>
+              <MenuTrigger asChild>
+                <Button variant="secondary" density="default">
+                  {c.moveMoney}
+                  <ChevronDown aria-hidden="true" data-icon="inline-end" />
+                </Button>
+              </MenuTrigger>
+              <MenuContent align="end">
+                <MenuItem>{c.sendPayment}</MenuItem>
+                <MenuItem>{c.requestFunds}</MenuItem>
+                <MenuItem>{c.transferBetween}</MenuItem>
+              </MenuContent>
+            </MenuRoot>
 
-          <IconButton label={c.hideBalances}>
-            <EyeOff aria-hidden="true" className="size-4" />
-          </IconButton>
-          <IconButton label={c.notificationsBell} dot>
-            <Bell aria-hidden="true" className="size-4" />
-          </IconButton>
+            <IconButton label={c.hideBalances}>
+              <EyeOff aria-hidden="true" />
+            </IconButton>
+            <IconButton label={c.notificationsBell} dot>
+              <Bell aria-hidden="true" />
+            </IconButton>
 
-          <Avatar size="sm">
-            <AvatarFallback>JK</AvatarFallback>
-          </Avatar>
+            <Avatar size="md">
+              <AvatarFallback>JK</AvatarFallback>
+            </Avatar>
+          </div>
         </header>
 
         <main className="min-w-0 px-6 pt-4 pb-10">
@@ -363,6 +379,13 @@ function Row({
   )
 }
 
+/**
+ * The notification bell and the balance toggle, which were hand-rolled markup
+ * until this screen was reviewed. Banhaten ships icon-only buttons — `size`
+ * carries an `icon-*` scale and `density` resolves onto it — so plain markup
+ * here was putting our button under test instead of theirs, against this file's
+ * own rule. The unread dot stays ours: it is not in Button's contract.
+ */
 function IconButton({
   label,
   dot,
@@ -372,16 +395,16 @@ function IconButton({
   dot?: boolean
   children: React.ReactNode
 }) {
+  const { Button } = useDS()
+
   return (
-    <button
-      type="button"
-      aria-label={label}
-      className="relative grid size-8 place-items-center rounded-[var(--bh-radius-full)] bg-[var(--bh-bg-neutral-subtle)]"
-    >
-      {children}
+    <span className="relative inline-flex">
+      <Button variant="soft" size="icon" density="default" aria-label={label}>
+        {children}
+      </Button>
       {dot && (
-        <span className="absolute end-1.5 top-1.5 size-1.5 rounded-[var(--bh-radius-full)] bg-[var(--bh-interactive-danger-default)]" />
+        <span className="pointer-events-none absolute end-1 top-1 size-1.5 rounded-[var(--bh-radius-full)] bg-[var(--bh-interactive-danger-default)]" />
       )}
-    </button>
+    </span>
   )
 }

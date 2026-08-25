@@ -127,6 +127,41 @@ the system likely intends.
 
 ---
 
+### `input-5` · The field is 320px wide and its container cannot widen it
+
+**File:** `input.tsx`, `globals.css` · **Severity:** minor · **Status:** Question
+**Repro:** put an `Input` in any container wider than 320px — a grid column, a
+two-column form, a centred header search. It stays 320.
+
+`inputRoot` is `cva("grid w-[var(--bh-input-width)] max-w-full")` at
+`input.tsx:97`, and `--bh-input-width` resolves to `320px`. `max-w-full` clamps
+the field **down** inside a narrower parent; nothing lets it grow. So a field's
+width is a property of the component, not of the space it is given.
+
+The published contract does not say so. The prop table carries `density` and
+`size` for height and nothing at all for width, and while `--bh-input-width` is
+listed among the tokens, a token is a theme-wide value, not a per-instance
+control. A reader of the contract has no way to learn that the field will ignore
+its container.
+
+There is a way out, and it is not in the contract either: `input.tsx:373` merges
+the consumer's `className` through `twMerge`, so `className="w-full"` beats the
+arbitrary `w-[var(...)]` and the field fills its parent. That is the shadcn
+escape hatch working as designed — but it is the escape hatch, reached for a case
+the props do not cover.
+
+The reason this reads as a question rather than a preference is that the system
+is not consistent with itself about it. `MenuContent` publishes `width` as a
+prop, so width-as-a-prop is a shape Banhaten already uses. `Input` is the wider
+of the two surfaces and publishes none.
+
+Two readings, and only Banhaten can pick. Either 320px is the field's designed
+width and `className` is the accepted way to depart from it — in which case the
+docs should say so, because nothing currently does. Or a form primitive is meant
+to fill the space it is handed, and the fixed width is the part that is wrong.
+
+---
+
 ## Badge
 
 ### `badge-1` · Three colour vocabularies for one idea
