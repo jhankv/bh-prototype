@@ -252,6 +252,24 @@ time. That is the opposite of the `Menu` case, where the component had no rule
 and Lucide's default won: here the component wins and the class is merely a lie
 in the source.
 
+**A documented RTL mechanism that appeared to generate no CSS.** Replacing
+Coda's hand-rolled header buttons with `Button`, the back arrow moved from our
+`rtl:rotate-180` to Banhaten's own `data-rtl-flip="true"`, which the Button
+contract names for exactly this. Checked in an RTL frame,
+`getComputedStyle(arrow).transform` came back `none`. A scan of
+`document.styleSheets` for any rule mentioning `rtl-flip` returned an empty
+array. Two independent signals agreeing, and both wrong.
+
+Tailwind v4 does not compile `-scale-x-100` into `transform`. It sets the
+standalone `scale` property, and `getComputedStyle(arrow).scale` reads `-1 1`.
+The flip had been working the whole time. The stylesheet scan agreed because it
+carried `catch { continue }` around a cross-origin sheet — a scan that hides its
+own failure and reports the same empty result as a genuine miss.
+
+Two rules come out of it. Read the property the tooling actually writes, not the
+one you would have written. And a corroborating check is only corroboration if it
+could have failed for a different reason than the first one.
+
 A convincing false finding is the worst thing this playground can produce.
 
 ## `tsc` catches prop misuse now, and used not to

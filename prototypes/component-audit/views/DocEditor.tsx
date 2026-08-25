@@ -162,9 +162,9 @@ export default function DocEditor() {
     <TooltipProvider>
       <div className="min-h-dvh bg-[var(--background)] text-[var(--foreground)]">
         <header className="flex items-center gap-3 border-b border-[var(--bh-border-default)] px-4 py-2.5">
-          <button type="button" aria-label={c.back} className="shrink-0">
-            <ArrowLeft aria-hidden="true" className="size-4 rtl:rotate-180" />
-          </button>
+          <IconAction label={c.back}>
+            <ArrowLeft aria-hidden="true" data-rtl-flip="true" />
+          </IconAction>
           <FileText aria-hidden="true" className="size-4 shrink-0 opacity-50" />
           <span className="min-w-0 truncate text-sm font-medium">{c.docTitle}</span>
 
@@ -187,17 +187,17 @@ export default function DocEditor() {
               </MenuContent>
             </MenuRoot>
 
-            <PlainIcon label={c.settings}>
-              <Settings aria-hidden="true" className="size-4" />
-            </PlainIcon>
-            <PlainIcon label={c.messages}>
-              <Mail aria-hidden="true" className="size-4" />
-            </PlainIcon>
-            <PlainIcon label={c.notifications}>
-              <Bell aria-hidden="true" className="size-4" />
-            </PlainIcon>
+            <IconAction label={c.settings}>
+              <Settings aria-hidden="true" />
+            </IconAction>
+            <IconAction label={c.messages}>
+              <Mail aria-hidden="true" />
+            </IconAction>
+            <IconAction label={c.notifications}>
+              <Bell aria-hidden="true" />
+            </IconAction>
 
-            <Avatar size="sm">
+            <Avatar size="md">
               <AvatarFallback>JK</AvatarFallback>
             </Avatar>
           </div>
@@ -359,10 +359,27 @@ function Divider() {
   )
 }
 
-function PlainIcon({ label, children }: { label: string; children: React.ReactNode }) {
+/**
+ * An icon-only header action.
+ *
+ * This was hand-rolled markup — a bare `<button className="grid size-7 …
+ * opacity-60">` — until the header was reviewed, and it was wrong in three ways
+ * at once. It sat at 28px beside 32px `Button`s. It dimmed a token colour with
+ * `opacity`, which paints a value no theme declares (`#1A1A1A` at 0.6 lands on
+ * `#767676`) instead of using the variant that means low emphasis. And the back
+ * arrow, written the same way with no size at all, gave a 16×16 hit target
+ * against the 24×24 floor of WCAG 2.2 SC 2.5.8.
+ *
+ * `Button` in `ghost` at `density="compact"` is all three answers. Icon-only
+ * buttons take no `data-icon`; the arrow takes `data-rtl-flip` because Button
+ * mirrors directional glyphs itself.
+ */
+function IconAction({ label, children }: { label: string; children: React.ReactNode }) {
+  const { Button } = useDS()
+
   return (
-    <button type="button" aria-label={label} className="grid size-7 place-items-center opacity-60">
+    <Button variant="ghost" size="icon" density="compact" aria-label={label}>
       {children}
-    </button>
+    </Button>
   )
 }
