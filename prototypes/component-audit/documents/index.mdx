@@ -20,12 +20,30 @@ After its component, numbered in the order we found it. So `toolbar-1`,
 `badge-2`. The name carries the subject before you reach the text, and it
 survives a retitle, which matters because entries cite each other.
 
-Status is one of two:
+Every entry opens with the same header line — the files it touches, a severity
+and a status — followed by a **Repro** naming the frame and, where it matters,
+the appearance to put that frame in.
+
+Status is one of three:
 
 **Confirmed.** It reproduces on a named frame, and the cause is identified in the
 source.
 
 **Question.** More than one answer is reasonable, and the choice is yours.
+
+**Narrowing.** The entry corrects an earlier one in this report by making it
+smaller. `kbd-2` is the only one, and it carries no severity, because what it
+records is that a defect reaches less than we first said.
+
+Severity is one of two, and it describes your reader's cost rather than ours:
+
+**major.** Something reaches a person broken — assistive technology is told
+nothing or told the wrong thing, text renders in an order its script does not
+read, a control is invisible in a shipped theme, or a keyboard cannot drive a
+component that presents itself as drivable.
+
+**minor.** A correctness or consistency problem with a workaround, a narrow blast
+radius, or a cost paid by whoever writes the code rather than whoever uses it.
 
 ## This report proposes nothing
 

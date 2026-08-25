@@ -9,7 +9,7 @@ narrower than the code behind them.
 
 ### `input-1` · `shortcutKeys` is quietly ignored unless `kind="shortcut"`
 
-**File:** `input.tsx` · **Status:** Question
+**File:** `input.tsx` · **Severity:** minor · **Status:** Question
 **Repro:** frame `empty` shows the working path — `kind="shortcut"` together with
 `shortcutKeys`. Drop the `kind` and the keys vanish with no error. That is the
 whole finding, so the frame is the control rather than the defect.
@@ -166,7 +166,7 @@ to fill the space it is handed, and the fixed width is the part that is wrong.
 
 ### `badge-1` · Three colour vocabularies for one idea
 
-**Files:** `badge.tsx`, `expanded/Table.tsx` · **Status:** Question
+**Files:** `badge.tsx`, `expanded/Table.tsx` · **Severity:** major · **Status:** Question
 **Repro:** frame `specimens`, the two badge rows. The bottom table asks a `Table`
 badge cell for all ten `Badge` colours. All ten render — which is the finding,
 because five of them are a type error to write.
@@ -213,7 +213,7 @@ documents it as a compatibility shim, which is a reasonable thing to keep.
 
 ### `badge-2` · An invalid colour renders an unstyled badge instead of failing
 
-**File:** `badge.tsx` · **Severity:** minor
+**File:** `badge.tsx` · **Severity:** minor · **Status:** Confirmed
 **Repro:** frame `specimens`, the Badge colours row. The last badge is `red` and
 renders with a transparent background beside five that do not.
 
@@ -400,7 +400,7 @@ does nothing.
 
 ### `avatar-1` · Initials are not meaningful for Arabic names
 
-**File:** `expanded/Table.tsx`, its local `Avatar` · **Status:** Question
+**File:** `expanded/Table.tsx`, its local `Avatar` · **Severity:** major · **Status:** Question
 **Repro:** frame `specimens`, the Arabic names table.
 
 The derivation is not in `avatar.tsx`. `AvatarFallback` renders whatever children

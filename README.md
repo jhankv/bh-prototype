@@ -7,8 +7,9 @@ ever stopped being true.
 
 A dashboard lists projects. Opening one shows a pan/zoom canvas of **live,
 interactive prototypes** — not screenshots — each in its own iframe, so the same
-view file can render simultaneously in light and dark, across brand themes, in
-LTR and RTL, and against two versions of the design system side by side.
+view file can render simultaneously in LTR and RTL, and — when a second sandbox
+is installed — against two versions of the design system side by side. Mode,
+theme, radius and direction are switched per frame from its own toolbar.
 
 You iterate with a coding agent. The interface only renders.
 
@@ -16,11 +17,35 @@ You iterate with a coding agent. The interface only renders.
 
 Design system defects are easy to feel and hard to prove. This tool exists to
 make them visible next to each other, then turn them into something a team can
-act on: a note, or a diff.
+act on.
 
-The first canvas produced five findings, three fixed and demonstrated
-side by side, and one hypothesis investigated and rejected. See
-[`prototypes/design-system/documents/findings.md`](prototypes/design-system/documents/findings.md).
+## The current audit
+
+[`prototypes/component-audit/`](prototypes/component-audit/) is the working
+project: eleven reproductions of real product screens, built on Banhaten 0.4.0,
+driven until they break.
+
+**Start at
+[`documents/index.mdx`](prototypes/component-audit/documents/index.mdx).** It
+explains how an entry is named, what `major` and `minor` mean, and why no entry
+proposes a fix.
+
+| Report | Covers |
+| --- | --- |
+| [Keyboard](prototypes/component-audit/documents/keyboard.mdx) | `toolbar`, `button-group` |
+| [Direction](prototypes/component-audit/documents/direction.mdx) | `kbd`, `tooltip`, `Table`, `Breadcrumbs`, `PageHeader` |
+| [Forms](prototypes/component-audit/documents/forms.mdx) | `input`, `badge`, `checkbox`, `progress`, `select`, `avatar`, `button`, `menu` |
+| [Data](prototypes/component-audit/documents/data.mdx) | `Table`, `PageHeader`, `pagination` |
+| [Method](prototypes/component-audit/documents/method.md) | How the findings were reached, and the ones we nearly got wrong |
+
+Thirty-five entries: twenty-one confirmed, thirteen open questions, one that
+narrows an earlier entry rather than adding to it. Every one names a frame you
+can open and an appearance to open it in.
+
+Read [Method](prototypes/component-audit/documents/method.md) if you only read
+one. It records the investigations that concluded "not a bug", including the
+several times a defect turned out to be our own composition — those are what
+make the other thirty-five worth trusting.
 
 ## Getting started
 
