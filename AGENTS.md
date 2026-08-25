@@ -358,6 +358,12 @@ finding needs rereading.
 
 ## Writing findings
 
+**A new entry goes in its component's `##` group, not at the end of the file.**
+Findings documents are grouped by component, with `architecture-*` collected last
+under "Across components". Appending is the natural move and it is wrong — it
+was wrong here one commit after the grouping landed, which is how long the
+convention survived without this line.
+
 **A `Repro` line has to survive leaving this repository.** It opens with a frame
 name, and the reader on the other side is an agent in a checkout of the design
 system, where `expenses` and `neon` name nothing. The frame is provenance — it is
