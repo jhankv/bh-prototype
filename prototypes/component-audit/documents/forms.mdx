@@ -314,6 +314,57 @@ documentation, and is absent from its variants.
 
 ---
 
+### `button-2` · A leading icon and a trailing label are padded in opposite directions
+
+**File:** `button.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `bills`, the `Columns` button in the toolbar. Ink to the left
+edge, 7.25px. Ink to the right edge, 10.68px. Same button, same padding value on
+both sides.
+
+`padding` is symmetric — 6px each side. Two other rules are not, and they point
+opposite ways.
+
+```css
+--bh-button-icon-offset:    calc(var(--bh-space-xxs-2) * -1);  /* pulls OUT */
+--bh-button-label-padding-x: var(--bh-space-xs-4);             /* pushes IN  */
+```
+
+The first is applied through `[&_svg[data-icon='inline-start']]:ms-[…]` and moves
+an edge icon **toward** the button's edge. The second lives on a wrapper
+`button.tsx:100` puts around every string child:
+
+```tsx
+<span data-slot="button-label" dir="auto" className="min-w-0 px-[var(--bh-button-label-padding-x)]">
+```
+
+so the label is held **away** from it. Each is defensible alone. In the ordinary
+case — an icon, then a word — they compound, and the icon side ends up tighter
+than the label side by the offset plus the label padding.
+
+Measured child by child, so the arithmetic is checkable:
+
+| | Distance from the button's edge |
+| --- | --- |
+| icon box | 5px — 6px padding, less the 1px offset |
+| icon ink | 7.25px |
+| label span | 6px, flush with the padding |
+| text advance | 10px — the span's own 4px |
+| text ink | 10.68px |
+
+**Scope, stated because the same screen contains a case this does not explain.**
+The `Filter` button beside it carries an icon at *both* ends and is also
+asymmetric — 6.5px against 9.5px — but that one is the icon set, not the
+component: `list-filter` insets its ink 1.5px inside an 18px box and
+`chevron-down` insets 4.5px, and 3px is exactly the difference measured. This
+entry is only about the icon-and-label case, where no label padding has a
+counterpart on the icon side.
+
+This was first dismissed as our own markup. It was ours, partly: the icons
+carried a `size-` class that opted them out of both the component's sizing and
+its optical offset. With that corrected to the documented `data-icon` form, and
+the icons at the component's own 18px, the imbalance is still there — and now
+nothing in the composition belongs to us.
+
 ## Menu
 
 ### `menu-1` · `onSelect` cannot be annotated the way Radix documents it
