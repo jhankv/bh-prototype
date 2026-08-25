@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Seven near-misses so far, each caught before it reached a report.
+Eight near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,31 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**A placeholder sitting low, which was our stylesheet.** Reported as "the
+placeholder is not vertically centred, and I do not know whether it is density or
+alignment". Neither. The box was already symmetric — a 32px surface, a 24px
+input, 4px of clearance top and bottom, `line-height: 24px`, no padding.
+
+The text was in the wrong font. `src/frame/main.tsx` imports `shell.css`, which
+it must, because document frames and the inspector are tool chrome rendered
+inside the frame. But `shell.css` carried a bare `body { font-family: … }`, and
+`body` sits nearer than the `html { font-family: Inter, … }` Banhaten sets. Every
+frame in this repo rendered its body-inherited text in the system font. The same
+rule also set `color` and `background-color`, so on a machine in dark mode a
+LIGHT frame had a near-black body and near-white ink, masked only by views that
+set their own.
+
+Scoped to `body:has(> #root)` and `body:has(.prose-frame)` — the shell document
+and a frame showing a document. A view frame's document now belongs to the design
+system.
+
+**The audit's measurements survived, and that was checked rather than hoped.**
+`page-header-1` records six tab widths to two decimals. Re-measured after the
+fix, all six are identical: 79.08 boxes, 136.11 and 139.63 for the two labels
+that overflow. Components that declare their own type stack — `.ds-tabs__label`
+does — never inherited from `body` and were never affected. Only text that
+inherits was, and no entry measures that.
 
 **A `Tag` that would not close.** Reported from the visual pass as a question
 rather than a defect — "does this component have a close option? if not, suggest

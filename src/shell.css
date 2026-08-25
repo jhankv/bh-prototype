@@ -37,7 +37,28 @@
   }
 }
 
-body {
+/*
+ * Shell chrome, and only shell chrome.
+ *
+ * `frame.html` loads this stylesheet too, and has to: document frames and the
+ * inspector are tool chrome rendered inside the frame. But a bare `body` rule is
+ * not chrome — it is the document, and the document inside a VIEW frame belongs
+ * to the design system.
+ *
+ * Unscoped, this rule did two things nobody asked for. `font-family` beat
+ * Banhaten's `html { font-family: Inter, … }` for everything that inherits,
+ * because `body` is nearer, so every frame in this repo rendered its
+ * body-inherited text in the system font — measured, not guessed: the search
+ * input in `bills` computed `ui-sans-serif` while its own `<h1>` computed
+ * `Inter`. And on a machine in dark mode, `color` and `background-color`
+ * resolved to the shell's DARK palette inside a LIGHT frame — near-white ink on
+ * a near-black body, masked only by views that happen to set their own.
+ *
+ * A frame showing a document still wants all three: a findings document is part
+ * of the tool, not the design.
+ */
+body:has(> #root),
+body:has(.prose-frame) {
   background-color: var(--color-shell-bg);
   color: var(--color-shell-ink);
   font-family: var(--font-shell);

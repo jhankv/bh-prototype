@@ -85,6 +85,14 @@ which entries carry a diff and which need a human decision.
 discovers projects, views, and documents. There is no registry to keep in sync
 and no backend, which is also what keeps deployment a config change.
 
+**Scanning scope is not isolation.** `src/shell.css` scans only `src/`, which
+keeps shell *utilities* out of a view — but the frame imports that stylesheet for
+its own chrome, so any **global selector** in it lands in the frame's document
+too. A bare `body { font-family; color; background-color }` did exactly that: it
+beat Banhaten's `html { font-family: Inter }` for everything that inherits, and
+painted a light frame's body in the shell's dark palette. Global selectors in
+`shell.css` must say which document they mean.
+
 **Every frame is an iframe.** That buys CSS isolation, real viewport and media
 queries, per-frame `<html>` attributes for theming and direction, and crash
 containment. It costs roughly one second per frame — measured, inherent, not
