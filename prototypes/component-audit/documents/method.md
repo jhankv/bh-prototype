@@ -28,7 +28,7 @@ isolation anywhere. The real count was 39 occurrences.
 
 ## Before recording anything, check it is not ours
 
-Nine near-misses so far, each caught before it reached a report.
+Ten near-misses so far, each caught before it reached a report.
 
 **The `Select` that would not open.** Radix opens on `pointerdown`, and the
 automation's synthetic click does not emit it. Keyboard opened it fine.
@@ -39,6 +39,39 @@ controlled component. With a frame between them, both stuck.
 **A toolbar that looked broken.** We had used `Toolbar` for a text formatting
 bar. It is a list toolbar, imported by exactly one file in the whole package,
 `expanded/Table.tsx`.
+
+**A button whose icon padding looked wrong twice, for two different reasons.**
+Reported on the bills toolbar: the space before the icon reads tighter than the
+space after the label. The box was symmetric — `padding: 6px` on both sides — so
+the question was optical.
+
+The first cause was ours. Banhaten sizes button icons itself and compensates them
+optically: `[&_svg[data-icon='inline-start']]:ms-[calc(var(--bh-button-icon-offset) + …)]`
+with `--bh-button-icon-offset` negative, and a generic centring rule guarded by
+`:not([class*='size-'])`. Every icon we wrote carried `className="size-3.5"` and
+no `data-icon`, which opted it out of **both**: 14px instead of 18px, and no
+offset at all. The documented example marks the slot; we never read it.
+
+The second cause was neither ours nor Banhaten's. With the markup corrected, the
+`Filter` button — an icon at each end, so no text side-bearing to confound it —
+still measured 6.5px of ink at the leading edge against 9.5px at the trailing
+one. The button treats both ends identically. The icons do not:
+
+| Icon | Box | Ink inset, each side |
+| --- | --- | --- |
+| `list-filter` | 18px | 1.5px |
+| `chevron-down` | 18px | **4.5px** |
+
+Three pixels, which is exactly the 3px measured. A chevron carries more empty box
+than a hamburger, and no amount of padding on the component can know that. Not
+filed: expecting two different glyphs to look identically inset is a property of
+the icon set, not a defect in the button.
+
+Fixed in `BillsList`. **Twenty-nine more icons across six views still carry a
+hardcoded `size-` class**, and each is rendering smaller than the component
+intends with no optical offset. They need marking one at a time, in context —
+icon-only buttons take no `data-icon`, and several of those icons are not inside
+a button at all.
 
 **A menu that looked inaccessible and was not.** Wiring the bills filter, the
 export list showed no `MenuCheckboxItem` — Radix ships one, Banhaten does not

@@ -247,10 +247,10 @@ export default function BillsList() {
           <MenuRoot>
             <MenuTrigger asChild>
               <Button variant="secondary" density="compact">
-                <ListFilter aria-hidden="true" className="size-3.5" />
+                <ListFilter aria-hidden="true" data-icon="inline-start" />
                 {c.filter}
                 {statuses.length > 0 && <Badge color="blue">{statuses.length}</Badge>}
-                <ChevronDown aria-hidden="true" className="size-3.5" />
+                <ChevronDown aria-hidden="true" data-icon="inline-end" />
               </Button>
             </MenuTrigger>
             <MenuPortal>
@@ -280,7 +280,7 @@ export default function BillsList() {
           </MenuPortal>
           </MenuRoot>
           <Button variant="secondary" density="compact">
-            <Columns3 aria-hidden="true" className="size-3.5" />
+            <Columns3 aria-hidden="true" data-icon="inline-start" />
             {c.columns}
           </Button>
           <Button
