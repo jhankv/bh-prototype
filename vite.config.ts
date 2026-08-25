@@ -102,6 +102,39 @@ export default defineConfig({
         main: resolve(root, 'index.html'),
         frame: resolve(root, 'frame.html'),
       },
+      output: {
+        /**
+         * One chunk per sandbox, and a shared one for what the sandboxes pull in.
+         *
+         * `registry.ts` globs every component file, so each one became its own
+         * chunk: 73 of them, 417 kB in total, median size 1 kB. `loadSandbox`
+         * then awaits all 73 before a frame renders, so that is 73 requests per
+         * frame document — and a canvas is 24 documents, none of which shares a
+         * module graph with another.
+         *
+         * The split was measured once before and cleared: the registry shrank
+         * 485 kB to 14 kB with no effect on open time, and the conclusion drawn
+         * was that ~1s per frame is inherent to the iframe. That measurement
+         * looked at bytes. The cost is the request count, which it did not
+         * change — a median chunk of 1 kB is a round trip carrying nothing.
+         */
+        manualChunks(id: string) {
+          const path = id.replace(/\\/g, '/')
+
+          const sandbox = path.match(/\/sandboxes\/([^/]+)\//)
+          if (sandbox) return `sandbox-${sandbox[1]}`
+
+          // Radix, cva and lucide arrive through the sandbox components and
+          // split the same way. They belong with whoever imports them.
+          if (path.includes('/node_modules/')) {
+            if (/@radix-ui|class-variance-authority|clsx|tailwind-merge|lucide-react/.test(path)) {
+              return 'sandbox-deps'
+            }
+          }
+
+          return undefined
+        },
+      },
     },
   },
 })
