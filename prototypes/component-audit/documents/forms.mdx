@@ -1,4 +1,4 @@
-# Forms: `input`, `badge`, `select`, `avatar`
+# Forms: `input`, `badge`, `checkbox`, `select`, `avatar`, `button`, `menu`
 
 Flags that render nothing, values that fail silently, and contracts
 narrower than the code behind them.
@@ -223,6 +223,73 @@ all. `red` is the obvious guess for a failure state, and it is not in the union.
 
 TypeScript catches the mistake. A JS codebase, or a value arriving from data,
 does not, and a status column quietly loses its most important state.
+
+---
+
+## Checkbox
+
+### `checkbox-1` · A white tick on a white box, in two of the seven themes
+
+**File:** `checkbox.tsx`, `select.tsx`, `globals.css` · **Severity:** major · **Status:** Open
+**Repro:** frame `neon`. Set the toolbar to dark mode and the `gray` theme, then
+tick a row. The box fills near-white and the tick vanishes into it.
+
+Measured on the checked control: surface `#FAFAFA`, tick `#FFFFFF`, **1.04:1**.
+WCAG 2.2 SC 1.4.11 asks for 3:1 on a graphical object you need in order to
+understand the state, and a checkbox's tick is the entire state.
+
+The cause is two tokens defined one line apart, only one of which is aware of
+the theme:
+
+```css
+/* globals.css, light */
+466  --bh-content-on-brand: var(--bh-colors-brand-color-on-brand-light);
+467  --bh-content-on-color: var(--bh-base-white);
+
+/* globals.css, dark */
+2296 --bh-content-on-brand: var(--bh-colors-brand-color-on-brand-dark);
+2297 --bh-content-on-color: var(--bh-base-white);
+```
+
+`on-brand` resolves through a per-theme, per-mode value. `on-color` is white in
+every theme and in both modes.
+
+The checked surface is `--bh-interactive-checkbox-default`, and in dark it takes
+each theme's own `-dark` value — for `gray` that is `--bh-gray-50`, `#FAFAFA`.
+Nothing about that is wrong on its own: a light control on a dark page is the
+correct call. What never happens is the ink following it.
+
+The system already knows how to do this, which is what makes it a defect rather
+than a gap. `Button`'s default variant sits on `--bh-interactive-brand-default`
+and takes `--bh-content-on-brand`. Measured on the same page, in the same theme
+and mode as the invisible tick above: `#FCFCFC` on `#0E0E0F`, **18.81:1**. Two
+controls on the same near-white brand surface, and only one of them flips.
+
+All fourteen combinations, tick against checked surface:
+
+| Theme | Light | Dark |
+| --- | --- | --- |
+| `blue` | 5.44 | 4.06 |
+| `gray` | 17.40 | **1.04** |
+| `brown` | 3.96 | 3.96 |
+| `orange` | 7.31 | **2.26** |
+| `green` | 5.48 | 4.62 |
+| `purple` | 7.10 | 5.70 |
+| `teal` | 5.47 | 4.68 |
+
+Two fall under the 3:1 floor and both are in dark mode. `gray` is unusable.
+`orange` at 2.26 is only as legible as it is because `#FB923C` happens to be
+mid-toned; it is the same failure with a kinder accident.
+
+`select.tsx:894` repeats the pairing for the multi-select tick, over the same
+`--bh-interactive-checkbox-default`, so it fails in the same two themes.
+
+The token is not at fault everywhere, and that is worth stating so it is not
+blamed wholesale. `badge.tsx` pairs `--bh-content-on-color` with
+`--bh-bg-accent-*` and `button.tsx` pairs it with
+`--bh-interactive-danger-default` — fixed hues that do not move with the theme,
+where a constant white is a correct constant. `Checkbox` is the only component
+that puts it over a surface that does move.
 
 ---
 

@@ -277,6 +277,19 @@ All three reproduced their findings on first run, and Xero's version of
 `page-header-1` is worse than the reading it replaces: two labels print on top of
 each other rather than losing a letter.
 
+**Component coverage is not appearance coverage, and the second one is close to
+zero.** Every one of the twenty-two view frames on the canvas opens in `blue` and
+`light`. Seven themes and two modes make fourteen combinations; thirteen of them
+have never been on the board. Thirty-three findings were written from one of
+fourteen.
+
+That is not a hypothetical gap. `checkbox-1` — a tick that is invisible in the
+`gray` dark theme at 1.04:1, and under the contrast floor in `orange` dark too —
+was found by switching the frame toolbar by hand, because no frame would have
+shown it. The eleven `-rtl` frames exist precisely because direction was
+understood to need its own frames rather than a mental substitution. Mode and
+theme were never given the same treatment.
+
 ## The package documents itself and we audited without reading it
 
 `sandboxes/banhaten/.banhaten/USAGE.md` is twenty-seven lines, and behind it sits
