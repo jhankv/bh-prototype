@@ -421,7 +421,7 @@ Seven were re-measured in the browser after the update:
 | `page-header-2` | Final period still renders at x=1796, left of the `E` at x=1800 |
 | `avatar-1` | Still `عع` `ست` `عا` |
 | `badge-2` | `red` still renders transparent beside ten that do not |
-| `table-1` | `Showing 1 to 10 of 20 results` still sits under `Showing 1 to 3 of 3 rows` |
+| `table-1` | `Showing 1 to 10 of 20 results` still sits under `Showing 1 to 10 of 12 rows` — `expenses` moved to a page size of 10 since this check, which is why both now start `Showing 1 to 10 of`. |
 | `pagination-1` | Both captions still English on a fully Arabic screen |
 
 The rest were confirmed in the 0.4.0 source: `Kbd`'s root still sets no `dir`;

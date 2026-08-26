@@ -13,17 +13,24 @@ built from.
 
 **Files:** `expanded/Table.tsx`, `pagination.tsx` · **Severity:** major
 **Status:** Confirmed
-**Repro:** frame `expenses`, the footer. Three rows are configured and the
-caption reads `Showing 1 to 10 of 20 results`, directly under the table's own
-caption reading `Showing 1 to 3 of 3 rows`.
+**Repro:** frame `expenses`, the footer. Twelve rows are configured, ten to a
+page, and the caption reads `Showing 1 to 10 of 20 results`, directly under the
+table's own caption reading `Showing 1 to 10 of 12 rows`.
 
-With `pagination={{ pageSize: 3, totalRows: 3, showCaption: true }}` the footer
-renders two summaries that disagree, three pixels apart:
+With `pagination={{ pageSize: 10, totalRows: 12, showCaption: true }}` the
+footer renders two summaries that disagree, three pixels apart:
 
 | Slot | Rendered |
 | --- | --- |
-| `toolbar-text` | `Showing 1 to 3 of 3 rows`, correct |
+| `toolbar-text` | `Showing 1 to 10 of 12 rows`, correct |
 | `pagination-caption` | `Showing 1 to 10 of 20 results`, invented |
+
+At three rows this read as two unrelated sentences — `1 to 3 of 3` beside
+`1 to 10 of 20`, wrong on every number. At a page size closer to a real
+product, the two now open identically, `Showing 1 to 10 of`, and diverge on the
+one word that was never computed: `12 rows` against `20 results`. The more
+realistic the page, the more the invented half reads as a typo in the total
+rather than a caption that was never wired up.
 
 `Pagination` has two text slots, `caption` and `summary`. `DataTable` passes
 `summary` and never `caption`, so `caption ?? messages.caption` falls through to
@@ -75,6 +82,107 @@ exactly that.
 both renderers are absent makes the obvious config work. Requiring one of them in
 the type makes the mistake impossible. The second is stricter and would break
 existing code that leans on empty columns as spacers.
+
+### `table-4` · A sortable header ignores its own column's alignment
+
+**Files:** `expanded/Table.tsx`, `expanded/table.css` · **Severity:** major
+**Status:** Confirmed
+**Repro:** frame `neon`. `id`, `price` and `stock` are configured
+`align: "end"`. In every one of the three columns the header label sits at the
+left edge and every value under it sits at the right edge — measured, in the
+`price` column: the label spans 1977–2009px, the column box is 1965–2115px,
+and `19.99` spans 2066.9–2103px. The label starts 12px from the left; the
+value ends 12px from the right. 106px of the same 150px column separates them.
+
+`TableColumn.align` is one value, typed for the whole column:
+
+```ts
+align?: "start" | "center" | "end";
+```
+
+Body cells honour it. `columnClass` turns `align: "end"` into
+`ds-table__cell--end`, and `.ds-table .ds-table__cell--end { text-align: end }`
+applies straight to the `<td>` — confirmed correct for RTL too, see
+`index.mdx`'s "Alignment" entry.
+
+The header cell carries the same class and the same `text-align: end`
+computes on the `<th>`. It has no effect, because a sortable column's header is
+not text — `Table` renders a `<Button className="ds-table__sort">` (or, when
+`onSortChange` is absent, a `<span className="ds-table__sort ds-table__sort--static">`)
+around the label and the sort icon, and `.ds-table__sort` is:
+
+```css
+.ds-table__sort {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  ...
+}
+```
+
+`justify-content: flex-start` is unconditional — the rule carries no
+`align`-scoped variant anywhere in `table.css`. A flex container's own
+`justify-content` decides where its children sit; the parent `<th>`'s
+`text-align` has nothing left to apply to. The column's alignment reaches the
+`<th>` and stops there. This holds for `align: "center"` as well as `"end"`,
+and for the non-interactive `--static` header (no `onSortChange`) exactly as
+for the clickable one, since both share the one class.
+
+Only a column with `sortable: false` escapes it: `Table` then prints
+`column.header` as a bare string inside the `<th>`, which is text and does
+follow `text-align`.
+
+**Why it matters.** `align: "end"` on a numeric, sortable column is the
+ordinary case for a data grid — ids, prices, quantities are exactly the
+columns a product turns sorting on for. The header disagreeing with its own
+data is not a rare configuration surfacing a rare bug; it is the default
+combination, reproduced here on three of five data columns from one screen.
+
+### `table-5` · `DataTable`'s search field cannot be narrowed
+
+**Files:** `expanded/Table.tsx` (`DataTable`), `toolbar.tsx` (`ToolbarSearch`)
+**Severity:** major · **Status:** Confirmed
+**Repro:** frame `expenses`, with `search` configured and no `filters`. The
+search field is the only child of its toolbar section and fills the row edge
+to edge — measured at 2244px wide in a 2244px toolbar, in a screen whose own
+reference puts a ~250px search box beside a Filter trigger and two chips.
+
+`DataTable` renders its search field unconditionally as:
+
+```tsx
+<ToolbarSearch ... width="full" />
+```
+
+`width="full"` resolves to `w-full`. `table.css` also carries what reads like
+a cap on the same element:
+
+```css
+.ds-data-table__toolbar [data-slot="toolbar-search"] {
+  width: min(100%, var(--bh-input-width));
+  flex: 1 1 min(100%, var(--bh-space-16xl-256));
+}
+```
+
+It is not one. `flex-basis` is `min(100%, 256px)`, but `flex-grow: 1` on a
+flex item with no growing sibling has nothing to share the row with, so it
+grows past the stated `width` regardless — confirmed with `getComputedStyle`:
+`width` computes to 2244px, not 320px, and `max-width` to `100%`, not a fixed
+value. The same shape as `page-header-1`'s dead `ds-tabs--hug` class: a rule
+that reads as a constraint and is inert in the layout mode it's declared for.
+
+`DataTableSearch`, the type behind the `search` prop, exposes `defaultValue`,
+`disabled`, `getRowText`, `label`, `onValueChange`, `placeholder`, `value` —
+no `className`, no `width`. There is no prop path to a narrower search field
+without abandoning `DataTable`'s own `search` and filtering rows yourself.
+
+**Why it matters.** Every reference screen this project reproduces puts search
+beside a filter trigger, filter chips, or a page action — never alone at full
+width. `DataTable`'s only layout for a lone search field is the one layout no
+real product on this canvas uses. `expenses` now routes around it: `rows` are
+filtered in the view and the search field lives in a hand-built `Toolbar`,
+which is more faithful to the reference but means `DataTable`'s own `search`
+goes untested on this canvas — it is the only frame using `DataTable` at all.
 
 ---
 
