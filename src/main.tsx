@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { Agentation } from 'agentation'
 import './shell.css'
 import { App } from './app/App'
+import { maybeMountVercelToolbar } from './lib/vercelToolbar'
+
+maybeMountVercelToolbar()
 
 /**
  * Agentation annotates the wrapper's own UI — the dashboard, the canvas chrome,
