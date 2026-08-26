@@ -85,6 +85,58 @@ which entries carry a diff and which need a human decision.
 discovers projects, views, and documents. There is no registry to keep in sync
 and no backend, which is also what keeps deployment a config change.
 
+**One rail, everywhere in the shell.** `src/app/ShellSidebar.tsx` is the only
+permanent surface: the way back to the projects, and the mode toggle. It exists
+because that toggle was landing in three different corners, and a control that
+moves is one you have to look for.
+
+It does **not** list the projects, and should not be made to. An icon rail can
+only carry items with a shape of their own, and projects have none: ten of them
+would be ten identical squares told apart by a tooltip. The dashboard chooses a
+project; the rail is how you reach the dashboard from anywhere. It is a 56px icon rail rather than a named sidebar because
+the canvas fits to WIDTH — a comparison row is two 1420-wide frames, so every
+pixel here comes off the scale every board opens at. It is **not** in
+`frame.html`: a frame shows someone else's design system at full bleed, and the
+tool's navigation has no business inside it.
+
+The rail owns the viewport height and the routed column scrolls inside it.
+Scrolling the document instead would carry the rail off the top of the screen,
+which is the one thing it may not do.
+
+**Three routes, and the canvas is the last of them.** `/` lists projects,
+`/p/:slug` is the project page, `/p/:slug/canvas` is the board. The project page
+is the front door because the canvas is the wrong one: it mounts frames until
+the board is covered, so reading one findings document used to cost a whole
+canvas, and it answers "how do these compare" when the question is usually
+"where is the one about forms".
+
+Its list comes from `canvas.json`, never from a glob over the folder, and
+`projectIndex` in `src/lib/projects.ts` is where that is enforced. `views/` also
+holds data modules and snippets used inside an MDX document, none of which
+render on their own — and a frame is a file *plus* a sandbox *plus* an
+appearance, which only the canvas declares. Frames sharing a `src` collapse into
+one row: on the board a screen and its Arabic twin are deliberately two frames
+because you compare them side by side, but a list of links is not a comparison,
+and the same name twice with nothing to tell them apart is a list you have to
+read carefully to use.
+
+**A frame opened on its own carries its own toolbar** (`src/frame/`), rendered
+only when `window.parent === window` — inside the canvas the shell already draws
+one above it. Until it existed a standalone frame had no controls at all: the
+appearance came from the URL and the only thing that could change it afterwards
+was a message from a canvas that was not there.
+
+Mode, theme and radius change in place and correct the URL with
+`history.replaceState`, because the URL is what you copy and a link that reopens
+a different screen than the one you copied is worse than no link. **Direction
+and sandbox reload instead, and neither is laziness.** `useCopy` in
+`src/copy.ts` reads `dir` off `window.location.search` rather than off React
+state, so flipping it without a reload renders an RTL layout still carrying
+English copy; a sandbox is a different stylesheet, and only a fresh document
+loads one. The shared controls live in `src/chrome/`, so the same toolbar
+appears in both places and `direction` — a label on the canvas, a switch
+standalone — is the one prop that names the difference.
+
 **Scanning scope is not isolation.** `src/shell.css` scans only `src/`, which
 keeps shell *utilities* out of a view — but the frame imports that stylesheet for
 its own chrome, so any **global selector** in it lands in the frame's document
@@ -92,6 +144,21 @@ too. A bare `body { font-family; color; background-color }` did exactly that: it
 beat Banhaten's `html { font-family: Inter }` for everything that inherits, and
 painted a light frame's body in the shell's dark palette. Global selectors in
 `shell.css` must say which document they mean.
+
+**The shell has a colour mode of its own, and it is not in the URL.** A frame's
+appearance is part of what its link means — sending someone `mode=dark` sends
+them the state the defect appears in — while the colour of the tool around it
+says nothing about the finding, so it lives in `localStorage` and an inline
+script in `index.html` applies it before the stylesheet paints.
+
+What that forced is the more useful rule: **`shell.css` reads `.dark` on
+`<html>`, never `prefers-color-scheme`.** Both documents already carry that
+class — the shell from the stored preference, a frame from `applyAppearance` —
+so one signal now serves both. The media query answered to something no control
+in the tool could reach, and it took the `dark:` variant with it: a document
+frame switched to light from its toolbar kept dark prose and a dark copy button
+on a dark-mode machine. `shell.css` therefore redeclares the variant
+(`@custom-variant dark`) so the tokens and the utilities cannot drift apart.
 
 **Every frame is an iframe.** That buys CSS isolation, real viewport and media
 queries, per-frame `<html>` attributes for theming and direction, and crash

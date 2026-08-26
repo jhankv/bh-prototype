@@ -5,6 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>prototype-playground</title>
+    <script>
+      /*
+       * The playground's colour mode, applied before the stylesheet paints.
+       *
+       * Inline and in <head> on purpose: the module script is deferred, so
+       * deciding this in React means every load flashes the light palette
+       * first. The key is duplicated from `src/lib/shellMode.ts` because an
+       * inline script cannot import one.
+       *
+       * With nothing stored the OS still decides, so the tool looks right
+       * before anyone has an opinion about it.
+       */
+      ;(function () {
+        var stored = null
+        try {
+          stored = localStorage.getItem('playground:shell-mode')
+        } catch (error) {
+          /* storage blocked — fall through to the OS preference */
+        }
+        var dark = stored
+          ? stored === 'dark'
+          : window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.classList.toggle('dark', dark)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

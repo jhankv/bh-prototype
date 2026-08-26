@@ -17,7 +17,7 @@ export function Dashboard() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-5xl px-6 py-12">
+    <main className="mx-auto w-full max-w-5xl px-6 py-12">
       <header className="mb-8">
         <h1 className="text-xl font-medium tracking-tight text-shell-ink">Prototypes</h1>
         <p className="mt-1 text-sm text-shell-muted">

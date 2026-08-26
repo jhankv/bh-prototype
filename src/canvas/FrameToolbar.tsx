@@ -1,11 +1,13 @@
 import { useControls } from 'react-zoom-pan-pinch'
-import { ExternalLink, Moon, Scan, Sun, X } from 'lucide-react'
-import { AppearanceSchema, type Appearance } from '@/lib/schema'
+import { ExternalLink, Scan, X } from 'lucide-react'
+import {
+  AppearanceSet,
+  Divider,
+  IconButton,
+  SandboxSwitcher,
+} from '@/chrome/appearanceControls'
+import type { Appearance } from '@/lib/schema'
 import { useCanvasScale } from './useCanvasScale'
-
-/** Read off the schema so adding a Banhaten theme never means editing chrome. */
-const THEMES = AppearanceSchema.shape.theme.unwrap().options
-const RADII = AppearanceSchema.shape.radius.unwrap().options
 
 type FrameToolbarProps = {
   frameId: string
@@ -36,10 +38,9 @@ type FrameToolbarProps = {
  * point is to drive a prototype until a component breaks, so putting a second
  * click in front of the first interaction taxes the one thing this tool is for.
  *
- * Direction is shown but not switchable, and that is not an omission. Light and
- * dark are one screen in two token sets; left-to-right and right-to-left are
- * two different screens, because RTL means the copy is Arabic. A toggle would
- * imply the frame can show you something it cannot.
+ * The appearance controls themselves live in `@/chrome`, shared with the
+ * toolbar a frame carries when it is opened on its own. Direction is the one
+ * control that behaves differently here — see `AppearanceSet`.
  */
 export function FrameToolbar({
   frameId,
@@ -55,9 +56,6 @@ export function FrameToolbar({
 }: FrameToolbarProps) {
   const scale = useCanvasScale()
   const { zoomToElement } = useControls()
-
-  const set = <K extends keyof Appearance>(key: K, value: Appearance[K]) =>
-    onAppearance({ ...appearance, [key]: value })
 
   return (
     <div
@@ -87,68 +85,18 @@ export function FrameToolbar({
             {frameId}
           </span>
 
+          <Divider />
+
           {themeable && (
-            <>
-              <Divider />
-
-              {/* The comparison this whole repo exists to make, in one frame:
-                  flipping a single frame between sandboxes beats reading two
-                  side by side, because the difference is almost always a shift
-                  in POSITION and only a shared origin makes that jump out. */}
-              {sandboxes.length > 1 && (
-                <div className="flex items-center gap-0.5">
-                  {sandboxes.map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() => onSandbox(name)}
-                      title={`Render against ${name}`}
-                      className={`rounded px-1.5 py-1 font-mono text-[10px] transition-colors ${
-                        name === sandbox
-                          ? 'bg-shell-accent/10 text-shell-accent'
-                          : 'text-shell-muted hover:text-shell-ink'
-                      }`}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <Divider />
-
-              <IconButton
-                label={appearance.mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
-                onClick={() => set('mode', appearance.mode === 'dark' ? 'light' : 'dark')}
-              >
-                {appearance.mode === 'dark' ? (
-                  <Sun className="size-3.5" aria-hidden />
-                ) : (
-                  <Moon className="size-3.5" aria-hidden />
-                )}
-              </IconButton>
-
-              <Picker
-                label="Theme"
-                value={appearance.theme}
-                options={THEMES}
-                onChange={(value) => set('theme', value)}
-              />
-              <Picker
-                label="Radius"
-                value={appearance.radius}
-                options={RADII}
-                onChange={(value) => set('radius', value)}
-              />
-
-              <span
-                title="Direction is declared per frame — RTL frames render Arabic copy"
-                className="cursor-default rounded px-1.5 py-1 font-mono text-[10px] text-shell-muted"
-              >
-                {appearance.dir}
-              </span>
-            </>
+            <SandboxSwitcher sandbox={sandbox} sandboxes={sandboxes} onSandbox={onSandbox} />
           )}
+
+          <AppearanceSet
+            appearance={appearance}
+            onChange={onAppearance}
+            themeable={themeable}
+            direction="fixed"
+          />
 
           <Divider />
 
@@ -176,64 +124,5 @@ export function FrameToolbar({
         </div>
       </div>
     </div>
-  )
-}
-
-function Divider() {
-  return <span aria-hidden className="mx-0.5 h-4 w-px bg-shell-line" />
-}
-
-function IconButton({
-  children,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      className="flex size-6 items-center justify-center rounded text-shell-muted transition-colors hover:bg-shell-bg hover:text-shell-ink"
-    >
-      {children}
-    </button>
-  )
-}
-
-/**
- * A native select rather than a custom popover: seven themes do not fit on a
- * toolbar as buttons and do not survive being cycled blind, and the browser
- * already renders its list at screen scale outside the transformed layer.
- */
-function Picker<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: T
-  options: readonly T[]
-  onChange: (value: T) => void
-}) {
-  return (
-    <select
-      value={value}
-      title={label}
-      aria-label={label}
-      onChange={(event) => onChange(event.target.value as T)}
-      className="cursor-pointer rounded border-0 bg-transparent py-1 ps-1.5 pe-0.5 font-mono text-[10px] text-shell-muted transition-colors hover:bg-shell-bg hover:text-shell-ink focus:outline-none"
-    >
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
-        </option>
-      ))}
-    </select>
   )
 }

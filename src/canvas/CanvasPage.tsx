@@ -30,9 +30,13 @@ export function CanvasPage() {
   const canvas = loadCanvas(slug)
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-full flex-col">
       <header className="z-10 flex items-center gap-3 border-b border-shell-line bg-shell-surface px-4 py-2.5">
-        <Link href="/" className="text-shell-muted hover:text-shell-ink" aria-label="Back">
+        <Link
+          href={`/p/${slug}`}
+          className="text-shell-muted hover:text-shell-ink"
+          aria-label="Back to the project"
+        >
           <ArrowLeft className="size-4" aria-hidden />
         </Link>
         <h1 className="text-sm font-medium text-shell-ink">{project.manifest.name}</h1>

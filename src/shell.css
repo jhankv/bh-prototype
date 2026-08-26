@@ -8,8 +8,26 @@
 @import "tailwindcss" source(none);
 
 @source "./app";
+@source "./chrome";
 @source "./canvas";
 @source "./frame";
+
+/*
+ * Dark is a class on <html>, never `prefers-color-scheme`.
+ *
+ * Both documents that load this stylesheet already carry that class for their
+ * own reasons: the shell writes it from the viewer's stored preference, and
+ * `applyAppearance` writes it into a frame from the appearance in its URL.
+ * Reading the OS instead meant the tokens below and the `dark:` utilities in
+ * `src/frame/` answered to something neither control could reach — a document
+ * frame switched to light from its toolbar kept its dark prose on a dark-mode
+ * machine, which is the chrome and the pixels disagreeing.
+ *
+ * Redeclaring the variant is what keeps the two halves in step: the tokens key
+ * off `.dark`, so the utilities have to as well, or one document ends up
+ * reading its mode from two places.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Deliberately unlike any design system we test. A reviewer must always be
@@ -27,14 +45,17 @@
   --font-shell: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-shell-bg: oklch(0.16 0 0);
-    --color-shell-surface: oklch(0.21 0 0);
-    --color-shell-line: oklch(0.30 0 0);
-    --color-shell-ink: oklch(0.96 0 0);
-    --color-shell-muted: oklch(0.65 0 0);
-  }
+/*
+ * Plain CSS variables rather than a second `@theme`: a theme block is hoisted
+ * to `:root` unconditionally, so nesting one under a selector would overwrite
+ * the light palette for every document instead of only the dark ones.
+ */
+:root.dark {
+  --color-shell-bg: oklch(0.16 0 0);
+  --color-shell-surface: oklch(0.21 0 0);
+  --color-shell-line: oklch(0.30 0 0);
+  --color-shell-ink: oklch(0.96 0 0);
+  --color-shell-muted: oklch(0.65 0 0);
 }
 
 /*

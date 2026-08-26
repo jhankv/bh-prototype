@@ -8,15 +8,17 @@ import {
 } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { applyAppearance, appearanceFromSearch } from '@/lib/appearance'
-import { isDocument } from '@/lib/schema'
+import { applyAppearance, appearanceFromSearch, appearanceToParams } from '@/lib/appearance'
+import { isDocument, type Appearance } from '@/lib/schema'
 import { DesignSystemProvider } from '@/ds'
+import { availableSandboxes } from '@/ds/registry'
 import {
   announceFrameReady,
   forwardShortcutsToCanvas,
   onAppearanceMessage,
 } from '@/lib/frameMessages'
 import { CopyHandoff } from './CopyHandoff'
+import { StandaloneToolbar } from './StandaloneToolbar'
 import { Inspector } from './inspector/Inspector'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FrameError } from './FrameError'
@@ -82,14 +84,17 @@ function auditFor(path: string): LazyExoticComponent<ComponentType> | null {
 export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
   useEffect(forwardShortcutsToCanvas, [])
 
+  const search = new URLSearchParams(window.location.search)
+  const project = search.get('project') ?? ''
+  const src = search.get('src') ?? ''
+  const sandbox = search.get('sandbox') ?? 'none'
+
   /**
    * The URL sets the appearance this document opens in; the canvas can change
    * it afterwards without reloading, so it has to be state rather than a value
    * read straight out of the search params on every render.
    */
-  const [appearance, setAppearance] = useState(() =>
-    appearanceFromSearch(new URLSearchParams(window.location.search)),
-  )
+  const [appearance, setAppearance] = useState(() => appearanceFromSearch(search))
 
   useEffect(() => {
     const stopListening = onAppearanceMessage(setAppearance)
@@ -99,14 +104,87 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
 
   applyAppearance(document.documentElement, appearance)
 
-  if (sandboxError) {
-    return <FrameError title="Sandbox unavailable" detail={sandboxError} />
+  /**
+   * Standalone means this document is the top one — opened from the project
+   * page or from the canvas toolbar's open-in-a-tab link. There is no canvas
+   * above it, so nothing will ever send it an appearance, and it has to carry
+   * its own controls.
+   */
+  const standalone = window.parent === window
+
+  // A document frame renders prose, not a design system: nothing to theme, and
+  // no Arabic version of an English findings note.
+  const themeable = !isDocument(src) && sandbox !== 'none'
+  const sandboxes = themeable ? availableSandboxes() : []
+
+  function urlWith(next: Appearance, nextSandbox: string): string {
+    const params = new URLSearchParams({
+      project,
+      src,
+      sandbox: nextSandbox,
+      ...appearanceToParams(next),
+    })
+    return `${window.location.pathname}?${params.toString()}`
   }
 
-  const search = new URLSearchParams(window.location.search)
-  const project = search.get('project') ?? ''
-  const src = search.get('src') ?? ''
-  const sandbox = search.get('sandbox') ?? 'none'
+  /**
+   * Mode, theme and radius are token swaps: the re-render already shows the new
+   * state, so the URL is corrected in place rather than navigated.
+   *
+   * Keeping it in step is the point. The URL is what you copy out of the
+   * address bar, and a link that reopens a different screen than the one you
+   * were looking at when you copied it is worse than no link at all.
+   */
+  function changeAppearance(next: Appearance) {
+    setAppearance(next)
+    window.history.replaceState(null, '', urlWith(next, sandbox))
+  }
+
+  /**
+   * Direction and sandbox reload instead, and neither is a shortcut.
+   *
+   * Direction has to: `useCopy` in `src/copy.ts` reads `dir` off
+   * `window.location.search`, not off React state, so a frame flipped without a
+   * reload renders an RTL layout still carrying English copy — the toolbar
+   * saying one thing and the pixels another, which is the worst failure this
+   * tool has. Sandbox has to for the reason the canvas reloads too: a different
+   * design system is a different stylesheet, and only a fresh document loads
+   * one.
+   *
+   * `replace` rather than `assign`, so Back returns you to wherever you opened
+   * the prototype from instead of walking you backwards through your own
+   * toggling.
+   */
+  function reloadWith(next: Appearance, nextSandbox: string) {
+    window.location.replace(urlWith(next, nextSandbox))
+  }
+
+  /* The standalone toolbar floats over the bottom of the document, so a
+     scrolling prose frame needs room under its last line or the bar sits on it. */
+  const prosePadding = standalone ? 'pt-10 pb-24' : 'py-10'
+
+  const toolbar = standalone && (
+    <StandaloneToolbar
+      title={src}
+      projectHref={`/p/${project}`}
+      appearance={appearance}
+      onAppearance={changeAppearance}
+      sandbox={sandbox}
+      sandboxes={sandboxes}
+      onSandbox={(next) => reloadWith(appearance, next)}
+      themeable={themeable}
+      onDirection={(dir) => reloadWith({ ...appearance, dir }, sandbox)}
+    />
+  )
+
+  if (sandboxError) {
+    return (
+      <>
+        {toolbar}
+        <FrameError title="Sandbox unavailable" detail={sandboxError} />
+      </>
+    )
+  }
 
   const path = `/prototypes/${project}/${src}`
 
@@ -121,9 +199,10 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
 
       return (
         <>
+          {toolbar}
           <CopyHandoff markdown={raw} source={`${project}/${src}`} />
           <ErrorBoundary>
-            <article className="prose-frame mx-auto max-w-3xl px-8 py-10">
+            <article className={`prose-frame mx-auto max-w-3xl px-8 ${prosePadding}`}>
               <Suspense fallback={null}>
                 {/* Same as View below: auditFor caches by path at module level,
                     so the identity is stable across renders and the rule cannot
@@ -143,15 +222,21 @@ export function FrameApp({ sandboxError }: { sandboxError: string | null }) {
     }
     return (
       <>
+        {toolbar}
         <CopyHandoff markdown={source} source={`${project}/${src}`} />
-        <article className="prose-frame mx-auto max-w-2xl px-8 py-10">
+        <article className={`prose-frame mx-auto max-w-2xl px-8 ${prosePadding}`}>
           <Markdown remarkPlugins={[remarkGfm]}>{source}</Markdown>
         </article>
       </>
     )
   }
 
-  return <ViewFrame path={path} sandbox={sandbox} />
+  return (
+    <>
+      {toolbar}
+      <ViewFrame path={path} sandbox={sandbox} />
+    </>
+  )
 }
 
 function ViewFrame({ path, sandbox }: { path: string; sandbox: string }) {
