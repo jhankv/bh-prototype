@@ -1,3 +1,5 @@
+import { gapsAround, type Gap } from './align'
+
 /**
  * What an annotation carries besides the words.
  *
@@ -15,6 +17,15 @@ export type Measurement = {
   container: number | null
   /** Whether anything is bounding it, since "no max-width" is often the bug. */
   maxWidth: string | null
+  /**
+   * The clear space on each side, which is the ruler's answer made permanent.
+   *
+   * Measure mode draws these while the cursor is over a box and loses them the
+   * moment it leaves — right for a ruler, useless for a report. Taken again here
+   * so a note about spacing arrives carrying the spacing, with no second gesture
+   * for the person to remember.
+   */
+  gaps: Gap[]
   tokens: Array<{ name: string; value: string }>
 }
 
@@ -67,6 +78,7 @@ export function measure(element: Element): Measurement {
     box: { width: Math.round(rect.width), height: Math.round(rect.height) },
     container: parent ? Math.round(parent.getBoundingClientRect().width) : null,
     maxWidth: maxWidth === 'none' ? null : maxWidth,
+    gaps: gapsAround(element),
     tokens: tokensFor(element),
   }
 }
