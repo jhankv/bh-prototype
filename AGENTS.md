@@ -342,6 +342,7 @@ only exist between components. These cost this audit five findings:
 | Icon sizing | Two components, two mechanisms, and the wrong one is silent. `Button` sizes an icon by the `data-icon="inline-start"` attribute; `Menu` sizes it by wrapping in `MenuItemIcon`. `data-icon` inside a menu matches nothing, so the icon falls back to the icon library's own default — 24px against the 18px the menu intends. Neither `tsc` nor `cva` sees an attribute that matches no rule. |
 | A hardcoded `size-` class on an svg | Opts the icon out of the component's sizing AND its optical offset: `Button`'s centring rule is guarded by `:not([class*='size-'])`. Let the component size its own icons. |
 | `dot`, `hasLeadingIcon` | Not props. `type="dot"` is, and `hasLeadingIcon` is deprecated in favour of passing `leadingIcon` alone. |
+| A token name inside `rounded-[…]`, `text-[…]`, `bg-[…]` | It is a string, so nothing checks it. `var(--bh-radius-md)` does not exist — the token is `--bh-radius-md-6` — and an unresolved `var()` makes the declaration invalid, which computes to `0px` for a radius. Sharp corners that ignore all three radius modes, in four call sites across two views before anyone noticed. |
 
 **`tsc` catches all of it, and only since `src/ds/types.ts` existed.** `useDS()`
 returns the pristine sandbox's real module shapes, so an out-of-union value is a
@@ -349,10 +350,15 @@ compile error in your editor. Before that it typed everything as
 `ComponentType<Record<string, unknown>>`, and every row above shipped at least
 once.
 
-Two things it still does not cover. `banhaten doctor` scans the sandbox, not
-`prototypes/`, so it sees none of your calls. And a value being inside a union
-says nothing about whether the component honours it — `isRequired` typechecks and
-never reaches the input.
+Three things it still does not cover. `banhaten doctor` scans the sandbox, not
+`prototypes/`, so it sees none of your calls. A value being inside a union says
+nothing about whether the component honours it — `isRequired` typechecks and
+never reaches the input. And **nothing at all checks a custom property name**:
+it lives inside a Tailwind arbitrary value, which is a string to `tsc`, a class
+name to ESLint, and a `var()` the browser resolves silently to nothing. That is
+the last row of the table, and it is the one failure mode in this section the
+compiler cannot reach. Copy token names from `banhaten docs <component>` or from
+a call in this repo that already works; do not type them from memory.
 
 So: read the docs, then read the table above, then write the call, and let the
 compiler confirm rather than discover.

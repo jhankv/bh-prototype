@@ -99,7 +99,7 @@ export default function BulkImport() {
             {FILES.map((file) => (
               <div
                 key={file.name}
-                className="rounded-[var(--bh-radius-md)] border border-[var(--bh-border-default)] px-4 py-3"
+                className="rounded-[var(--bh-radius-md-6)] border border-[var(--bh-border-default)] px-4 py-3"
               >
                 <Progress
                   value={file.percent}

@@ -147,7 +147,7 @@ export default function NotificationSettings() {
           <MenuTrigger asChild>
             <button
               type="button"
-              className="flex w-full items-center gap-2 rounded-[var(--bh-radius-md)] px-2 py-1.5 text-start"
+              className="flex w-full items-center gap-2 rounded-[var(--bh-radius-md-6)] px-2 py-1.5 text-start"
             >
               <Avatar size="xs" shape="rounded">
                 <AvatarFallback>N</AvatarFallback>
@@ -309,7 +309,7 @@ function NavGroup({
         {items.map((item) => (
           <span
             key={item}
-            className={`truncate rounded-[var(--bh-radius-md)] px-2 py-1.5 text-sm ${
+            className={`truncate rounded-[var(--bh-radius-md-6)] px-2 py-1.5 text-sm ${
               item === current ? 'bg-[var(--bh-bg-neutral-subtle)] font-medium' : ''
             }`}
           >
@@ -338,7 +338,7 @@ function SubNavItem({
 
   return (
     <span
-      className={`flex items-center justify-between gap-2 rounded-[var(--bh-radius-md)] px-2.5 py-1.5 ${
+      className={`flex items-center justify-between gap-2 rounded-[var(--bh-radius-md-6)] px-2.5 py-1.5 ${
         current ? 'bg-[var(--bh-bg-neutral-subtle)] font-medium' : 'text-[var(--bh-content-subtle)]'
       }`}
     >
