@@ -354,6 +354,92 @@ because the report is telling you which line to edit.
 
 ---
 
+### `progress-2` · `infoLabel` is the only prop that is both the accessible name and the visible content
+
+**File:** `progress.tsx` · **Severity:** minor · **Status:** Question
+**Repro:** frame `bulk-import`, any appearance. The 16×16 info glyph beside each
+filename. Hover it and the browser's own tooltip reads "More information". Tab
+through the frame — eight elements take focus and this is not one of them.
+
+`Progress` publishes five content props. Four of them take a node:
+
+```ts
+// progress.tsx:54-68
+type ProgressProps = Omit<React.ComponentPropsWithoutRef<"div">, "children"> & {
+  helperText?: React.ReactNode
+  indicator?:  React.ReactNode
+  label?:      React.ReactNode
+  optional?:   React.ReactNode
+  infoLabel?:  string          // <-
+  showInfo?:   boolean
+}
+```
+
+`children` is omitted from the type, so there is no composition seam either. The
+info affordance is reachable only through those two props.
+
+**The `string` is not obviously wrong, and that is why this is a Question rather
+than a defect.** Across the package, a `string` label prop means an accessible
+name and a `ReactNode` label prop means visible content, and the split is
+consistent: `ariaLabel` on `Table`, `Tabs`, `PageHeader` and `EmptyState`;
+`closeLabel` on `tooltip.tsx:62` and `tag.tsx:145`; `overflowLabel`,
+`iconLabel`, `addLabel`, `valueLabel`, `previousAriaLabel`, `nextAriaLabel` —
+all `string`. `previousLabel`, `nextLabel`, `buttonLabel` and `quantityLabel`
+are all `React.ReactNode`. Twelve props, one rule, no exceptions.
+
+`infoLabel` does not fit either side, because it is used twice:
+
+```tsx
+// progress.tsx:243-251 (className elided)
+<span
+  aria-label={infoLabel}
+  data-slot="progress-info"
+  role="img"
+  title={infoLabel}
+>
+  <InfoIcon aria-hidden="true" />
+</span>
+```
+
+The same string is the accessible name **and** the tooltip a sighted user reads.
+As a name, `string` is exactly right. As content, it is the one place in the
+package where visible text cannot carry a link, a shortcut, emphasis, or a line
+break.
+
+**Measured on the frame**, not read from the source: `<span role="img">`,
+`tabIndex` `-1`, no `tabindex` attribute, and calling `.focus()` on it leaves
+`document.activeElement` on `<body>`. The tooltip is the browser's `title`
+popup, so it appears on hover and nowhere else — keyboard-only and touch users
+never see it. Nothing is lost by that today, because `title` and `aria-label`
+hold the same string and a screen reader gets it from the name. It only becomes
+a loss if the content ever grows past what a name should be.
+
+**What we cannot decide for you.** Three answers are reasonable and they are not
+the same size:
+
+1. `infoLabel` stays a `string` and the glyph is documented as decorative — the
+   contract is then honest and this entry closes as "working as intended".
+2. `infoLabel` widens to `React.ReactNode` and joins its four siblings. Cheap,
+   but the same prop is still feeding `aria-label`, which must stay a string.
+3. The name and the content separate — a `string` for the name, a node or a
+   slot for the content — and the glyph becomes a real trigger. `tooltip.tsx`
+   already ships the piece that would receive it: `TooltipTrigger` is Radix's
+   own trigger and keeps `asChild`, so a `Progress` that yielded the glyph would
+   compose with the package's existing tooltip and need nothing new.
+
+The third is the only one that makes the affordance interactive, and it is also
+the only one that changes the component's shape. That is API, and API is yours.
+
+**Why we are asking at all.** Building `bulk-import` we wanted the icon to
+explain what "processing" means for a row that has stalled. There is no prop
+that takes it and no child that reaches it, so the screen ships an icon whose
+entire payload is the default string `"More information"` — which is what
+`progress.tsx:78` falls back to when `infoLabel` is not passed, and which tells
+a reader nothing. An affordance that can only say that it exists is one a screen
+either drops or works around.
+
+---
+
 ## Select
 
 ### `select-1` · A label-less select announces its value and has no name
@@ -614,6 +700,120 @@ and the failing arrangement is the documented one. A team follows the example,
 puts a menu near a table — which is where menus go — and gets a broken one, with
 nothing to suggest the fix is a component they were never shown.
 
+## Segmented control
+
+### `segmented-control-1` · It cannot reach the icon mode of the surface it reuses
+
+**Files:** `segmented-control.tsx`, `button-group.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `neon`, the toolbar. The three view icons sit beside the two
+paging icons. Same `density="compact"`, same icon size, same row. The view items
+are 36px wide; the paging items are 32px.
+
+Measured on the frame:
+
+| Control | Item box | `padding-x` | Token |
+| --- | --- | --- | --- |
+| `SegmentedControlItem` | 36×32 | 8px | `--bh-button-group-xs-padding-x` |
+| `ButtonGroupItem`, `mode="iconOnly"` | 32×32 | 6px | `--bh-button-group-xs-icon-padding-x` |
+
+`button-group.tsx` defines two padding rules for an `xs` item:
+
+```tsx
+// button-group.tsx:102-107 — text
+{ size: "xs", mode: "default", itemWidth: "content",
+  class: "w-auto px-[var(--bh-button-group-xs-padding-x)]" }
+
+// button-group.tsx:120-125 — icon
+{ size: "xs", mode: "iconOnly",
+  class: "w-[var(--bh-button-group-xs-height)] px-[var(--bh-button-group-xs-icon-padding-x)]" }
+```
+
+The icon rule sets width equal to height. The text rule sets `w-auto`. A
+segmented control never reaches the icon rule, because `mode` is removed from
+its props and then hardcoded:
+
+```tsx
+// segmented-control.tsx:15-18
+type SegmentedControlProps = Omit<ToggleGroupProps, "itemWidth" | "mode"> & {
+  "aria-label": string
+  density?: ControlDensity
+}
+
+// segmented-control.tsx:31-35
+<ToggleGroup itemWidth="content" mode="default" ... />
+```
+
+An icon inside a segmented control gets text padding. There is no prop that
+changes this.
+
+**The contract states the reuse and not the limit.** `banhaten docs
+segmented-control` says it "reuses Button Group surface, divider, interaction,
+typography, and density tokens". `mode` is part of that surface. The docs do not
+say it is unavailable, and `Omit` is not visible from an editor's autocomplete —
+the prop is simply absent, which reads as an oversight rather than a rule.
+
+**The escape hatch is undocumented.** `ToggleGroup` is `Omit<ButtonGroupProps,
+"onChange">` at `button-group.tsx:390`, so it keeps `mode` and carries the same
+value model. `<ToggleGroup type="single" mode="iconOnly">` renders 32×32 and
+behaves identically. Nothing in either component's docs names it as the answer
+for an icon-only exclusive choice, and it drops the required `aria-label` that
+`SegmentedControl` enforces.
+
+**What this costs.** Two connected icon controls in one row, four pixels apart
+per item, and the wider one is the component whose name matches the pattern.
+Nothing errors. It reads as spacing.
+
+---
+
+## Toolbar
+
+### `toolbar-3` · The clear button in every search field is the browser's, not Banhaten's
+
+**Files:** `toolbar.tsx`, `expanded/Table.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `expenses`, light mode, `brown` theme. Click into the search
+field and type. An X appears at its trailing edge in **blue**, next to a brown
+focus ring, on a brown page. Switch the theme to `green`: the ring turns green,
+the X stays blue.
+
+`ToolbarSearch` hardcodes the input type, at `toolbar.tsx:345`:
+
+```tsx
+type = "search",
+```
+
+It is the only component in the package that does. `Input` passes `type`
+through and never sets it, so nothing else in Banhaten opts into this.
+
+`type="search"` makes the browser render `::-webkit-search-cancel-button`, and
+nothing in the package styles it. Grepping `globals.css`, `frame.css`,
+`toolbar.tsx` and `input.tsx` for `search-cancel`, `search-decoration` or an
+`appearance` reset returns nothing. Read off the running frame, the pseudo-element
+resolves to `-webkit-appearance: auto` — the UA paints its own glyph and the
+inherited `color: #2E1510` never reaches it. On macOS Chrome that glyph takes the
+system accent colour, which is why it is blue on a brown page and blue again on a
+green one.
+
+**This is not `architecture-5`, and the difference is the point.** The
+placeholder and the magnifier beside this X are the same wrong colour in every
+theme because a token is frozen; they are still Banhaten's pixels. The X is not
+Banhaten's pixels at all. Same symptom on the same 320px field, two unrelated
+causes, and only one of them is fixable in a stylesheet the package controls.
+
+**In dark mode it nearly disappears.** The input surface is
+`rgb(255 255 255 / 0.05)` over `#0E0E0F`, and the UA renders the accent glyph
+dark. It is present, clickable, and hard to see.
+
+**The blast radius is larger than the toolbar.** `expanded/Table.tsx:455` builds
+`DataTable`'s own `search` prop on `ToolbarSearch`, so every data table with
+search enabled inherits it — including screens that never mention `Toolbar`.
+
+**RTL is fine, and that is worth recording so nobody re-checks it.** On frame
+`expenses-rtl`, typing Arabic into the field puts the X at the leading edge with
+the magnifier at the trailing one — the browser mirrors its own control
+correctly. The direction handling is not the problem here. The colour is.
+
+---
+
 ## Across components
 
 ### `architecture-3` · An out-of-union value renders unstyled, in every component
@@ -705,3 +905,109 @@ nothing applies it on your behalf.
 its children would fix the toolbar case and leave the filter row, which is not a
 toolbar. A context provider would cover both and is a larger change with
 inheritance rules to settle. Either way it is API, and API is yours.
+
+---
+
+### `architecture-5` · One semantic colour is a literal, and it is the one under every placeholder
+
+**Files:** `globals.css`, `toolbar.tsx`, `input.tsx`, `select.tsx`, `menu.tsx`,
+`badge.tsx`, `tag.tsx`, `progress.tsx`, `expanded/table.css`,
+`expanded/pageHeader.css` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `expenses`, light mode, `brown` theme. The search placeholder,
+the magnifier beside it, and the unsorted arrows in every sortable column header
+all measure `#627084`, a blue-grey, on a page whose text is `#2E1510`. Take the
+toolbar through all seven themes. The page moves; those three do not.
+
+Every semantic colour in Banhaten is a reference, and that indirection is the
+whole theming mechanism:
+
+```css
+/* globals.css — :root, [data-theme="gray"] */
+458  --bh-content-default:  var(--bh-colors-neutral-950);
+459  --bh-content-disabled: var(--bh-colors-neutral-600);
+465  --bh-content-muted:    #627084;
+472  --bh-content-subtle:   var(--bh-colors-neutral-800);
+```
+
+Six of the seven themes then repoint `--bh-colors-neutral-*` at a ramp of their
+own — `brown` at `brown`, `orange` and `teal` at `slate`, `green` at `sage`,
+`purple` at `mauve` — and `blue` keeps the base `gray`. Seventeen lines per
+block, and every token that reads through them retints for free.
+
+`--bh-content-muted` does not read through them. It is a literal, no theme block
+overrides it, and it is the same value in all seven:
+
+| Theme | `--bh-content-muted` | `--bh-content-subtle` | `--bh-content-disabled` |
+| --- | --- | --- | --- |
+| `gray` | `#627084` | `#595959` | `#ADADAD` |
+| `blue` | `#627084` | `#595959` | `#ADADAD` |
+| `brown` | `#627084` | `#6B544B` | `#C9B4A9` |
+| `orange` | `#627084` | `#4E596E` | `#ABB8C7` |
+| `green` | `#627084` | `#465A50` | `#9AAFA3` |
+| `purple` | `#627084` | `#584963` | `#AA98B9` |
+| `teal` | `#627084` | `#4E596E` | `#ABB8C7` |
+
+Its two nearest neighbours in the same block, six lines above and seven below,
+both move. Measured in the running frame by reading the computed custom
+properties off `<html>`, not from the source.
+
+**It is not a contrast problem, and saying so keeps the entry honest.** The
+input surface is `#FFFFFF` in every light theme, so `#627084` sits at **5.04:1**
+everywhere — over the 4.5:1 text floor and over the 3:1 floor an icon carrying
+state has to clear. Nobody is locked out. What is wrong is that the colour is
+not from the palette it is being shown in.
+
+In OKLCH the token is `L 0.541, C 0.036, H 257°`. Against each theme's own
+`neutral-800`:
+
+| Theme | Its ramp | `neutral-800` hue | Δ from the token |
+| --- | --- | --- | --- |
+| `orange` | `slate` | 263° | 6° |
+| `teal` | `slate` | 263° | 6° |
+| `purple` | `mauve` | 311° | 53° |
+| `green` | `sage` | 163° | 94° |
+| `brown` | `brown` | 42° | **145°** |
+| `gray` | `gray` | achromatic | chroma 0.036 against 0.000 |
+| `blue` | `gray` | achromatic | chroma 0.036 against 0.000 |
+
+`#627084` is a slate value — it sits between `--bh-slate-700` (`#7F8C9E`,
+H 257°) and `--bh-slate-800` (`#4E596E`, H 263°) in both lightness and hue. So
+in `orange` and `teal`, which are slate-ramped, it is correct by coincidence.
+
+**The theme it looks deliberate in is not the theme it belongs to.** `blue` runs
+on the achromatic `gray` ramp, so the token is off-ramp there as much as
+anywhere; it reads as intentional because the *brand* is blue and a blue-cast
+neutral looks chosen next to it. `gray` gets the same cast with no blue on the
+page to justify it, and `brown` gets a cold grey 145° from every other neutral
+it sits beside.
+
+**Blast radius.** Fourteen call sites across nine files: `input.tsx:173` (every
+placeholder), `:626`, `:658`; `toolbar.tsx:362` (the search icon), `:369` (the
+search placeholder), `:431`; `expanded/table.css:254` and `:272` (the unsorted
+sort arrows, both interactive and static); `select.tsx:809`; `menu.tsx:95`;
+`badge.tsx:189`; `tag.tsx:326`; `progress.tsx:248`;
+`expanded/pageHeader.css:6`. Indirectly it also reaches every select trigger
+chevron — `globals.css:959` and `:2486` define
+`--bh-select-trigger-icon-color: var(--bh-content-muted)`, used at five points
+in `select.tsx` — and any consumer reaching for the shadcn compatibility alias,
+since `globals.css:1375` maps `--muted-foreground` to it too.
+
+**Dark mode is a constant as well, of a different colour.** The dark block sets
+`--bh-content-muted: #808080` at `globals.css:2295`, pure achromatic grey in all
+seven themes, while `--bh-content-subtle` beside it takes `#A3A3A3`, `#98A5B5`,
+`#9FB3A8` and `#B1A4BE` depending on the theme. Same defect, opposite tint: the
+light literal is too blue for five themes and the dark one is too neutral for
+four.
+
+**Why this is a defect and not a taste call.** Everything else in the base block
+written as a raw hex is either a primitive ramp step or a colour that must not
+move — `--bh-social-facebook-bg`, `--bh-social-google-*`,
+`--bh-radio-card-payment-logo-color`, the `aqua` ramp. Grepping the base block
+for `--bh-<semantic>: #` returns exactly one token that is neither: this one.
+The system has a rule, applies it to every other content colour, and skips one
+line.
+
+**Published as part of the contract.** `banhaten docs toolbar` lists
+`--bh-content-muted` in the component's token table, and describes `ToolbarSearch`
+as "tokenized". A consumer reading that has no way to learn that this particular
+token is the one that does not follow the theme.

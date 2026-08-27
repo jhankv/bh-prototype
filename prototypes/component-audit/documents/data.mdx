@@ -186,6 +186,72 @@ goes untested on this canvas — it is the only frame using `DataTable` at all.
 
 ---
 
+### `table-6` · The selection checkbox sits 2.5px above everything beside it
+
+**Files:** `expanded/Table.tsx`, `expanded/table.css`, `checkbox.tsx` · **Severity:** minor · **Status:** Confirmed
+**Repro:** frame `neon`. The header checkbox against the `id` and `product_name`
+sort buttons in the same row. Same defect in every body row.
+
+Measured on the frame:
+
+| | Cell centre | Content centre | Offset |
+| --- | --- | --- | --- |
+| Header, selection cell | 218.0 | 215.3 | **2.7px high** |
+| Header, `id` sort button | 218.0 | 217.8 | 0.2px |
+| Body row, selection cell | 264.0 | 261.5 | **2.5px high** |
+
+`Table.tsx:853-874` renders the checkbox with no wrapper and no alignment:
+
+```tsx
+function SelectionCheckbox({ checked, disabled, indeterminate, label, onChange }) {
+  return <Checkbox aria-label={label} checked={...} disabled={disabled} onCheckedChange={...} />
+}
+```
+
+`checkbox.tsx:16` sets no display and no vertical-align. Radix renders a
+`<button>`, so it computes to `display: inline-block; vertical-align: baseline`.
+
+The cell is `vertical-align: middle` (`table.css:196`), which centres the cell's
+**line box**, not each child. The sort buttons are `inline-flex`, so their
+baseline is the baseline of the text inside them and the 32px button lands
+centred. The checkbox has no in-flow text — its control is
+`position: absolute` — so its baseline is its own bottom edge. It hangs above
+the line instead of centring.
+
+Confirmed by intervention on the shipped element, body row, cell centre 264.0:
+
+| Applied to the checkbox | Content centre |
+| --- | --- |
+| nothing (as shipped) | 261.5 |
+| `vertical-align: middle` | 264.6 |
+| `display: grid` | 264.0 |
+
+**The stylesheet already contains the fix, and nothing uses it.**
+`table.css:275-324` defines `.ds-table-checkbox`:
+
+```css
+.ds-table-checkbox {
+  width: calc(var(--bh-space-3xl-16) + var(--bh-space-xxs-2));
+  height: calc(var(--bh-space-3xl-16) + var(--bh-space-xxs-2));
+  display: inline-grid;
+  place-items: center;
+}
+```
+
+`inline-grid` with `place-items: center` would centre it. The class appears nine
+times in `table.css` and zero times in any `.tsx` in the package —
+`document.querySelectorAll('.ds-table-checkbox')` returns 0 on this frame. Fifty
+lines of stylesheet for a control that was replaced by the `Checkbox` component
+and never re-aligned.
+
+**Scope.** Measured on `neon` at the default density, LTR, light: every selection
+cell in the table, header and body. The mechanism is vertical alignment inside a
+table cell, so nothing about it is direction-specific, but we have measured one
+density and one direction and the entry claims no more than that.
+
+
+---
+
 ## PageHeader
 
 ### `page-header-1` · It clips its own tab labels, with no way to opt out

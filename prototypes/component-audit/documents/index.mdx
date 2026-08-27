@@ -11,7 +11,7 @@ here. Nothing in this report was fixed by it.
 | --- | --- |
 | **Keyboard** | `toolbar`, `button-group`. Focus management, and why it is missing |
 | **Direction** | `kbd`, `tooltip`, `Table`, `Breadcrumbs`, `PageHeader`. RTL and bidi |
-| **Forms** | `input`, `badge`, `checkbox`, `progress`, `select`, `avatar`, `button`, `menu`. Flags that do nothing, values that fail silently, tokens wired to the wrong mode, and a density rule nothing enforces |
+| **Forms** | `input`, `badge`, `checkbox`, `progress`, `select`, `avatar`, `button`, `menu`, `segmented-control`, `toolbar`. Flags that do nothing, values that fail silently, tokens wired to the wrong mode or to no theme at all, a clear button the browser draws, a control that cannot reach the icon mode it reuses, and a density rule nothing enforces |
 | **Data** | `Table`, `PageHeader`, `pagination`. Counts, labels, untranslated strings |
 
 ## How an entry is named
@@ -112,7 +112,8 @@ Checked deliberately and found correct, so nobody re-checks them.
 
 **RTL layout.** Column order, sort affordances, filter chips, the search field
 and its icon, pagination controls, page header actions and breadcrumbs all
-mirror.
+mirror. So does the browser's own clear button inside the search field, which
+`toolbar-3` faults for its colour and not its position.
 
 **Theming.** `brown` and `sharp` change brand colour and radius with nothing
 hardcoded leaking through.
